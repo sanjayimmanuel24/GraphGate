@@ -110,4 +110,4 @@ that reintroduces the hallucination surface the design specifically avoids.
 See `BUILD_PLAN.md` for the milestone breakdown. Update the "Current phase" line here as you
 move between phases so a new session knows where things stand.
 
-**Current phase: not started — beginning M1.1 (refinement harness).**
+**Current phase: M1.1 — step 1.1 (scaffold) complete. Next: 1.2 (refinement-loop driver).**

@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.eggs/
+
+# Environments
+.venv/
+venv/
+env/
+.python-version.local
+
+# Testing / tooling caches
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# Secrets
+.env
+*.key
+
+# GraphGate runtime artifacts
+# Graph snapshots persisted between iterations, LLM response cache, and raw
+# harness traces are all regenerable — keep them out of version control.
+*.sqlite
+*.sqlite3
+.graphgate_cache/
+runs/
+out/
+
+# Datasets and holdout data are managed deliberately, not committed by accident.
+# (The holdout set in particular must stay untouched by tuning — see BUILD_PLAN 5.3.)
+data/raw/
+data/holdout/
+
+# OS
+Thumbs.db
+desktop.ini
+.DS_Store

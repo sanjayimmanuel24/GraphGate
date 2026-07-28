@@ -1,0 +1,39 @@
+[build-system]
+requires = ["hatchling==1.31.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "graphgate"
+version = "0.1.0"
+description = "A security gate for iterative LLM code refinement, grounded in temporal code-graph deltas."
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+authors = [{ name = "sanjay", email = "sanjayimmanuel29996@gmail.com" }]
+
+# Pinned exactly — deterministic replay across the A/B/C conditions depends on a
+# reproducible environment (see CLAUDE.md, "Coding conventions").
+# Later phases add their own pins as they land:
+#   M1.2 — LLM client SDK
+#   M1.3 — semgrep, bandit, pysa
+#   M2.1 — (tree-sitter already pinned here; it defines the graph layer)
+dependencies = [
+    "networkx==3.6.1",
+    "tree-sitter==0.25.2",
+    "tree-sitter-python==0.25.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest==9.1.1"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/graphgate"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers --strict-config"
+# Fixed seed / no randomised ordering: every experiment must be re-runnable
+# deterministically (CLAUDE.md).
+markers = [
+    "slow: marks tests that hit the filesystem or spawn external analysers",
+]
