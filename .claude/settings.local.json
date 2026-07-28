@@ -12,7 +12,13 @@
       "Bash(find \"C:/Users/Jeskookies\" -maxdepth 4 \\\\\\( -iname \"*capstone*\" -o -iname \"*graphgate*\" \\\\\\) -not -path \"*/AppData/*\" 2>/dev/null | head -20)",
       "Bash(conda env *)",
       "Bash(cmd //c \"py -0p\")",
-      "Bash(pandoc --version)"
+      "Bash(pandoc --version)",
+      "Bash(env)",
+      "Bash(echo \"--- exit: $? \\(no output = none set\\) ---\")",
+      "Skill(claude-api)",
+      "Skill(claude-api:*)",
+      "Bash(python -c \"import anthropic; print\\('anthropic', anthropic.__version__\\)\")",
+      "Bash(PYTHONPATH=src python -m pytest tests/ -q --deselect tests/test_smoke.py::test_running_on_supported_python)"
     ]
   }
 }
