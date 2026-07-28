@@ -80,6 +80,20 @@ that reintroduces the hallucination surface the design specifically avoids.
 - If you (Claude Code) think a scope constraint should change, say so explicitly and ask —
   do not just implement the larger version because it seemed natural.
 
+## Success criteria (pre-registered — proposal §7.5)
+
+These are operating points the project is judged against, not aspirations. They were fixed in
+advance; do not quietly relax them because a run came in over budget.
+
+- **False-positive rate < ~15%** — fraction of BLOCK decisions on clean turns, in Condition C.
+- **Median added latency < ~10 s per iteration** in the CI setting.
+- Condition A must reproduce a degradation trend consistent with the ISTAS 2025 base paper.
+- Condition C must show a **statistically significant** improvement in cross-file recall over
+  Condition B, and be at least competitive with S1 (Pysa).
+
+A null result on the cross-file comparison is still reportable as a rigorous negative finding —
+the controlled design is the contribution. Do not tune toward a positive result.
+
 ## Tech stack (decided — don't relitigate without discussion)
 
 - Python 3.12
@@ -102,6 +116,9 @@ that reintroduces the hallucination surface the design specifically avoids.
   metric in the paper — this data has to come from somewhere).
 - Every experiment/script must be re-runnable deterministically: fixed seeds, temperature 0 for
   gate/triage LLM calls, pinned dependency versions recorded in `requirements.txt` or `pyproject.toml`.
+  "Fixed seeds" means a **fixed list of several** seeds, not one — proposal §7.2 runs multiple
+  seeds per trace to get confidence intervals and the paired Wilcoxon tests. Anything that takes a
+  seed should take `seeds: list[int]`, from the harness outward.
 - Config over hardcoding: hop depth, vulnerability family, model choice, etc. should be CLI/config
   flags, not constants buried in code — we need this for the ablation study (Section 7.3).
 

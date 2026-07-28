@@ -11,7 +11,8 @@
       "Bash(where python *)",
       "Bash(find \"C:/Users/Jeskookies\" -maxdepth 4 \\\\\\( -iname \"*capstone*\" -o -iname \"*graphgate*\" \\\\\\) -not -path \"*/AppData/*\" 2>/dev/null | head -20)",
       "Bash(conda env *)",
-      "Bash(cmd //c \"py -0p\")"
+      "Bash(cmd //c \"py -0p\")",
+      "Bash(pandoc --version)"
     ]
   }
 }

@@ -39,27 +39,40 @@ trace files (in replay mode).
 
 ## Phase M1.2 — Dataset v1 (Weeks 3–6)
 
-**2.1** Write a script to pull candidate CVE fix commits for injection-class vulnerabilities in
+**2.1** Select and record the seed repository set: 8–12 mid-sized open-source Python projects
+(5k–50k LOC) under permissive licenses (MIT / Apache-2.0 / BSD). Record the license of each and
+verify compliance **before** any trace is redistributed (proposal §6.1). Output a manifest file
+(repo URL, commit pinned, LOC, license, verification date) — this is the input to 2.2.
+
+**2.2** Write a script to pull candidate CVE fix commits for injection-class vulnerabilities in
 Python projects from CVEfixes (or equivalent public source).
 > Prompt: *"Write a script that queries [CVEfixes/public source] for Python CVE fix commits
 > tagged with injection-class CWEs (CWE-89, CWE-78, CWE-22), and outputs candidate
 > vulnerable-commit / fixed-commit pairs with repo URL and file paths."*
 
-**2.2** Manual validation pass: for each candidate, confirm the fix is genuinely injection-class,
+**2.3** Manual validation pass: for each candidate, confirm the fix is genuinely injection-class,
 extract the minimal vulnerable/fixed function pair, and record whether it's local (single-file)
 or cross-file (fix touches a caller/callee in another file). Target 25–30 validated events for M1.
 
-**2.3** Build the trace-synthesis tool: given a validated vulnerable/fixed pair, generate a 5–8
+**2.4** Build the trace-synthesis tool: given a validated vulnerable/fixed pair, generate a 5–8
 turn refinement trace (using the ISTAS-2025-style prompts: "improve readability", "add feature
 X", "optimize") with the regression injected at a randomized turn.
 > Prompt: *"Build a trace synthesizer: given a code snippet and its known-vulnerable variant,
 > generate a 5-8 turn refinement trace using these prompt templates [...], injecting the
 > vulnerable variant at a randomized turn between 2 and 6."*
 
-**2.4** Label every turn `{clean, local_regression, cross_file_regression}` and store alongside
+**2.5** Label every turn `{clean, local_regression, cross_file_regression}` and store alongside
 the trace.
 
-**Exit check:** 25–30 labeled traces on disk, each replayable via the M1.1 harness.
+**2.6** Leakage control (proposal §6.3): verify that each injected vulnerable pattern does not
+already appear elsewhere in its repository; where duplicates exist, exclude them from the graph's
+retrieval scope during evaluation. Log every exclusion — this has to be reportable.
+> Prompt: *"Write a leakage check that, for each injected vulnerable pattern, scans the rest of
+> the seed repository for near-duplicate occurrences and emits an exclusion list consumed by the
+> retrieval layer."*
+
+**Exit check:** 25–30 labeled traces on disk, each replayable via the M1.1 harness, with a seed-repo
+license manifest and a leakage-exclusion list alongside them.
 
 ---
 
@@ -77,13 +90,25 @@ findings (no graph context), classify ALLOW / BLOCK and produce a rationale.
 same diffs.
 
 **3.4** Run Conditions A (no gate) / B (local gate) / S1 (Pysa-only) over the M1 dataset and
-produce the degradation-curve numbers.
+produce the full metric set from proposal §7.2 — not just the degradation curve:
+- **Degradation curve** — cumulative ground-truth-verified critical/high regressions surviving
+  per iteration, per condition.
+- **Iterations-to-detection** — mean turns between a regression's introduction and first
+  detection. A gate that flags three turns late is materially less useful than one that flags
+  immediately, and the curve alone hides this.
+- **Precision / false-positive burden** — fraction of BLOCK decisions on clean turns.
+- **Overhead** — median added latency, LLM tokens, and estimated API cost per iteration.
+
+Emit one tidy CSV keyed by `(trace_id, seed, condition, iteration)` so every metric above and the
+§7.2 paired statistics can be derived from a single artifact.
 > Prompt: *"Write the experiment runner that replays all M1 traces under conditions A, B, and S1,
-> and outputs cumulative critical/high findings per iteration per condition as a CSV, plus the
+> emitting a per-(trace, seed, condition, iteration) CSV covering surviving regressions,
+> detection turn, BLOCK/ALLOW decision vs. ground-truth label, latency, and token count — plus the
 > plotting script for the degradation curve."*
 
-**Exit check (M1 complete):** you have a real A-vs-B-vs-S1 degradation-curve result. This is your
-fallback publishable project if nothing else gets built — treat this exit check seriously.
+**Exit check (M1 complete):** you have a real A-vs-B-vs-S1 degradation-curve result, plus
+iterations-to-detection and false-positive numbers for each condition. This is your fallback
+publishable project if nothing else gets built — treat this exit check seriously.
 
 ---
 
@@ -120,11 +145,17 @@ weakened in one file, vulnerable call site in another).
 supporting subgraphs into the LLM triage step.
 
 **5.3** Collect the real-session holdout set: 10–20 genuine multi-turn refinement sessions with
-manual two-pass review of naturally occurring regressions. Keep this data untouched by any
-tuning — it's validation-only.
+manual two-pass review of naturally occurring regressions (disagreements adjudicated). Keep this
+data untouched by any tuning — it's validation-only.
 
-**Exit check:** Condition C runs end-to-end on the full dataset; holdout set collected and
-reviewed, sitting untouched in its own directory.
+**5.4** Set up the **repository-level** holdout (proposal §7.4) — distinct from 5.3. Withhold
+entire seed repositories from *any* rule tuning or sanitizer-allowlist curation, so generalization
+is measured across repos and not just across traces. Record the split in the seed manifest from
+2.1 and make the tuning scripts refuse to read held-out repos rather than relying on discipline.
+
+**Exit check:** Condition C runs end-to-end on the full dataset; both holdouts in place — the
+real-session set collected and reviewed, and the repository-level split enforced in code — sitting
+untouched in their own directories.
 
 ---
 
@@ -134,7 +165,8 @@ reviewed, sitting untouched in its own directory.
 set separately.
 
 **6.2** Run the ablation suite (call-only / taint-only / full / hop-depth 1-2-3 / rules-without-
-LLM-triage).
+LLM-triage), plus the **small-model ablation** — re-run Condition C on the secondary, cheaper code
+LLM (proposal §9) to show how much of the benefit depends on model capability.
 
 **6.3** Statistical analysis: paired Wilcoxon tests, effect sizes, confidence intervals.
 
