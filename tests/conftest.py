@@ -1,0 +1,158 @@
+"""Shared test fixtures.
+
+Lives here so test modules never import from each other — pytest discovers
+conftest automatically, which keeps the helpers available without depending on
+how the test package happens to be on sys.path.
+"""
+
+from __future__ import annotations
+
+from collections import deque
+from pathlib import Path
+
+import pytest
+
+from graphgate.config import RunConfig
+from graphgate.harness.driver import RefinementDriver
+from graphgate.harness.replay import ReplayClient
+from graphgate.harness.trace import KIND_TURN, SCHEMA_VERSION, TraceRecord
+from graphgate.llm.base import Completion, prompt_hash
+
+
+class RecordingFakeClient:
+    """Stands in for the live client, but computes *real* prompt hashes.
+
+    Using a real hash matters: replay verifies the request it rebuilds against
+    the recorded hash, so a stub value would leave that check untested.
+    """
+
+    MODEL = "fake-model"
+    PARAMS = {
+        "max_tokens": 100,
+        "thinking": {"type": "adaptive"},
+        "output_config": {"effort": "medium"},
+    }
+
+    def __init__(self, responses):
+        self._responses = deque(responses)
+        self._tick = 0
+        self.calls = 0
+        self.prompts_seen: list[str] = []
+
+    def describe_params(self) -> dict:
+        return dict(self.PARAMS)
+
+    def clock(self) -> str:
+        """Deterministic timestamps, so a live run is comparable to its replay."""
+        self._tick += 1
+        return f"2026-07-28T12:00:{self._tick:02d}+00:00"
+
+    def complete(self, system: str, user: str) -> Completion:
+        self.prompts_seen.append(user)
+        if not self._responses:
+            raise AssertionError("driver requested more turns than expected")
+        item = self._responses.popleft()
+        self.calls += 1
+        if isinstance(item, Exception):
+            raise item
+        return Completion(
+            text=item,
+            model=self.MODEL,
+            stop_reason="end_turn",
+            prompt_hash=prompt_hash(system, user, self.MODEL, self.PARAMS),
+            latency_ms=1.5,
+            usage={"input_tokens": 5, "output_tokens": 7},
+        )
+
+
+def _file_block(body: str, path: str = "app.py") -> str:
+    """A model reply in the file-block format the protocol expects."""
+    return f"### FILE: {path}\n```python\n{body}\n```\n"
+
+
+def _make_trace_record(**overrides) -> TraceRecord:
+    """A fully-populated turn record, with fields overridable per test."""
+    fields = dict(
+        schema_version=SCHEMA_VERSION,
+        trace_id="t1",
+        seed=0,
+        turn=1,
+        kind=KIND_TURN,
+        timestamp="2026-07-28T00:00:00+00:00",
+        files_after={"a.py": "a = 1"},
+        diff="--- a/a.py",
+        changed_paths=["a.py"],
+        prompt="improve readability",
+        prompt_hash="abc123",
+        model="claude-opus-5",
+        params={"effort": "medium"},
+        response_text="### FILE: a.py",
+        usage={"input_tokens": 10, "output_tokens": 20},
+        latency_ms=123.4,
+    )
+    fields.update(overrides)
+    return TraceRecord(**fields)
+
+
+@pytest.fixture
+def make_trace_record():
+    return _make_trace_record
+
+
+@pytest.fixture
+def file_block():
+    return _file_block
+
+
+@pytest.fixture
+def fake_client():
+    """Factory for a client that replays canned responses."""
+    return RecordingFakeClient
+
+
+@pytest.fixture
+def snapshot_dir(tmp_path: Path) -> Path:
+    """A one-file starting snapshot."""
+    directory = tmp_path / "snap"
+    directory.mkdir()
+    (directory / "app.py").write_text("def run():\n    return 1\n", encoding="utf-8")
+    return directory
+
+
+@pytest.fixture
+def record_live():
+    """Produce a source trace with the fake client, as a live run would."""
+
+    def _record(snapshot_dir, out, prompts, responses, seeds=(0,), trace_id="src-trace"):
+        config = RunConfig(
+            prompts=tuple(prompts),
+            trace_path=out,
+            trace_id=trace_id,
+            snapshot_dir=snapshot_dir,
+            seeds=tuple(seeds),
+        )
+        client = RecordingFakeClient(responses)
+        RefinementDriver(config, client, clock=client.clock).run()
+        return out
+
+    return _record
+
+
+@pytest.fixture
+def replay_into():
+    """Replay a saved trace into a new file through the unmodified driver."""
+
+    def _replay(source: Path, out: Path, verify_hash: bool = True) -> int:
+        client = ReplayClient.from_trace(source, verify_hash=verify_hash)
+        config = RunConfig(
+            prompts=client.prompts,
+            trace_path=out,
+            trace_id=client.trace_id,
+            seeds=client.seeds,
+        )
+        driver = RefinementDriver(
+            config, client, clock=client.clock, initial=client.initial_snapshot
+        )
+        return driver.run()
+
+    return _replay

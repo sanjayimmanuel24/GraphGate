@@ -51,10 +51,12 @@ class ModelConfig:
 class RunConfig:
     """One harness invocation: a snapshot, a prompt sequence, and where to log."""
 
-    snapshot_dir: Path
     prompts: tuple[str, ...]
     trace_path: Path
     trace_id: str
+    # None in replay mode: a recorded trace carries its own starting snapshot, so
+    # replaying one needs nothing on disk beyond the trace file itself.
+    snapshot_dir: Path | None = None
     # Each seed is one independent replication of the full prompt sequence.
     # NOTE: the Anthropic API accepts no seed parameter, so this labels the
     # replication — it does not make the provider deterministic. Byte-identical
@@ -64,7 +66,7 @@ class RunConfig:
 
     def to_dict(self) -> dict[str, Any]:
         return {
-            "snapshot_dir": str(self.snapshot_dir),
+            "snapshot_dir": None if self.snapshot_dir is None else str(self.snapshot_dir),
             "prompts": list(self.prompts),
             "trace_path": str(self.trace_path),
             "trace_id": self.trace_id,

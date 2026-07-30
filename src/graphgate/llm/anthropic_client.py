@@ -43,7 +43,11 @@ class AnthropicCodeGenClient:
         }
 
     def describe_params(self) -> dict[str, Any]:
-        return self.config.to_dict()
+        # Deliberately the wire params, not ModelConfig.to_dict(): these are what
+        # prompt_hash is computed over, so recording them lets replay recompute
+        # the hash and prove it reproduced the request exactly. Recording the
+        # config shape instead would make that check impossible.
+        return self._request_params()
 
     def complete(self, system: str, user: str) -> Completion:
         params = self._request_params()

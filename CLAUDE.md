@@ -142,5 +142,5 @@ the controlled design is the contribution. Do not tune toward a positive result.
 See `BUILD_PLAN.md` for the milestone breakdown. Update the "Current phase" line here as you
 move between phases so a new session knows where things stand.
 
-**Current phase: M1.1 — steps 1.1 (scaffold) and 1.2 (refinement-loop driver) complete.
-Next: 1.3 (deterministic replay).**
+**Current phase: M1.1 — steps 1.1 (scaffold), 1.2 (refinement-loop driver), and 1.3
+(deterministic replay) complete. Next: 1.4 (response caching).**

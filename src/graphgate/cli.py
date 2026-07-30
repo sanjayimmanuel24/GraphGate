@@ -13,7 +13,12 @@ from pathlib import Path
 
 from graphgate.config import DEFAULT_SEEDS, ModelConfig, RunConfig
 from graphgate.harness.driver import RefinementDriver
-from graphgate.llm.anthropic_client import AnthropicCodeGenClient
+from graphgate.harness.replay import ReplayClient
+
+# The provider SDK is imported lazily inside _run_live() so that replaying an
+# archived trace needs nothing but this package — someone reproducing our
+# results from the artifact release (proposal §9) should not have to install an
+# LLM SDK or hold an API key to do it.
 
 
 def _parse_seeds(raw: str) -> tuple[int, ...]:
@@ -45,22 +50,41 @@ def build_parser() -> argparse.ArgumentParser:
         description="Run an LLM refinement loop over a snapshot and record a JSONL trace.",
     )
     parser.add_argument(
-        "--snapshot", type=Path, required=True,
+        "--out", type=Path, required=True,
+        help="Path to the JSONL trace file to write (appended to).",
+    )
+    parser.add_argument(
+        "--replay", type=Path, default=None, metavar="TRACE",
+        help=(
+            "Replay a saved trace instead of calling the LLM. Prompts, seeds, "
+            "trace id, starting snapshot, and request params all come from the "
+            "recording, so --snapshot/--prompts/--trace-id and the model flags "
+            "are not used."
+        ),
+    )
+    parser.add_argument(
+        "--no-verify-hash", action="store_true",
+        help=(
+            "Replay only: don't fail when a rebuilt request doesn't hash to the "
+            "recorded value. Use solely to read an old trace recorded before a "
+            "prompt-format change — the replay is not faithful."
+        ),
+    )
+
+    live = parser.add_argument_group("live run (ignored with --replay)")
+    live.add_argument(
+        "--snapshot", type=Path, default=None,
         help="Directory holding the starting Python files.",
     )
-    parser.add_argument(
-        "--prompts", type=Path, required=True,
+    live.add_argument(
+        "--prompts", type=Path, default=None,
         help="Text file with one refinement instruction per line.",
     )
-    parser.add_argument(
-        "--out", type=Path, required=True,
-        help="Path to the JSONL trace file (appended to).",
-    )
-    parser.add_argument(
-        "--trace-id", required=True,
+    live.add_argument(
+        "--trace-id", default=None,
         help="Identifier recorded on every record in this run.",
     )
-    parser.add_argument(
+    live.add_argument(
         "--seeds", type=_parse_seeds, default=DEFAULT_SEEDS,
         help=(
             "Comma-separated replication seeds (default: %(default)s). "
@@ -89,12 +113,22 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def main(argv: list[str] | None = None) -> int:
-    args = build_parser().parse_args(argv)
-    logging.basicConfig(
-        level=getattr(logging, args.log_level),
-        format="%(asctime)s %(levelname)-7s %(name)s: %(message)s",
-    )
+def _run_live(args: argparse.Namespace) -> int:
+    missing = [
+        flag
+        for flag, value in (
+            ("--snapshot", args.snapshot),
+            ("--prompts", args.prompts),
+            ("--trace-id", args.trace_id),
+        )
+        if value is None
+    ]
+    if missing:
+        raise SystemExit(
+            f"a live run requires {', '.join(missing)} (or pass --replay TRACE)"
+        )
+
+    from graphgate.llm.anthropic_client import AnthropicCodeGenClient
 
     model = ModelConfig(
         model=args.model,
@@ -110,12 +144,57 @@ def main(argv: list[str] | None = None) -> int:
         seeds=args.seeds,
         model=model,
     )
-
     driver = RefinementDriver(config, AnthropicCodeGenClient(model))
-    turns = driver.run()
-    logging.getLogger(__name__).info(
-        "wrote %d turn record(s) to %s", turns, config.trace_path
+    return driver.run()
+
+
+def _run_replay(args: argparse.Namespace) -> int:
+    """Re-run a recording through the driver with no network calls.
+
+    Everything comes from the trace, so the run is reproducible from the trace
+    file alone. The driver is the *same* code path as a live run — the parse and
+    the diff are recomputed rather than copied, which is what makes a
+    byte-identical result meaningful.
+    """
+    if args.replay.resolve() == args.out.resolve():
+        raise SystemExit(
+            "--out must differ from --replay: the writer appends, so replaying "
+            "onto the source would corrupt it. Write elsewhere and diff the two."
+        )
+
+    client = ReplayClient.from_trace(args.replay, verify_hash=not args.no_verify_hash)
+    config = RunConfig(
+        prompts=client.prompts,
+        trace_path=args.out,
+        trace_id=client.trace_id,
+        seeds=client.seeds,
+        # snapshot_dir stays None: the recording carries its own starting state.
     )
+    driver = RefinementDriver(
+        config,
+        client,
+        clock=client.clock,
+        initial=client.initial_snapshot,
+    )
+    return driver.run()
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = build_parser().parse_args(argv)
+    logging.basicConfig(
+        level=getattr(logging, args.log_level),
+        format="%(asctime)s %(levelname)-7s %(name)s: %(message)s",
+    )
+    log = logging.getLogger(__name__)
+
+    if args.replay is not None:
+        turns = _run_replay(args)
+        log.info(
+            "replayed %d turn(s) from %s into %s", turns, args.replay, args.out
+        )
+    else:
+        turns = _run_live(args)
+        log.info("wrote %d turn record(s) to %s", turns, args.out)
     return 0
 
 

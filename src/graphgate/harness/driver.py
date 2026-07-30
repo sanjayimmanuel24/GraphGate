@@ -10,6 +10,7 @@ replayed against.
 from __future__ import annotations
 
 import logging
+from typing import Callable
 
 from graphgate.config import RunConfig
 from graphgate.harness.diff import changed_paths, unified_diff
@@ -37,13 +38,33 @@ log = logging.getLogger(__name__)
 class RefinementDriver:
     """Runs each seed's full prompt sequence and appends to one trace file."""
 
-    def __init__(self, config: RunConfig, client: CodeGenClient):
+    def __init__(
+        self,
+        config: RunConfig,
+        client: CodeGenClient,
+        clock: Callable[[], str] = utc_now_iso,
+        initial: Snapshot | None = None,
+    ):
         self.config = config
         self.client = client
+        # Injectable so replay (step 1.3) can re-emit the *recorded* timestamps
+        # rather than the wall clock. Without this, a replayed trace could never
+        # be byte-identical to its source, which is M1.1's exit check.
+        self._clock = clock
+        # Replay supplies the starting snapshot straight from the trace, so a
+        # recording is replayable without the original source directory.
+        self._initial = initial
 
     def run(self) -> int:
         """Execute every replication. Returns the number of turns recorded."""
-        initial = load_snapshot(self.config.snapshot_dir)
+        initial = self._initial
+        if initial is None:
+            if self.config.snapshot_dir is None:
+                raise ValueError(
+                    "no starting snapshot: RunConfig.snapshot_dir is None and no "
+                    "initial snapshot was supplied"
+                )
+            initial = load_snapshot(self.config.snapshot_dir)
         log.info(
             "trace %s: %d file(s), %d prompt(s), seeds=%s",
             self.config.trace_id,
@@ -65,7 +86,7 @@ class RefinementDriver:
             seed=seed,
             turn=turn,
             kind=kind,
-            timestamp=utc_now_iso(),
+            timestamp=self._clock(),
             **fields,
         )
 

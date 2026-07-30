@@ -1,50 +1,16 @@
-"""End-to-end driver tests against a fake client — no network, no API key."""
+"""End-to-end driver tests against a fake client — no network, no API key.
+
+``snapshot_dir``, ``file_block``, and the fake client come from ``conftest.py``.
+"""
 
 from pathlib import Path
-
-import pytest
 
 from graphgate.config import ModelConfig, RunConfig
 from graphgate.harness.driver import RefinementDriver
 from graphgate.harness.trace import KIND_ERROR, KIND_INIT, KIND_TURN, read_trace
-from graphgate.llm.base import Completion, CompletionError
+from graphgate.llm.base import CompletionError
 
-
-class FakeClient:
-    """Replays canned responses, one per call, and records prompts it saw."""
-
-    def __init__(self, responses):
-        self._responses = list(responses)
-        self.calls = 0
-        self.prompts_seen: list[str] = []
-
-    def describe_params(self):
-        return {"model": "fake-model", "effort": "medium"}
-
-    def complete(self, system: str, user: str) -> Completion:
-        self.prompts_seen.append(user)
-        if self.calls >= len(self._responses):
-            raise AssertionError("driver requested more turns than expected")
-        item = self._responses[self.calls]
-        self.calls += 1
-        if isinstance(item, Exception):
-            raise item
-        return Completion(
-            text=item,
-            model="fake-model",
-            stop_reason="end_turn",
-            prompt_hash=f"hash{self.calls}",
-            latency_ms=1.0,
-            usage={"input_tokens": 5, "output_tokens": 7},
-        )
-
-
-@pytest.fixture
-def snapshot_dir(tmp_path: Path) -> Path:
-    directory = tmp_path / "snap"
-    directory.mkdir()
-    (directory / "app.py").write_text("def run():\n    return 1\n", encoding="utf-8")
-    return directory
+from conftest import RecordingFakeClient as FakeClient
 
 
 def make_config(snapshot_dir: Path, tmp_path: Path, prompts, seeds=(0,)) -> RunConfig:
@@ -58,13 +24,9 @@ def make_config(snapshot_dir: Path, tmp_path: Path, prompts, seeds=(0,)) -> RunC
     )
 
 
-def block(body: str, path: str = "app.py") -> str:
-    return f"### FILE: {path}\n```python\n{body}\n```\n"
-
-
-def test_records_init_then_one_record_per_turn(snapshot_dir, tmp_path):
+def test_records_init_then_one_record_per_turn(snapshot_dir, tmp_path, file_block):
     config = make_config(snapshot_dir, tmp_path, ["readability", "optimize"])
-    client = FakeClient([block("def run():\n    return 2"), block("def run():\n    return 3")])
+    client = FakeClient([file_block("def run():\n    return 2"), file_block("def run():\n    return 3")])
 
     turns = RefinementDriver(config, client).run()
 
@@ -74,9 +36,9 @@ def test_records_init_then_one_record_per_turn(snapshot_dir, tmp_path):
     assert [r.turn for r in records] == [0, 1, 2]
 
 
-def test_snapshot_evolves_across_turns(snapshot_dir, tmp_path):
+def test_snapshot_evolves_across_turns(snapshot_dir, tmp_path, file_block):
     config = make_config(snapshot_dir, tmp_path, ["a", "b"])
-    client = FakeClient([block("v = 2"), block("v = 3")])
+    client = FakeClient([file_block("v = 2"), file_block("v = 3")])
 
     RefinementDriver(config, client).run()
     records = list(read_trace(config.trace_path))
@@ -88,9 +50,9 @@ def test_snapshot_evolves_across_turns(snapshot_dir, tmp_path):
     assert "v = 2" in client.prompts_seen[1]
 
 
-def test_turn_record_captures_diff_and_metrics(snapshot_dir, tmp_path):
+def test_turn_record_captures_diff_and_metrics(snapshot_dir, tmp_path, file_block):
     config = make_config(snapshot_dir, tmp_path, ["readability"])
-    client = FakeClient([block("def run():\n    return 2")])
+    client = FakeClient([file_block("def run():\n    return 2")])
 
     RefinementDriver(config, client).run()
     turn = list(read_trace(config.trace_path))[1]
@@ -99,15 +61,18 @@ def test_turn_record_captures_diff_and_metrics(snapshot_dir, tmp_path):
     assert "+    return 2" in turn.diff
     assert turn.changed_paths == ["app.py"]
     assert turn.prompt == "readability"
-    assert turn.prompt_hash == "hash1"
     assert turn.usage == {"input_tokens": 5, "output_tokens": 7}
-    assert turn.latency_ms == 1.0
-    assert turn.params == {"model": "fake-model", "effort": "medium"}
+    assert turn.latency_ms == 1.5
+    assert turn.params == FakeClient.PARAMS
+    # A real sha256 of the request, not a placeholder — replay relies on this
+    # being the genuine hash to verify itself against.
+    assert len(turn.prompt_hash) == 64
+    assert int(turn.prompt_hash, 16) >= 0
 
 
-def test_each_seed_restarts_from_the_initial_snapshot(snapshot_dir, tmp_path):
+def test_each_seed_restarts_from_the_initial_snapshot(snapshot_dir, tmp_path, file_block):
     config = make_config(snapshot_dir, tmp_path, ["a"], seeds=(0, 1))
-    client = FakeClient([block("v = 2"), block("v = 9")])
+    client = FakeClient([file_block("v = 2"), file_block("v = 9")])
 
     RefinementDriver(config, client).run()
     records = list(read_trace(config.trace_path))
@@ -117,9 +82,9 @@ def test_each_seed_restarts_from_the_initial_snapshot(snapshot_dir, tmp_path):
     assert records[0].files_after == records[2].files_after
 
 
-def test_new_files_are_added_to_the_snapshot(snapshot_dir, tmp_path):
+def test_new_files_are_added_to_the_snapshot(snapshot_dir, tmp_path, file_block):
     config = make_config(snapshot_dir, tmp_path, ["split it up"])
-    client = FakeClient([block("def helper():\n    return 0", path="helpers.py")])
+    client = FakeClient([file_block("def helper():\n    return 0", path="helpers.py")])
 
     RefinementDriver(config, client).run()
     turn = list(read_trace(config.trace_path))[1]
@@ -129,12 +94,12 @@ def test_new_files_are_added_to_the_snapshot(snapshot_dir, tmp_path):
 
 
 def test_unparseable_response_is_recorded_and_stops_that_replication(
-    snapshot_dir, tmp_path
+    snapshot_dir, tmp_path, file_block
 ):
     """A bad turn must not advance silently — later turns would log as no-ops
     and understate the degradation curve."""
     config = make_config(snapshot_dir, tmp_path, ["a", "b"])
-    client = FakeClient(["I have updated the file.", block("never reached")])
+    client = FakeClient(["I have updated the file.", file_block("never reached")])
 
     turns = RefinementDriver(config, client).run()
 
@@ -156,9 +121,9 @@ def test_api_failure_is_recorded_and_stops_that_replication(snapshot_dir, tmp_pa
     assert "declined" in records[-1].error
 
 
-def test_one_seed_failing_does_not_abort_the_others(snapshot_dir, tmp_path):
+def test_one_seed_failing_does_not_abort_the_others(snapshot_dir, tmp_path, file_block):
     config = make_config(snapshot_dir, tmp_path, ["a"], seeds=(0, 1))
-    client = FakeClient([CompletionError("transient"), block("v = 2")])
+    client = FakeClient([CompletionError("transient"), file_block("v = 2")])
 
     turns = RefinementDriver(config, client).run()
 
@@ -172,10 +137,10 @@ def test_one_seed_failing_does_not_abort_the_others(snapshot_dir, tmp_path):
     ]
 
 
-def test_no_op_turn_is_still_recorded(snapshot_dir, tmp_path):
+def test_no_op_turn_is_still_recorded(snapshot_dir, tmp_path, file_block):
     """A refinement that changes nothing is a real outcome worth measuring."""
     config = make_config(snapshot_dir, tmp_path, ["a"])
-    client = FakeClient([block("def run():\n    return 1\n")])
+    client = FakeClient([file_block("def run():\n    return 1\n")])
 
     RefinementDriver(config, client).run()
     turn = list(read_trace(config.trace_path))[1]

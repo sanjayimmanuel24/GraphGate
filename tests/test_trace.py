@@ -2,45 +2,22 @@
 
 import pytest
 
-from graphgate.harness.trace import (
-    KIND_TURN,
-    SCHEMA_VERSION,
-    TraceRecord,
-    TraceWriter,
-    read_trace,
-)
+from graphgate.harness.trace import TraceRecord, TraceWriter, read_trace
 from graphgate.llm.base import prompt_hash
 
 
-def make_record(**overrides) -> TraceRecord:
-    fields = dict(
-        schema_version=SCHEMA_VERSION,
-        trace_id="t1",
-        seed=0,
-        turn=1,
-        kind=KIND_TURN,
-        timestamp="2026-07-28T00:00:00+00:00",
-        files_after={"a.py": "a = 1"},
-        diff="--- a/a.py",
-        changed_paths=["a.py"],
-        prompt="improve readability",
-        prompt_hash="abc123",
-        model="claude-opus-5",
-        params={"effort": "medium"},
-        response_text="### FILE: a.py",
-        usage={"input_tokens": 10, "output_tokens": 20},
-        latency_ms=123.4,
-    )
-    fields.update(overrides)
-    return TraceRecord(**fields)
+@pytest.fixture
+def make_record(make_trace_record):
+    """Alias for the shared record factory (see conftest.py)."""
+    return make_trace_record
 
 
-def test_record_round_trips_through_json():
+def test_record_round_trips_through_json(make_record):
     record = make_record()
     assert TraceRecord.from_json(record.to_json()) == record
 
 
-def test_json_is_byte_stable_across_field_order():
+def test_json_is_byte_stable_across_field_order(make_record):
     """M1.1's exit check is byte-identical trace files, so serialization must
     not depend on dict ordering."""
     a = make_record(usage={"input_tokens": 10, "output_tokens": 20})
@@ -54,7 +31,7 @@ def test_from_json_rejects_unknown_schema_version():
         TraceRecord.from_json(line)
 
 
-def test_writer_appends_and_reader_streams(tmp_path):
+def test_writer_appends_and_reader_streams(tmp_path, make_record):
     path = tmp_path / "trace.jsonl"
     with TraceWriter(path) as writer:
         writer.write(make_record(turn=1))
@@ -64,7 +41,7 @@ def test_writer_appends_and_reader_streams(tmp_path):
     assert [r.turn for r in records] == [1, 2]
 
 
-def test_writer_appends_to_an_existing_file(tmp_path):
+def test_writer_appends_to_an_existing_file(tmp_path, make_record):
     path = tmp_path / "trace.jsonl"
     with TraceWriter(path) as writer:
         writer.write(make_record(turn=1))
@@ -74,20 +51,20 @@ def test_writer_appends_to_an_existing_file(tmp_path):
     assert len(list(read_trace(path))) == 2
 
 
-def test_writer_creates_parent_directories(tmp_path):
+def test_writer_creates_parent_directories(tmp_path, make_record):
     path = tmp_path / "runs" / "nested" / "trace.jsonl"
     with TraceWriter(path) as writer:
         writer.write(make_record())
     assert path.exists()
 
 
-def test_writer_rejects_use_outside_context_manager(tmp_path):
+def test_writer_rejects_use_outside_context_manager(tmp_path, make_record):
     writer = TraceWriter(tmp_path / "trace.jsonl")
     with pytest.raises(RuntimeError, match="context manager"):
         writer.write(make_record())
 
 
-def test_reader_reports_the_offending_line_number(tmp_path):
+def test_reader_reports_the_offending_line_number(tmp_path, make_record):
     path = tmp_path / "trace.jsonl"
     path.write_text(make_record().to_json() + "\nnot json\n", encoding="utf-8")
     with pytest.raises(ValueError, match=r":2: malformed"):
