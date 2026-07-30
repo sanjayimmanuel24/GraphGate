@@ -83,13 +83,6 @@ def build_parser() -> argparse.ArgumentParser:
         help="Thinking mode (default: %(default)s).",
     )
     parser.add_argument(
-        "--temperature", type=float, default=None,
-        help=(
-            "Only valid on models that still accept sampling parameters "
-            "(Sonnet 4.6, Haiku 4.5, older). Current models return HTTP 400."
-        ),
-    )
-    parser.add_argument(
         "--log-level", default="INFO",
         choices=["DEBUG", "INFO", "WARNING", "ERROR"],
     )
@@ -108,7 +101,6 @@ def main(argv: list[str] | None = None) -> int:
         max_tokens=args.max_tokens,
         effort=args.effort,
         thinking=args.thinking,
-        temperature=args.temperature,
     )
     config = RunConfig(
         snapshot_dir=args.snapshot,

@@ -1,7 +1,8 @@
 # Determinism in GraphGate
 
-> **Status: open decision.** The default in code is Option A below. Confirm or change
-> it before M1.3 runs, because it belongs in the paper's methods section.
+> **Status: decided — Option A**, 2026-07-28. `CLAUDE.md` has been amended to match.
+> This page is the rationale to draw on when writing the methods section; Option B is
+> kept below as the recorded alternative, not as a live choice.
 
 ## The conflict
 
@@ -44,7 +45,7 @@ regardless of sampling settings. Determinism was always going to come from repla
 
 ## Options
 
-### Option A — current models, no sampling parameters *(the default in code)*
+### Option A — current models, no sampling parameters ✅ **chosen**
 
 - `claude-opus-5` primary, `claude-haiku-4-5` for the §9 small-model ablation.
 - `temperature` omitted entirely. `ModelConfig.temperature` stays `None`.
@@ -54,7 +55,7 @@ regardless of sampling settings. Determinism was always going to come from repla
 **Cost:** the paper cannot claim "temperature 0". It must instead claim cached,
 replayed traces — which is a stronger and more accurate claim.
 
-### Option B — pin older models to keep the literal wording
+### Option B — pin older models to keep the literal wording *(rejected)*
 
 - `claude-sonnet-4-6` primary, `claude-haiku-4-5` ablation. Both accept `temperature`.
 - Set `--temperature 0`; `ModelConfig` passes it through.
@@ -75,7 +76,22 @@ Wilcoxon tests, and that is exactly what the field provides.
 This is recorded in the trace so the statistics can group by it. It is *not* a
 reproducibility mechanism, and no part of the write-up should describe it as one.
 
-## Recommendation
+## Decision
 
-**Option A.** Take the accurate reproducibility story over the familiar-sounding
-one, and run on the model generation the research question is actually about.
+**Option A**, chosen 2026-07-28: take the accurate reproducibility story over the
+familiar-sounding one, and run on the model generation the research question is
+actually about.
+
+### Consequences for the write-up
+
+- The methods section claims **cached, replayed traces**, not "temperature 0". Say
+  plainly that sampling parameters are unavailable on the models used and that
+  condition comparison is guaranteed by replay instead.
+- Threats to validity (§8, *internal validity*) currently lists "fixed decoding
+  temperature" among the mitigations for LLM nondeterminism. That item needs
+  replacing with the cache-and-replay mechanism when the proposal is next revised —
+  the remaining mitigations there (deterministic replay, multiple seeds, response
+  caching, paired tests) are unaffected and already carry the argument.
+- Report the exact model identifiers (`claude-opus-5`, `claude-haiku-4-5`) and the
+  effort level per run, since those now stand in for the sampling settings a reader
+  would otherwise expect.

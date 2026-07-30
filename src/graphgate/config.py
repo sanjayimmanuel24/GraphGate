@@ -24,23 +24,15 @@ class ModelConfig:
     replay (step 1.3) or cache hit (step 1.4) can only match a request issued
     under identical settings.
 
-    On ``temperature``
-    ------------------
-    CLAUDE.md and proposal §9 call for "temperature 0" on gate/triage calls.
-    That parameter **no longer exists** on current Anthropic models: Opus 4.7+,
-    Sonnet 5, and Fable 5 removed ``temperature``/``top_p``/``top_k``, and
-    sending one returns HTTP 400. The Messages API has never had a seed
-    parameter either.
-
-    Determinism in this project therefore rests on response caching (step 1.4)
-    and trace replay (step 1.3) — not on sampling settings. This is not a
-    weakening of the design: temperature 0 never guaranteed identical outputs
-    on the models that did accept it, so replay was always the load-bearing
-    mechanism. Set ``temperature`` below only if you pin an older model that
-    still accepts it.
+    There is deliberately no ``temperature`` field. Current models removed the
+    sampling parameters and return HTTP 400 for any value, and determinism here
+    comes from response caching (step 1.4) and trace replay (step 1.3) instead.
+    See ``docs/DETERMINISM.md`` and the determinism convention in CLAUDE.md.
     """
 
     provider: str = "anthropic"
+    # Proposal §9: one primary code LLM plus a smaller ablation model. Primary
+    # here; pass --model claude-haiku-4-5 for the ablation arm.
     model: str = "claude-opus-5"
     max_tokens: int = 16_000
     # low | medium | high | xhigh | max. "medium" keeps per-iteration cost down
@@ -50,9 +42,6 @@ class ModelConfig:
     # can leak <thinking> tags into the visible response, which would corrupt
     # the code we parse back out of it.
     thinking: str = "adaptive"
-    # Only set on models that still accept it (Sonnet 4.6, Haiku 4.5, older).
-    # Left as None on current models, where any value is a 400.
-    temperature: float | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)

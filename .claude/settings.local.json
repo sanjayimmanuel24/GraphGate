@@ -18,7 +18,8 @@
       "Skill(claude-api)",
       "Skill(claude-api:*)",
       "Bash(python -c \"import anthropic; print\\('anthropic', anthropic.__version__\\)\")",
-      "Bash(PYTHONPATH=src python -m pytest tests/ -q --deselect tests/test_smoke.py::test_running_on_supported_python)"
+      "Bash(PYTHONPATH=src python -m pytest tests/ -q --deselect tests/test_smoke.py::test_running_on_supported_python)",
+      "Bash(PYTHONPATH=src python -c ' *)"
     ]
   }
 }

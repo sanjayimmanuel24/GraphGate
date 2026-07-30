@@ -34,17 +34,13 @@ class AnthropicCodeGenClient:
         Also hashed into the cache key, so anything that changes the output
         must appear here.
         """
-        params: dict[str, Any] = {
+        # No temperature/top_p/top_k: removed on current models (HTTP 400), and
+        # determinism comes from caching + replay instead. See docs/DETERMINISM.md.
+        return {
             "max_tokens": self.config.max_tokens,
             "thinking": {"type": self.config.thinking},
             "output_config": {"effort": self.config.effort},
         }
-        # Omitted entirely on current models — sending it is a 400. Present only
-        # when explicitly pinned to a model that still accepts it (see
-        # ModelConfig's note on temperature).
-        if self.config.temperature is not None:
-            params["temperature"] = self.config.temperature
-        return params
 
     def describe_params(self) -> dict[str, Any]:
         return self.config.to_dict()

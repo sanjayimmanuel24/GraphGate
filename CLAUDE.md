@@ -102,6 +102,9 @@ the controlled design is the contribution. Do not tune toward a positive result.
   S2, optional — license-permitting)
 - Graph storage: NetworkX in-process, persisted to SQLite between iterations
 - Orchestration: LangGraph (reuse patterns from the UTA trading project if helpful)
+- Models: `claude-opus-5` as the primary code LLM, `claude-haiku-4-5` as the smaller ablation
+  model (proposal §9). Both are CLI flags, never constants — record the exact identifiers used
+  in every run.
 - LLM calls: cache every response keyed by `(prompt_hash, model, params)` — this is required for
   deterministic replay across the A/B/C conditions, not optional
 - Testing: pytest; every ΔG rule (R1–R4) needs unit tests on hand-crafted minimal graphs before
@@ -114,11 +117,23 @@ the controlled design is the contribution. Do not tune toward a positive result.
 - No silent fallbacks: if call resolution fails, taint propagation is ambiguous, or a sanitizer
   pattern doesn't match, log it explicitly (we report "unknown-edge counts" as a transparency
   metric in the paper — this data has to come from somewhere).
-- Every experiment/script must be re-runnable deterministically: fixed seeds, temperature 0 for
-  gate/triage LLM calls, pinned dependency versions recorded in `requirements.txt` or `pyproject.toml`.
-  "Fixed seeds" means a **fixed list of several** seeds, not one — proposal §7.2 runs multiple
-  seeds per trace to get confidence intervals and the paired Wilcoxon tests. Anything that takes a
-  seed should take `seeds: list[int]`, from the harness outward.
+- Every experiment/script must be re-runnable deterministically. For everything we control, that
+  means pinned dependency versions in `pyproject.toml` and no unseeded randomness.
+
+  **For LLM calls, determinism comes from response caching and trace replay — not from sampling
+  settings.** Do not add `temperature`, `top_p`, or `top_k` to a request: current models
+  (`claude-opus-5`, Opus 4.7+, Sonnet 5, Fable 5) removed those parameters and return HTTP 400.
+  The Messages API has no seed parameter either, on any model. An earlier draft of this file
+  specified "temperature 0"; that is not achievable on the chosen models, and `temperature=0`
+  never guaranteed identical outputs even where it was accepted. The mechanisms that actually
+  deliver reproducibility are the cache (BUILD_PLAN 1.4) and replay (BUILD_PLAN 1.3), and
+  conditions A/B/C are compared over replayed traces, so they see identical inputs by
+  construction. Full reasoning and the rejected alternative: `docs/DETERMINISM.md`.
+
+- `seeds` labels **independent replications**, not provider determinism. Proposal §7.2 runs
+  several per trace for confidence intervals and the paired Wilcoxon tests, so anything taking a
+  seed takes `seeds: list[int]`, from the harness outward. Never describe this in the write-up as
+  a reproducibility mechanism — it isn't one.
 - Config over hardcoding: hop depth, vulnerability family, model choice, etc. should be CLI/config
   flags, not constants buried in code — we need this for the ablation study (Section 7.3).
 
@@ -127,4 +142,5 @@ the controlled design is the contribution. Do not tune toward a positive result.
 See `BUILD_PLAN.md` for the milestone breakdown. Update the "Current phase" line here as you
 move between phases so a new session knows where things stand.
 
-**Current phase: M1.1 — step 1.1 (scaffold) complete. Next: 1.2 (refinement-loop driver).**
+**Current phase: M1.1 — steps 1.1 (scaffold) and 1.2 (refinement-loop driver) complete.
+Next: 1.3 (deterministic replay).**
