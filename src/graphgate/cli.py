@@ -71,6 +71,23 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
 
+    cache = parser.add_argument_group("response cache (live runs only)")
+    cache.add_argument(
+        "--cache", type=Path, default=None, metavar="DB",
+        help=(
+            "SQLite response cache. Identical requests are served from here "
+            "instead of being paid for again."
+        ),
+    )
+    cache.add_argument(
+        "--cache-only", action="store_true",
+        help=(
+            "Fail on a cache miss instead of making a billable call. Enforces "
+            "the pre-set API budget ceiling on a rerun expected to be fully "
+            "cached. Requires --cache."
+        ),
+    )
+
     live = parser.add_argument_group("live run (ignored with --replay)")
     live.add_argument(
         "--snapshot", type=Path, default=None,
@@ -127,8 +144,13 @@ def _run_live(args: argparse.Namespace) -> int:
         raise SystemExit(
             f"a live run requires {', '.join(missing)} (or pass --replay TRACE)"
         )
+    if args.cache_only and args.cache is None:
+        raise SystemExit("--cache-only requires --cache")
 
+    # Imported here, after validation, so a bad command line reports the actual
+    # problem rather than failing on a missing SDK.
     from graphgate.llm.anthropic_client import AnthropicCodeGenClient
+    from graphgate.llm.cache import CachingClient, ResponseCache
 
     model = ModelConfig(
         model=args.model,
@@ -144,8 +166,24 @@ def _run_live(args: argparse.Namespace) -> int:
         seeds=args.seeds,
         model=model,
     )
-    driver = RefinementDriver(config, AnthropicCodeGenClient(model))
-    return driver.run()
+
+    client = AnthropicCodeGenClient(model)
+    if args.cache is None:
+        return RefinementDriver(config, client).run()
+
+    with ResponseCache(args.cache) as cache:
+        wrapped = CachingClient(client, cache, read_only=args.cache_only)
+        turns = RefinementDriver(config, wrapped).run()
+        stats = cache.stats()
+        logging.getLogger(__name__).info(
+            "cache: %d hit(s), %d miss(es) (%.0f%% hit rate), %d entries in %s",
+            stats.hits,
+            stats.misses,
+            stats.hit_rate * 100,
+            stats.entries,
+            args.cache,
+        )
+    return turns
 
 
 def _run_replay(args: argparse.Namespace) -> int:

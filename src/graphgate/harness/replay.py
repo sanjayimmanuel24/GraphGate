@@ -63,6 +63,7 @@ class ReplayTurn:
     model: str | None
     usage: dict[str, int]
     latency_ms: float | None
+    cached: bool
     error: str | None
 
     @property
@@ -121,6 +122,7 @@ def replay_turns(path: Path) -> Iterator[ReplayTurn]:
             model=record.model,
             usage=dict(record.usage),
             latency_ms=record.latency_ms,
+            cached=record.cached,
             error=record.error,
         )
         current = after
@@ -255,6 +257,10 @@ class ReplayClient:
             prompt_hash=record.prompt_hash or "",
             latency_ms=record.latency_ms if record.latency_ms is not None else 0.0,
             usage=dict(record.usage),
+            # Reproduce the recorded value rather than asserting True: this says
+            # whether the *original* call hit the cache, which is what the
+            # overhead analysis needs. Replay itself is always free.
+            cached=record.cached,
         )
 
     def _check_hash(self, record: TraceRecord, system: str, user: str) -> None:

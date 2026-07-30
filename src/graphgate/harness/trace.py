@@ -15,7 +15,9 @@ from pathlib import Path
 from types import TracebackType
 from typing import Any, Iterator
 
-SCHEMA_VERSION = 1
+# v2 added `cached` (step 1.4). No v1 traces exist outside tests, so there is no
+# migration path — a v1 file is rejected rather than silently upgraded.
+SCHEMA_VERSION = 2
 
 # Record kinds.
 KIND_INIT = "init"  # turn 0: the starting snapshot, before any refinement
@@ -52,6 +54,10 @@ class TraceRecord:
     response_text: str | None = None
     usage: dict[str, int] = field(default_factory=dict)
     latency_ms: float | None = None
+    # Whether this turn's response came from the cache. `latency_ms` and `usage`
+    # hold the originally measured values either way, so overhead analysis must
+    # read this to tell a real API call from a replayed one.
+    cached: bool = False
     error: str | None = None
 
     def to_json(self) -> str:

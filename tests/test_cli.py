@@ -83,3 +83,23 @@ def test_seeds_reject_non_integers():
     parser = build_parser()
     with pytest.raises(SystemExit):
         parser.parse_args(["--out", "o.jsonl", "--seeds", "a,b"])
+
+
+def test_cache_only_requires_a_cache(tmp_path):
+    """Otherwise it would silently do nothing and still spend money."""
+    with pytest.raises(SystemExit, match="--cache-only requires --cache"):
+        main([
+            "--out", str(tmp_path / "t.jsonl"),
+            "--snapshot", str(tmp_path),
+            "--prompts", str(tmp_path / "p.txt"),
+            "--trace-id", "x",
+            "--cache-only",
+        ])
+
+
+def test_cache_flags_default_to_off():
+    args = build_parser().parse_args(
+        ["--out", "o.jsonl", "--snapshot", "s", "--prompts", "p", "--trace-id", "x"]
+    )
+    assert args.cache is None
+    assert args.cache_only is False

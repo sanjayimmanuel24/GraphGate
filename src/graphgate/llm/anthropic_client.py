@@ -42,6 +42,12 @@ class AnthropicCodeGenClient:
             "output_config": {"effort": self.config.effort},
         }
 
+    def cache_key(self, system: str, user: str) -> str:
+        """The key this request will hash to. Used by CachingClient to look up
+        before spending anything, and by complete() below, so the two can never
+        disagree."""
+        return prompt_hash(system, user, self.config.model, self._request_params())
+
     def describe_params(self) -> dict[str, Any]:
         # Deliberately the wire params, not ModelConfig.to_dict(): these are what
         # prompt_hash is computed over, so recording them lets replay recompute
@@ -51,7 +57,7 @@ class AnthropicCodeGenClient:
 
     def complete(self, system: str, user: str) -> Completion:
         params = self._request_params()
-        key = prompt_hash(system, user, self.config.model, params)
+        key = self.cache_key(system, user)
 
         started = time.perf_counter()
         try:

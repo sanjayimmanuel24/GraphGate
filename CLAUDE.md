@@ -142,5 +142,7 @@ the controlled design is the contribution. Do not tune toward a positive result.
 See `BUILD_PLAN.md` for the milestone breakdown. Update the "Current phase" line here as you
 move between phases so a new session knows where things stand.
 
-**Current phase: M1.1 — steps 1.1 (scaffold), 1.2 (refinement-loop driver), and 1.3
-(deterministic replay) complete. Next: 1.4 (response caching).**
+**Current phase: M1.1 complete** — scaffold (1.1), refinement-loop driver (1.2), deterministic
+replay (1.3), and response caching (1.4) are all in, with the exit check (byte-identical replayed
+traces) covered by tests. Everything so far is verified against a fake client; nothing has run
+against the live API yet. **Next: M1.2 step 2.1 (seed repository selection).**

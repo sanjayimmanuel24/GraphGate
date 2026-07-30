@@ -33,14 +33,20 @@ class RecordingFakeClient:
         "output_config": {"effort": "medium"},
     }
 
-    def __init__(self, responses):
+    def __init__(self, responses, params: dict | None = None, model: str | None = None):
         self._responses = deque(responses)
         self._tick = 0
         self.calls = 0
         self.prompts_seen: list[str] = []
+        # Overridable so tests can vary the request and check the key changes.
+        self.params = dict(self.PARAMS if params is None else params)
+        self.model = self.MODEL if model is None else model
 
     def describe_params(self) -> dict:
-        return dict(self.PARAMS)
+        return dict(self.params)
+
+    def cache_key(self, system: str, user: str) -> str:
+        return prompt_hash(system, user, self.model, self.params)
 
     def clock(self) -> str:
         """Deterministic timestamps, so a live run is comparable to its replay."""
@@ -57,9 +63,9 @@ class RecordingFakeClient:
             raise item
         return Completion(
             text=item,
-            model=self.MODEL,
+            model=self.model,
             stop_reason="end_turn",
-            prompt_hash=prompt_hash(system, user, self.MODEL, self.PARAMS),
+            prompt_hash=self.cache_key(system, user),
             latency_ms=1.5,
             usage={"input_tokens": 5, "output_tokens": 7},
         )

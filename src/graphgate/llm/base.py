@@ -36,6 +36,11 @@ class Completion:
     prompt_hash: str
     latency_ms: float
     usage: dict[str, int] = field(default_factory=dict)
+    # True when served from the response cache. `latency_ms` and `usage` still
+    # carry the originally measured values, so this flag is what separates
+    # "what a deployment would cost" from "what this run actually spent".
+    # See graphgate.llm.cache for the reasoning.
+    cached: bool = False
 
 
 def prompt_hash(system: str, user: str, model: str, params: dict[str, Any]) -> str:
@@ -62,5 +67,23 @@ class CodeGenClient(Protocol):
 
         Part of the protocol so the driver records them without sniffing at a
         provider-specific attribute.
+        """
+        ...
+
+
+class CacheableClient(CodeGenClient, Protocol):
+    """A client whose requests can be cached.
+
+    Separate from :class:`CodeGenClient` because not every client is worth
+    caching — replaying a recording is already free, so ReplayClient
+    deliberately does not implement this.
+    """
+
+    def cache_key(self, system: str, user: str) -> str:
+        """The request's cache key.
+
+        On the client rather than computed by the cache so there is exactly one
+        implementation: a caller that rebuilt the key itself could drift from
+        what the client hashes and silently miss every lookup.
         """
         ...

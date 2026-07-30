@@ -21,7 +21,8 @@
       "Bash(PYTHONPATH=src python -m pytest tests/ -q --deselect tests/test_smoke.py::test_running_on_supported_python)",
       "Bash(PYTHONPATH=src python -c ' *)",
       "Bash(PYTHONPATH=src python -m pytest tests/ -q --deselect tests/test_smoke.py::test_running_on_supported_python --durations=8)",
-      "Bash(python -)"
+      "Bash(python -)",
+      "Bash(PYTHONPATH=src python -c \"import graphgate.llm, graphgate.harness, graphgate.config; print\\('ok: llm + harness import cleanly'\\)\")"
     ]
   }
 }

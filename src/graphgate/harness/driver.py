@@ -171,6 +171,7 @@ class RefinementDriver:
                     response_text=completion.text,
                     usage=dict(completion.usage),
                     latency_ms=completion.latency_ms,
+                    cached=completion.cached,
                 )
             )
             snapshot = new_snapshot
