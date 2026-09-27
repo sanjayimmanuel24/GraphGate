@@ -1,0 +1,5 @@
+# Traces are compared byte-for-byte (replay's exit check) and checksummed as
+# evidence. With core.autocrlf=true, git would check them out with CRLF line
+# endings and silently change every byte-level comparison. Never convert them.
+*.jsonl -text
+docs/evidence/** -text

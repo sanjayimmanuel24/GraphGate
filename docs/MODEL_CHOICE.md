@@ -17,6 +17,7 @@ the study measures.
 
 Same fixture (`examples/smoke/`), same three ISTAS-style prompts
 (`examples/smoke_prompts.txt`), `effort: medium`, adaptive thinking where supported.
+The traces named below are archived, checksummed, in `docs/evidence/2026-09-27-smoke/`.
 
 | Model | Turns completed | Refused | Replications reaching the last turn | Traces |
 |---|---|---|---|---|
