@@ -1,11 +1,21 @@
 """Persistent response cache (BUILD_PLAN step 1.4).
 
-CLAUDE.md and proposal §9 specify a key of ``(prompt_hash, model, params)``.
+The key is ``(prompt_hash, replication)``.
+
 ``prompt_hash`` already hashes the model and params along with the system and
-user text (see :func:`graphgate.llm.base.prompt_hash`), so the hash *is* the
-key — adding the other two would be redundant. They are still stored as
-columns, for inspecting the cache and for evicting a model's entries when its
-behaviour changes.
+user text (see :func:`graphgate.llm.base.prompt_hash`), so the
+``(prompt_hash, model, params)`` key written in proposal §9 reduces to the hash
+alone. Model and params are still stored as columns, for inspecting the cache
+and evicting a model's entries.
+
+``replication`` is the seed, and leaving it out was a bug. The API accepts no
+seed, so every seed of a trace sends byte-identical requests; keyed on the hash
+alone, seed 0's live answer was served to every later seed, and N "independent
+replications" collapsed into one trajectory copied N times. The §7.2 confidence
+intervals and paired Wilcoxon tests would then have run over duplicates — zero
+variance, silently. With the seed in the key, each replication is its own live
+sample, and rerunning the *same* seed still hits the cache, which is what keeps
+reruns reproducible.
 
 SQLite because it is already in the stack for graph persistence, is stdlib, and
 gives a single shareable file for the artifact release (proposal §9).
@@ -40,7 +50,9 @@ from graphgate.llm.base import CacheableClient, Completion
 
 log = logging.getLogger(__name__)
 
-CACHE_SCHEMA_VERSION = 1
+# v2 added `replication` to the key (see module docstring).
+# v3 added `resolved_model`, so a cache hit records the same snapshot a live call would.
+CACHE_SCHEMA_VERSION = 3
 
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS meta (
@@ -48,7 +60,8 @@ CREATE TABLE IF NOT EXISTS meta (
     value TEXT NOT NULL
 );
 CREATE TABLE IF NOT EXISTS responses (
-    prompt_hash   TEXT PRIMARY KEY,
+    prompt_hash   TEXT NOT NULL,
+    replication   INTEGER NOT NULL,
     model         TEXT NOT NULL,
     params_json   TEXT NOT NULL,
     response_text TEXT NOT NULL,
@@ -57,7 +70,9 @@ CREATE TABLE IF NOT EXISTS responses (
     latency_ms    REAL,
     created_at    TEXT NOT NULL,
     system_prompt TEXT NOT NULL,
-    user_prompt   TEXT NOT NULL
+    user_prompt   TEXT NOT NULL,
+    resolved_model TEXT,
+    PRIMARY KEY (prompt_hash, replication)
 );
 CREATE INDEX IF NOT EXISTS responses_model ON responses (model);
 """
@@ -122,9 +137,10 @@ class ResponseCache:
     def close(self) -> None:
         self._conn.close()
 
-    def get(self, key: str) -> Completion | None:
+    def get(self, key: str, replication: int) -> Completion | None:
         row = self._conn.execute(
-            "SELECT * FROM responses WHERE prompt_hash = ?", (key,)
+            "SELECT * FROM responses WHERE prompt_hash = ? AND replication = ?",
+            (key, replication),
         ).fetchone()
         if row is None:
             self.misses += 1
@@ -133,6 +149,7 @@ class ResponseCache:
         return Completion(
             text=row["response_text"],
             model=row["model"],
+            resolved_model=row["resolved_model"],
             stop_reason=row["stop_reason"],
             prompt_hash=key,
             latency_ms=row["latency_ms"],
@@ -143,6 +160,7 @@ class ResponseCache:
     def put(
         self,
         key: str,
+        replication: int,
         completion: Completion,
         system: str,
         user: str,
@@ -154,12 +172,14 @@ class ResponseCache:
         self._conn.execute(
             """
             INSERT OR REPLACE INTO responses (
-                prompt_hash, model, params_json, response_text, stop_reason,
-                usage_json, latency_ms, created_at, system_prompt, user_prompt
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                prompt_hash, replication, model, params_json, response_text,
+                stop_reason, usage_json, latency_ms, created_at, system_prompt,
+                user_prompt, resolved_model
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 key,
+                replication,
                 completion.model,
                 json.dumps(params, sort_keys=True, ensure_ascii=False),
                 completion.text,
@@ -169,6 +189,7 @@ class ResponseCache:
                 datetime.now(timezone.utc).isoformat(),
                 system,
                 user,
+                completion.resolved_model,
             ),
         )
         self._conn.commit()
@@ -201,30 +222,37 @@ class CachingClient:
     def describe_params(self) -> dict[str, Any]:
         return self.inner.describe_params()
 
-    def cache_key(self, system: str, user: str) -> str:
-        return self.inner.cache_key(system, user)
+    def request_hash(self, system: str, user: str) -> str:
+        return self.inner.request_hash(system, user)
 
-    def complete(self, system: str, user: str) -> Completion:
-        key = self.inner.cache_key(system, user)
+    def complete(self, system: str, user: str, *, replication: int) -> Completion:
+        key = self.inner.request_hash(system, user)
 
-        hit = self.cache.get(key)
+        hit = self.cache.get(key, replication)
         if hit is not None:
-            log.debug("cache hit %s", key[:12])
+            log.debug("cache hit %s (replication %d)", key[:12], replication)
             return hit
 
         if self.read_only:
             raise CacheError(
-                f"cache miss for {key[:12]} and the cache is read-only; refusing "
-                "to make a billable call. Drop --cache-only to allow live calls."
+                f"cache miss for {key[:12]} (replication {replication}) and the "
+                "cache is read-only; refusing to make a billable call. Drop "
+                "--cache-only to allow live calls."
             )
 
-        completion = self.inner.complete(system, user)
+        # A refusal (RefusalError) propagates from here without being stored.
+        # Deliberate: caching one would lock a possibly-false-positive refusal
+        # into every future live run of that request. Reproducing a recorded
+        # refusal is replay's job, and replay does reproduce it exactly.
+        completion = self.inner.complete(system, user, replication=replication)
         if completion.prompt_hash != key:
             # Would poison the cache: a later lookup computing the key this way
             # would never find the entry the client stored under its own.
             raise CacheError(
                 f"client hashed its request to {completion.prompt_hash[:12]} but "
-                f"cache_key() returned {key[:12]}; the two must agree"
+                f"request_hash() returned {key[:12]}; the two must agree"
             )
-        self.cache.put(key, completion, system, user, self.inner.describe_params())
+        self.cache.put(
+            key, replication, completion, system, user, self.inner.describe_params()
+        )
         return completion

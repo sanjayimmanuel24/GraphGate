@@ -24,13 +24,14 @@ from graphgate.harness.snapshot import Snapshot, load_snapshot
 from graphgate.harness.trace import (
     KIND_ERROR,
     KIND_INIT,
+    KIND_REFUSAL,
     KIND_TURN,
     SCHEMA_VERSION,
     TraceRecord,
     TraceWriter,
     utc_now_iso,
 )
-from graphgate.llm.base import CodeGenClient, CompletionError
+from graphgate.llm.base import CodeGenClient, CompletionError, RefusalError
 
 log = logging.getLogger(__name__)
 
@@ -54,6 +55,9 @@ class RefinementDriver:
         # Replay supplies the starting snapshot straight from the trace, so a
         # recording is replayable without the original source directory.
         self._initial = initial
+        # Outcome counters across all replications, for the run summary.
+        self.refusals = 0
+        self.errors = 0
 
     def run(self) -> int:
         """Execute every replication. Returns the number of turns recorded."""
@@ -77,6 +81,16 @@ class RefinementDriver:
         with TraceWriter(self.config.trace_path) as writer:
             for seed in self.config.seeds:
                 turns_written += self._run_replication(writer, initial, seed)
+
+        # Refusals are reported in their own right (CLAUDE.md, "Refusals"), so
+        # the run summary separates them from genuine failures.
+        log.info(
+            "trace %s: %d turn(s) completed, %d refusal(s), %d error(s)",
+            self.config.trace_id,
+            turns_written,
+            self.refusals,
+            self.errors,
+        )
         return turns_written
 
     def _record(self, seed: int, turn: int, kind: str, **fields) -> TraceRecord:
@@ -110,9 +124,44 @@ class RefinementDriver:
         for turn, prompt in enumerate(self.config.prompts, start=1):
             user_prompt = render_user_prompt(snapshot.files, prompt)
             try:
-                completion = self.client.complete(SYSTEM_PROMPT, user_prompt)
+                completion = self.client.complete(
+                    SYSTEM_PROMPT, user_prompt, replication=seed
+                )
                 changes = parse_file_blocks(completion.text)
+            except RefusalError as refusal:
+                # Caught before CompletionError (its base class) so a refusal is
+                # recorded as the model outcome it is, with the category needed
+                # to report the refusal rate — not as a generic failure.
+                self.refusals += 1
+                log.warning(
+                    "trace %s seed %d turn %d: model declined (category=%s)",
+                    self.config.trace_id,
+                    seed,
+                    turn,
+                    refusal.category or "unspecified",
+                )
+                writer.write(
+                    self._record(
+                        seed,
+                        turn,
+                        KIND_REFUSAL,
+                        # Unchanged: the refused change never reached the code.
+                        files_after=dict(snapshot.files),
+                        prompt=prompt,
+                        prompt_hash=refusal.prompt_hash,
+                        model=refusal.model,
+                        resolved_model=refusal.resolved_model,
+                        params=params,
+                        response_text=refusal.partial_text,
+                        usage=dict(refusal.usage),
+                        latency_ms=refusal.latency_ms,
+                        refusal_category=refusal.category,
+                        refusal_explanation=refusal.explanation,
+                    )
+                )
+                return turns
             except (CompletionError, ResponseParseError) as exc:
+                self.errors += 1
                 log.error(
                     "trace %s seed %d turn %d failed: %s",
                     self.config.trace_id,
@@ -167,6 +216,7 @@ class RefinementDriver:
                     prompt=prompt,
                     prompt_hash=completion.prompt_hash,
                     model=completion.model,
+                    resolved_model=completion.resolved_model,
                     params=params,
                     response_text=completion.text,
                     usage=dict(completion.usage),

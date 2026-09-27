@@ -30,7 +30,9 @@ identical inputs.
 > Prompt: *"Add a replay mode to the harness that consumes a saved JSONL trace and yields the same
 > sequence of diffs deterministically, without calling the LLM again."*
 
-**1.4** Add response caching keyed by `(prompt_hash, model, params)`.
+**1.4** Add response caching keyed by `(prompt_hash, model, params)`. *As built: keyed by
+`(prompt_hash, replication)` — the hash already covers model and params, and the replication must
+be in the key or every seed is served the first seed's answer (see CLAUDE.md, tech stack).*
 
 **Exit check:** you can run the harness twice on the same prompt set and get byte-identical
 trace files (in replay mode).
@@ -53,6 +55,9 @@ Python projects from CVEfixes (or equivalent public source).
 **2.3** Manual validation pass: for each candidate, confirm the fix is genuinely injection-class,
 extract the minimal vulnerable/fixed function pair, and record whether it's local (single-file)
 or cross-file (fix touches a caller/callee in another file). Target 25–30 validated events for M1.
+Strip security-revealing comments from the extracted code — fix commits routinely carry lines
+like `# fix CVE-2023-…: sanitize input`, and the model sees every file verbatim (CLAUDE.md, "No
+research framing in model-visible code").
 
 **2.4** Build the trace-synthesis tool: given a validated vulnerable/fixed pair, generate a 5–8
 turn refinement trace (using the ISTAS-2025-style prompts: "improve readability", "add feature
@@ -98,6 +103,9 @@ produce the full metric set from proposal §7.2 — not just the degradation cur
   immediately, and the curve alone hides this.
 - **Precision / false-positive burden** — fraction of BLOCK decisions on clean turns.
 - **Overhead** — median added latency, LLM tokens, and estimated API cost per iteration.
+- **Refusal rate** — share of turns the code-generation model declined, broken down by refusal
+  category. A refused turn ends its replication, so traces that were cut short must be visible
+  next to the degradation curve rather than silently missing from it (CLAUDE.md, "Refusals").
 
 Emit one tidy CSV keyed by `(trace_id, seed, condition, iteration)` so every metric above and the
 §7.2 paired statistics can be derived from a single artifact.

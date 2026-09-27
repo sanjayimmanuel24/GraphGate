@@ -301,3 +301,65 @@ def test_prompts_tolerate_a_short_errored_replication(
 
     assert client.prompts == ("a", "b")
     assert list(read_trace(source))[-1].kind == KIND_ERROR
+
+
+def test_replay_rejects_a_turn_requested_by_the_wrong_seed(
+    snapshot_dir, tmp_path, file_block, record_live
+):
+    source = record_live(
+        snapshot_dir, tmp_path / "source.jsonl", ["a"], [file_block("v = 2")]
+    )
+    client = ReplayClient.from_trace(source)
+
+    with pytest.raises(ReplayError, match="recorded for seed 0 but requested by seed 7"):
+        client.complete("sys", "user", replication=7)
+
+
+# --- Regressions found on real API output (2026-09-27) --------------------
+
+
+def test_trace_where_the_first_seed_stops_early_still_replays(
+    snapshot_dir, tmp_path, file_block, record_live, replay_into
+):
+    """Real Opus 5.5 trace: seed 0 was refused at turn 2 while seed 1 ran all
+    three turns. Replay used seed 0's prompts as the reference and rejected it."""
+    from graphgate.llm.base import RefusalError
+
+    refused = RefusalError(prompt_hash="", model="", category="cyber")
+    source = record_live(
+        snapshot_dir,
+        tmp_path / "source.jsonl",
+        ["readability", "feature", "optimize"],
+        [file_block("v = 2"), refused,
+         file_block("v = 5"), file_block("v = 6"), file_block("v = 7")],
+        seeds=(0, 1),
+    )
+    client = ReplayClient.from_trace(source)
+    assert client.prompts == ("readability", "feature", "optimize")
+
+    replayed = tmp_path / "replayed.jsonl"
+    replay_into(source, replayed)
+    assert replayed.read_bytes() == source.read_bytes()
+
+
+def test_model_reported_under_a_dated_snapshot_still_replays(
+    snapshot_dir, tmp_path, file_block, record_live, replay_into
+):
+    """Real Haiku 4.5 trace: requested as claude-haiku-4-5, reported back as
+    claude-haiku-4-5-20251001. The trace kept only the reported name, so replay
+    rehashed with the wrong ID and every Haiku trace failed verification."""
+    source = record_live(
+        snapshot_dir,
+        tmp_path / "source.jsonl",
+        ["readability", "optimize"],
+        [file_block("v = 2"), file_block("v = 3")],
+        model="claude-haiku-4-5",
+        resolved_model="claude-haiku-4-5-20251001",
+    )
+    turns = [r for r in load_records(source) if r.kind == KIND_TURN]
+    assert {r.model for r in turns} == {"claude-haiku-4-5"}
+    assert {r.resolved_model for r in turns} == {"claude-haiku-4-5-20251001"}
+
+    replayed = tmp_path / "replayed.jsonl"
+    replay_into(source, replayed)
+    assert replayed.read_bytes() == source.read_bytes()

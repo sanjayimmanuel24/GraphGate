@@ -102,11 +102,19 @@ the controlled design is the contribution. Do not tune toward a positive result.
   S2, optional — license-permitting)
 - Graph storage: NetworkX in-process, persisted to SQLite between iterations
 - Orchestration: LangGraph (reuse patterns from the UTA trading project if helpful)
-- Models: `claude-opus-5` as the primary code LLM, `claude-haiku-4-5` as the smaller ablation
+- Models: `claude-opus-4-8` as the primary code LLM, `claude-haiku-4-5` as the smaller ablation
   model (proposal §9). Both are CLI flags, never constants — record the exact identifiers used
-  in every run.
-- LLM calls: cache every response keyed by `(prompt_hash, model, params)` — this is required for
-  deterministic replay across the A/B/C conditions, not optional
+  in every run. Decided 2026-09-27 after `claude-opus-5` and `claude-opus-5-5` refused ordinary
+  refinement turns on harmless code (Opus 4.8: 0 of 9); evidence and write-up guidance in
+  `docs/MODEL_CHOICE.md`. Haiku 4.5 has the nearest retirement floor (2026-10-15);
+  `claude-sonnet-5` is the fallback ablation model if it is deprecated mid-study.
+- LLM calls: cache every response keyed by `(prompt_hash, replication)` — this is required for
+  deterministic replay across the A/B/C conditions, not optional. `prompt_hash` already covers
+  model and params. **The replication (seed) must be in the key**: the API takes no seed, so every
+  seed sends an identical request, and without it one seed's cached answer is served to all the
+  others — N replications collapse into one trajectory copied N times, and the §7.2 statistics
+  silently run over duplicates. This happened in the 2026-09-27 smoke run and is now fixed and
+  regression-tested.
 - Testing: pytest; every ΔG rule (R1–R4) needs unit tests on hand-crafted minimal graphs before
   it's ever run on real repos
 
@@ -122,7 +130,7 @@ the controlled design is the contribution. Do not tune toward a positive result.
 
   **For LLM calls, determinism comes from response caching and trace replay — not from sampling
   settings.** Do not add `temperature`, `top_p`, or `top_k` to a request: current models
-  (`claude-opus-5`, Opus 4.7+, Sonnet 5, Fable 5) removed those parameters and return HTTP 400.
+  (`claude-opus-4-8` and every model from Opus 4.7 on) removed those parameters and return 400.
   The Messages API has no seed parameter either, on any model. An earlier draft of this file
   specified "temperature 0"; that is not achievable on the chosen models, and `temperature=0`
   never guaranteed identical outputs even where it was accepted. The mechanisms that actually
@@ -137,12 +145,36 @@ the controlled design is the contribution. Do not tune toward a positive result.
 - Config over hardcoding: hop depth, vulnerability family, model choice, etc. should be CLI/config
   flags, not constants buried in code — we need this for the ablation study (Section 7.3).
 
+- **Refusals** — decided 2026-09-27: *record and report*. The code-generation model's safety
+  classifiers can decline a request (HTTP 200, `stop_reason: "refusal"`); the first live smoke
+  run hit one. Refusals concentrate on exactly the security-relevant turns this study measures,
+  so if they silently drop out, the degradation curve is biased downward, not just noisier.
+  - A refusal is recorded as its own trace kind, `refusal`, with the API's category and
+    explanation. It is a model outcome, never lumped in with `error`.
+  - A refused turn ends that replication — the snapshot never received the change. Revisit at
+    BUILD_PLAN 2.4 if this cuts short too many traces.
+  - Report the refusal rate, with its category breakdown, alongside the degradation curve
+    (BUILD_PLAN 3.4).
+  - No automatic fallback to another model: that would mix two models within one condition.
+  - Refusals are never cached — that would lock a possibly-false-positive refusal into every
+    future live run. Replay reproduces recorded refusals exactly.
+
+- **No research framing in model-visible code.** The harness sends every snapshot file to the
+  code-generation model verbatim, so docstrings, comments, and names are part of the prompt.
+  Anything the model sees — snapshots, seed code, fixtures — must read as ordinary code, with no
+  mention of security testing, regressions, vulnerabilities, CVEs, or this study. Framing biases
+  the output toward unrequested defensive code and can trigger refusals; the first smoke fixture
+  did both. Explanations go in files the harness never sends (a README, prompt-file comments).
+
 ## Current phase
 
 See `BUILD_PLAN.md` for the milestone breakdown. Update the "Current phase" line here as you
 move between phases so a new session knows where things stand.
 
 **Current phase: M1.1 complete** — scaffold (1.1), refinement-loop driver (1.2), deterministic
-replay (1.3), and response caching (1.4) are all in, with the exit check (byte-identical replayed
-traces) covered by tests. Everything so far is verified against a fake client; nothing has run
-against the live API yet. **Next: M1.2 step 2.1 (seed repository selection).**
+replay (1.3), and response caching (1.4) are all in. Live smoke runs on 2026-09-27 confirmed the
+response protocol and byte-identical replay on real output, and surfaced problems now fixed:
+research framing in the fixture, seeds collapsing under the cache, Opus-only request settings
+breaking Haiku 4.5, requested-vs-reported model IDs breaking replay, and replay rejecting traces
+whose first seed stopped early. The code-generation model is decided (`claude-opus-4-8`, see
+`docs/MODEL_CHOICE.md`). **Next: M1.2 step 2.1 (seed repository selection).**

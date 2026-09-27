@@ -33,7 +33,9 @@ something that did not hold.
 The design already carries the mechanisms that *do* deliver reproducibility, and it
 carries them as requirements rather than conveniences:
 
-1. **Response caching** keyed by `(prompt_hash, model, params)` — BUILD_PLAN 1.4.
+1. **Response caching** keyed by `(prompt_hash, replication)` — BUILD_PLAN 1.4. The hash
+   covers model and params; the replication keeps seeds independent, since the API takes no
+   seed and every seed otherwise sends an identical request.
    `CLAUDE.md` calls this "required for deterministic replay across the A/B/C
    conditions, not optional."
 2. **Trace replay** — BUILD_PLAN 1.3. Conditions A / B / C consume pre-recorded
@@ -48,6 +50,8 @@ regardless of sampling settings. Determinism was always going to come from repla
 ### Option A — current models, no sampling parameters ✅ **chosen**
 
 - `claude-opus-5` primary, `claude-haiku-4-5` for the §9 small-model ablation.
+  *(The primary model was later changed to `claude-opus-4-8` — see `docs/MODEL_CHOICE.md`.
+  That change leaves this decision intact: Opus 4.8 also rejects sampling parameters.)*
 - `temperature` omitted entirely. `ModelConfig.temperature` stays `None`.
 - Determinism from caching + replay, stated plainly in the methods section.
 - Amend `CLAUDE.md` to describe the real mechanism.
@@ -92,6 +96,6 @@ actually about.
   replacing with the cache-and-replay mechanism when the proposal is next revised —
   the remaining mitigations there (deterministic replay, multiple seeds, response
   caching, paired tests) are unaffected and already carry the argument.
-- Report the exact model identifiers (`claude-opus-5`, `claude-haiku-4-5`) and the
+- Report the exact model identifiers (`claude-opus-4-8`, `claude-haiku-4-5`) and the
   effort level per run, since those now stand in for the sampling settings a reader
   would otherwise expect.

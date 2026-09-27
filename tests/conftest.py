@@ -16,7 +16,7 @@ from graphgate.config import RunConfig
 from graphgate.harness.driver import RefinementDriver
 from graphgate.harness.replay import ReplayClient
 from graphgate.harness.trace import KIND_TURN, SCHEMA_VERSION, TraceRecord
-from graphgate.llm.base import Completion, prompt_hash
+from graphgate.llm.base import Completion, RefusalError, prompt_hash
 
 
 class RecordingFakeClient:
@@ -33,7 +33,13 @@ class RecordingFakeClient:
         "output_config": {"effort": "medium"},
     }
 
-    def __init__(self, responses, params: dict | None = None, model: str | None = None):
+    def __init__(
+        self,
+        responses,
+        params: dict | None = None,
+        model: str | None = None,
+        resolved_model: str | None = None,
+    ):
         self._responses = deque(responses)
         self._tick = 0
         self.calls = 0
@@ -41,11 +47,14 @@ class RecordingFakeClient:
         # Overridable so tests can vary the request and check the key changes.
         self.params = dict(self.PARAMS if params is None else params)
         self.model = self.MODEL if model is None else model
+        # What the API reports back; defaults to the requested ID (Opus IDs are
+        # dateless). Set a dated snapshot to mimic Haiku 4.5.
+        self.resolved_model = self.model if resolved_model is None else resolved_model
 
     def describe_params(self) -> dict:
         return dict(self.params)
 
-    def cache_key(self, system: str, user: str) -> str:
+    def request_hash(self, system: str, user: str) -> str:
         return prompt_hash(system, user, self.model, self.params)
 
     def clock(self) -> str:
@@ -53,19 +62,34 @@ class RecordingFakeClient:
         self._tick += 1
         return f"2026-07-28T12:00:{self._tick:02d}+00:00"
 
-    def complete(self, system: str, user: str) -> Completion:
+    def complete(self, system: str, user: str, *, replication: int) -> Completion:
         self.prompts_seen.append(user)
         if not self._responses:
             raise AssertionError("driver requested more turns than expected")
         item = self._responses.popleft()
         self.calls += 1
+        if isinstance(item, RefusalError):
+            # A test can't know the request hash in advance — it depends on the
+            # rendered prompt — so fill in the real one, as the live client
+            # would. Replay verifies it, so a placeholder would fail there.
+            raise RefusalError(
+                prompt_hash=self.request_hash(system, user),
+                model=self.model,
+                resolved_model=self.resolved_model,
+                category=item.category,
+                explanation=item.explanation,
+                partial_text=item.partial_text,
+                usage=item.usage,
+                latency_ms=item.latency_ms,
+            )
         if isinstance(item, Exception):
             raise item
         return Completion(
             text=item,
             model=self.model,
+            resolved_model=self.resolved_model,
             stop_reason="end_turn",
-            prompt_hash=self.cache_key(system, user),
+            prompt_hash=self.request_hash(system, user),
             latency_ms=1.5,
             usage={"input_tokens": 5, "output_tokens": 7},
         )
@@ -129,7 +153,9 @@ def snapshot_dir(tmp_path: Path) -> Path:
 def record_live():
     """Produce a source trace with the fake client, as a live run would."""
 
-    def _record(snapshot_dir, out, prompts, responses, seeds=(0,), trace_id="src-trace"):
+    def _record(
+        snapshot_dir, out, prompts, responses, seeds=(0,), trace_id="src-trace", **client_kwargs
+    ):
         config = RunConfig(
             prompts=tuple(prompts),
             trace_path=out,
@@ -137,7 +163,7 @@ def record_live():
             snapshot_dir=snapshot_dir,
             seeds=tuple(seeds),
         )
-        client = RecordingFakeClient(responses)
+        client = RecordingFakeClient(responses, **client_kwargs)
         RefinementDriver(config, client, clock=client.clock).run()
         return out
 

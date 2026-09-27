@@ -15,14 +15,20 @@ from pathlib import Path
 from types import TracebackType
 from typing import Any, Iterator
 
-# v2 added `cached` (step 1.4). No v1 traces exist outside tests, so there is no
-# migration path — a v1 file is rejected rather than silently upgraded.
-SCHEMA_VERSION = 2
+# v2 added `cached` (step 1.4); v3 added the `refusal` kind and its category and
+# explanation fields. Older files are rejected rather than silently upgraded:
+# the only pre-v3 traces are smoke runs, and they are cheap to regenerate.
+# v4 added `resolved_model`; `model` now always holds the requested ID.
+SCHEMA_VERSION = 4
 
 # Record kinds.
 KIND_INIT = "init"  # turn 0: the starting snapshot, before any refinement
 KIND_TURN = "turn"  # a completed refinement turn
-KIND_ERROR = "error"  # a turn that failed; the replication stops here
+KIND_ERROR = "error"  # the harness or the API failed; the replication stops here
+# The model declined the request. A model *outcome*, not a failure, so it is
+# counted and reported in its own right (CLAUDE.md, "Refusals"). Like an error,
+# it ends the replication: the snapshot never received the refused change.
+KIND_REFUSAL = "refusal"
 
 
 def utc_now_iso() -> str:
@@ -59,6 +65,13 @@ class TraceRecord:
     # read this to tell a real API call from a replayed one.
     cached: bool = False
     error: str | None = None
+    # Set only on refusal records. Either can legitimately be None: the API
+    # documents the category as informational and the explanation as optional.
+    refusal_category: str | None = None
+    refusal_explanation: str | None = None
+    # The model snapshot the API reported. `model` is the ID requested, which
+    # is what prompt_hash covers; see Completion.resolved_model.
+    resolved_model: str | None = None
 
     def to_json(self) -> str:
         # sort_keys so two runs producing the same record produce the same

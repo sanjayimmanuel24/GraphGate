@@ -26,11 +26,12 @@ from graphgate.harness.snapshot import Snapshot
 from graphgate.harness.trace import (
     KIND_ERROR,
     KIND_INIT,
+    KIND_REFUSAL,
     KIND_TURN,
     TraceRecord,
     read_trace,
 )
-from graphgate.llm.base import Completion, CompletionError, prompt_hash
+from graphgate.llm.base import Completion, CompletionError, RefusalError, prompt_hash
 
 log = logging.getLogger(__name__)
 
@@ -65,10 +66,19 @@ class ReplayTurn:
     latency_ms: float | None
     cached: bool
     error: str | None
+    refusal_category: str | None = None
+    refusal_explanation: str | None = None
+    resolved_model: str | None = None
 
     @property
     def failed(self) -> bool:
+        """The harness or API failed. Distinct from :attr:`refused`."""
         return self.kind == KIND_ERROR
+
+    @property
+    def refused(self) -> bool:
+        """The model declined. A model outcome, reported in its own right."""
+        return self.kind == KIND_REFUSAL
 
 
 def load_records(path: Path) -> list[TraceRecord]:
@@ -124,6 +134,9 @@ def replay_turns(path: Path) -> Iterator[ReplayTurn]:
             latency_ms=record.latency_ms,
             cached=record.cached,
             error=record.error,
+            refusal_category=record.refusal_category,
+            refusal_explanation=record.refusal_explanation,
+            resolved_model=record.resolved_model,
         )
         current = after
 
@@ -144,7 +157,7 @@ class ReplayClient:
         self._timestamps: deque[str] = deque(r.timestamp for r in records)
         # Only the turn/error records, which are what complete() serves.
         self._pending: deque[TraceRecord] = deque(
-            r for r in records if r.kind in (KIND_TURN, KIND_ERROR)
+            r for r in records if r.kind in (KIND_TURN, KIND_REFUSAL, KIND_ERROR)
         )
         self._source = records
         self.calls = 0
@@ -185,18 +198,22 @@ class ReplayClient:
 
     @property
     def prompts(self) -> tuple[str, ...]:
-        """The prompt sequence, taken from the first replication.
+        """The prompt sequence, taken from the longest replication.
 
-        Later replications must match; a divergence means the trace was
-        assembled from different runs and is not replayable as one unit.
+        Every other replication must be a prefix of it; anything else means the
+        trace was assembled from different runs and is not replayable as one.
+
+        The longest, not the first: a replication cut short by a refusal or
+        error holds only a prefix, and seed 0 is as likely to be cut short as
+        any other. Using the first seed rejected a real Opus 5.5 trace in which
+        seed 0 was refused at turn 2 and seed 1 ran all three turns.
         """
-        first = self.seeds[0]
         by_seed: dict[int, list[str]] = {}
         for record in self._source:
-            if record.kind in (KIND_TURN, KIND_ERROR) and record.prompt is not None:
+            if record.kind in (KIND_TURN, KIND_REFUSAL, KIND_ERROR) and record.prompt is not None:
                 by_seed.setdefault(record.seed, []).append(record.prompt)
 
-        reference = by_seed.get(first, [])
+        reference = max(by_seed.values(), key=len, default=[])
         if not reference:
             raise ReplayError(f"trace {self.trace_id} has no prompts to replay")
 
@@ -205,22 +222,30 @@ class ReplayClient:
             # is the correct test rather than full equality.
             if reference[: len(prompts)] != prompts:
                 raise ReplayError(
-                    f"trace {self.trace_id}: seed {seed} replays a different "
-                    f"prompt sequence than seed {first}; the trace is not a "
-                    "single replayable run"
+                    f"trace {self.trace_id}: seed {seed} replays a prompt "
+                    "sequence that is not a prefix of the longest replication's; "
+                    "the trace is not a single replayable run"
                 )
         return tuple(reference)
 
     # -- CodeGenClient ------------------------------------------------------
 
     def describe_params(self) -> dict[str, Any]:
-        """The params recorded on the first served turn.
+        """The params recorded on the first served record.
 
         Replay does not choose params — it reproduces whatever the live run used,
         so the re-emitted trace carries the original values.
+
+        Refusal and error records are searched too, not just successful turns.
+        The driver writes the same params on all three, and a trace in which the
+        model declined turn 1 on every seed contains no successful turn at all —
+        restricting this to turns made such a trace unreplayable.
         """
         for record in self._source:
-            if record.kind == KIND_TURN and record.params is not None:
+            if (
+                record.kind in (KIND_TURN, KIND_REFUSAL, KIND_ERROR)
+                and record.params is not None
+            ):
                 return dict(record.params)
         raise ReplayError(f"trace {self.trace_id} records no request params")
 
@@ -233,7 +258,7 @@ class ReplayClient:
             )
         return self._timestamps.popleft()
 
-    def complete(self, system: str, user: str) -> Completion:
+    def complete(self, system: str, user: str, *, replication: int) -> Completion:
         if not self._pending:
             raise ReplayError(
                 "replay requested more turns than the source trace contains; "
@@ -242,17 +267,42 @@ class ReplayClient:
         record = self._pending.popleft()
         self.calls += 1
 
+        if record.seed != replication:
+            raise ReplayError(
+                f"trace {record.trace_id} turn {record.turn}: recorded for seed "
+                f"{record.seed} but requested by seed {replication}; the "
+                "replay's replication order has diverged from the recording"
+            )
+
         if record.kind == KIND_ERROR:
             # Reproduce the original failure so the replayed trace carries the
             # same error record and the replication stops at the same turn.
             raise CompletionError(record.error or "recorded failure (no message)")
 
+        # Refusals carry the request hash, so unlike errors they are verified:
+        # a replay that reaches a recorded refusal via a *different* request has
+        # diverged just as surely as one that reaches a different response.
         if self._verify_hash:
             self._check_hash(record, system, user)
+
+        if record.kind == KIND_REFUSAL:
+            # Re-raise the recorded refusal so the driver writes an identical
+            # refusal record — required for a byte-identical replay.
+            raise RefusalError(
+                prompt_hash=record.prompt_hash or "",
+                model=record.model or "",
+                resolved_model=record.resolved_model,
+                category=record.refusal_category,
+                explanation=record.refusal_explanation,
+                partial_text=record.response_text or "",
+                usage=record.usage,
+                latency_ms=record.latency_ms,
+            )
 
         return Completion(
             text=record.response_text or "",
             model=record.model or "",
+            resolved_model=record.resolved_model,
             stop_reason="replayed",
             prompt_hash=record.prompt_hash or "",
             latency_ms=record.latency_ms if record.latency_ms is not None else 0.0,

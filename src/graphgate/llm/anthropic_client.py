@@ -9,7 +9,7 @@ from typing import Any
 import anthropic
 
 from graphgate.config import ModelConfig
-from graphgate.llm.base import Completion, CompletionError, prompt_hash
+from graphgate.llm.base import Completion, CompletionError, RefusalError, prompt_hash
 
 log = logging.getLogger(__name__)
 
@@ -36,14 +36,17 @@ class AnthropicCodeGenClient:
         """
         # No temperature/top_p/top_k: removed on current models (HTTP 400), and
         # determinism comes from caching + replay instead. See docs/DETERMINISM.md.
-        return {
-            "max_tokens": self.config.max_tokens,
-            "thinking": {"type": self.config.thinking},
-            "output_config": {"effort": self.config.effort},
-        }
+        params: dict[str, Any] = {"max_tokens": self.config.max_tokens}
+        # Omitted rather than sent as null when unset: models that predate a
+        # setting reject the field outright (Haiku 4.5 rejects both).
+        if self.config.thinking is not None:
+            params["thinking"] = {"type": self.config.thinking}
+        if self.config.effort is not None:
+            params["output_config"] = {"effort": self.config.effort}
+        return params
 
-    def cache_key(self, system: str, user: str) -> str:
-        """The key this request will hash to. Used by CachingClient to look up
+    def request_hash(self, system: str, user: str) -> str:
+        """The hash this request will carry. Used by CachingClient to look up
         before spending anything, and by complete() below, so the two can never
         disagree."""
         return prompt_hash(system, user, self.config.model, self._request_params())
@@ -55,9 +58,13 @@ class AnthropicCodeGenClient:
         # config shape instead would make that check impossible.
         return self._request_params()
 
-    def complete(self, system: str, user: str) -> Completion:
+    def complete(self, system: str, user: str, *, replication: int) -> Completion:
+        # `replication` is deliberately not sent: the Messages API has no seed
+        # parameter. It is accepted only to satisfy CodeGenClient; the cache in
+        # front of this client is what uses it.
+        del replication
         params = self._request_params()
-        key = self.cache_key(system, user)
+        key = self.request_hash(system, user)
 
         started = time.perf_counter()
         try:
@@ -71,11 +78,25 @@ class AnthropicCodeGenClient:
             raise CompletionError(f"Anthropic call failed: {exc}") from exc
         latency_ms = (time.perf_counter() - started) * 1000
 
+        text = "".join(
+            block.text for block in response.content if block.type == "text"
+        )
+        usage = self._usage(response)
+
         # Opus 5 runs safety classifiers that can decline a request: HTTP 200,
-        # empty content, stop_reason "refusal". Check before reading content.
+        # stop_reason "refusal". Branch on stop_reason, never on stop_details —
+        # the API documents stop_details as informational and possibly null.
         if response.stop_reason == "refusal":
-            raise CompletionError(
-                f"model declined the request (prompt_hash={key[:12]})"
+            details = response.stop_details
+            raise RefusalError(
+                prompt_hash=key,
+                model=self.config.model,
+                resolved_model=response.model,
+                category=getattr(details, "category", None),
+                explanation=getattr(details, "explanation", None),
+                partial_text=text,
+                usage=usage,
+                latency_ms=latency_ms,
             )
         if response.stop_reason == "max_tokens":
             # Not fatal, but the returned file is probably truncated — and a
@@ -87,32 +108,30 @@ class AnthropicCodeGenClient:
                 key[:12],
             )
 
-        text = "".join(
-            block.text for block in response.content if block.type == "text"
-        )
         if not text.strip():
             raise CompletionError(
                 f"model returned no text (stop_reason={response.stop_reason}, "
                 f"prompt_hash={key[:12]})"
             )
 
-        usage = response.usage
         return Completion(
             text=text,
-            model=response.model,
+            model=self.config.model,
+            resolved_model=response.model,
             stop_reason=response.stop_reason,
             prompt_hash=key,
             latency_ms=latency_ms,
-            usage={
-                "input_tokens": usage.input_tokens,
-                "output_tokens": usage.output_tokens,
-                "cache_read_input_tokens": getattr(
-                    usage, "cache_read_input_tokens", 0
-                )
-                or 0,
-                "cache_creation_input_tokens": getattr(
-                    usage, "cache_creation_input_tokens", 0
-                )
-                or 0,
-            },
+            usage=usage,
         )
+
+    @staticmethod
+    def _usage(response: Any) -> dict[str, int]:
+        """Token counts from a response, including a refused one — a refusal
+        after partial output is billed, so it still counts toward cost."""
+        usage = response.usage
+        return {
+            "input_tokens": usage.input_tokens,
+            "output_tokens": usage.output_tokens,
+            "cache_read_input_tokens": getattr(usage, "cache_read_input_tokens", 0) or 0,
+            "cache_creation_input_tokens": getattr(usage, "cache_creation_input_tokens", 0) or 0,
+        }

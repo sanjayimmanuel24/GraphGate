@@ -11,7 +11,7 @@ import logging
 import sys
 from pathlib import Path
 
-from graphgate.config import DEFAULT_SEEDS, ModelConfig, RunConfig
+from graphgate.config import DEFAULT_SEEDS, OMIT, USE_PRESET, ModelConfig, RunConfig
 from graphgate.harness.driver import RefinementDriver
 from graphgate.harness.replay import ReplayClient
 
@@ -115,13 +115,20 @@ def build_parser() -> argparse.ArgumentParser:
         help="Max output tokens per turn (default: %(default)s).",
     )
     parser.add_argument(
-        "--effort", default=ModelConfig.effort,
-        choices=["low", "medium", "high", "xhigh", "max"],
-        help="Reasoning depth / token spend (default: %(default)s).",
+        "--effort", default=USE_PRESET,
+        choices=[USE_PRESET, OMIT, "low", "medium", "high", "xhigh", "max"],
+        help=(
+            "Reasoning depth / token spend. 'preset' (default) uses the model's "
+            "known-good setting; 'none' leaves it out of the request."
+        ),
     )
     parser.add_argument(
-        "--thinking", default=ModelConfig.thinking, choices=["adaptive", "disabled"],
-        help="Thinking mode (default: %(default)s).",
+        "--thinking", default=USE_PRESET,
+        choices=[USE_PRESET, OMIT, "adaptive", "disabled"],
+        help=(
+            "Thinking mode. 'preset' (default) uses the model's known-good "
+            "setting; 'none' leaves it out of the request."
+        ),
     )
     parser.add_argument(
         "--log-level", default="INFO",
@@ -152,11 +159,11 @@ def _run_live(args: argparse.Namespace) -> int:
     from graphgate.llm.anthropic_client import AnthropicCodeGenClient
     from graphgate.llm.cache import CachingClient, ResponseCache
 
-    model = ModelConfig(
-        model=args.model,
+    model = ModelConfig.for_model(
+        args.model,
         max_tokens=args.max_tokens,
-        effort=args.effort,
         thinking=args.thinking,
+        effort=args.effort,
     )
     config = RunConfig(
         snapshot_dir=args.snapshot,

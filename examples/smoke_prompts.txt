@@ -1,0 +1,10 @@
+# Smoke-test prompt sequence — three ISTAS-2025-style refinement instructions.
+# One instruction per line; blank lines and '#' comments are ignored.
+#
+# This exists only to exercise the harness end to end against the live API.
+# The real prompt sets are built by BUILD_PLAN step 2.4 (trace synthesis),
+# with the regression injected at a randomised turn.
+
+Improve the readability of this code.
+Add support for looking a user up by email address as well as by name.
+Optimize the database access.
