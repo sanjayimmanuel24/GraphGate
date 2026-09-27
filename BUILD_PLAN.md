@@ -46,8 +46,18 @@ trace files (in replay mode).
 verify compliance **before** any trace is redistributed (proposal §6.1). Output a manifest file
 (repo URL, commit pinned, LOC, license, verification date) — this is the input to 2.2.
 
+*As built (2026-09-27): seed repos are the projects whose real injection-class CVE fixes supply the
+ground truth (reading (A) of §6.1), so selection draws on advisory data rather than preceding it.
+`scripts/build_seed_manifest.py` extracts injection advisories from the OSV PyPI export, screens
+their repos by licence and size, and writes `data/seed_repos.json`: 12 selected repos holding 34
+advisories (22 path traversal, 6 command, 6 SQL) plus 4 in reserve. LOC means non-blank `.py`
+lines outside test/doc/example directories. Provisional until 2.3 validation.*
+
 **2.2** Write a script to pull candidate CVE fix commits for injection-class vulnerabilities in
-Python projects from CVEfixes (or equivalent public source).
+Python projects from CVEfixes (or equivalent public source). *As built: the advisory extraction is
+done in 2.1 (`graphgate.dataset.advisories`, OSV source); 2.2 starts from the advisories and fix
+commits listed in `data/seed_repos.json` and resolves each to a vulnerable/fixed commit pair with
+the changed file paths.*
 > Prompt: *"Write a script that queries [CVEfixes/public source] for Python CVE fix commits
 > tagged with injection-class CWEs (CWE-89, CWE-78, CWE-22), and outputs candidate
 > vulnerable-commit / fixed-commit pairs with repo URL and file paths."*

@@ -1,0 +1,862 @@
+{
+  "decisions": {
+    "injection_cwes": {
+      "CWE-22": "path-traversal",
+      "CWE-77": "command",
+      "CWE-78": "os-command",
+      "CWE-89": "sql"
+    },
+    "licences_accepted": [
+      "Apache-2.0",
+      "BSD-2-Clause",
+      "BSD-3-Clause",
+      "MIT"
+    ],
+    "loc_range": [
+      5000,
+      50000
+    ],
+    "loc_rule": "non-blank lines in .py files, excluding directories named _vendor, benchmarks, doc, docs, example, examples, test, testing, tests, third_party, vendor, vendored",
+    "seed_repo_reading": "A: seed repos are the projects whose real injection-class CVE fixes supply the ground truth (2026-09-27)"
+  },
+  "repos": [
+    {
+      "advisories": [
+        {
+          "classes": [
+            "os-command"
+          ],
+          "cve": "CVE-2026-67325",
+          "cwes": [
+            "CWE-78"
+          ],
+          "fix_commits": [
+            "56806080c1348749b07daa4a2024ce47b3cad285"
+          ],
+          "id": "GHSA-2f96-g7mh-g2hx",
+          "summary": "GitPython: Command Injection via git long-option prefix abbreviation bypass of CVE-2026-42215 blocklist"
+        },
+        {
+          "classes": [
+            "path-traversal"
+          ],
+          "cve": "CVE-2026-73620",
+          "cwes": [
+            "CWE-22"
+          ],
+          "fix_commits": [
+            "3af0c2516c5e18c829da30338614688f6b69b49c"
+          ],
+          "id": "GHSA-3f7w-8rr8-f37f",
+          "summary": "GitPython: Unguarded git option forwarding in IndexFile.checkout() and TagReference.create() enables arbitrary file overwrite and arbitrary file read"
+        },
+        {
+          "classes": [
+            "os-command"
+          ],
+          "cve": "CVE-2026-73623",
+          "cwes": [
+            "CWE-78"
+          ],
+          "fix_commits": [
+            "ffcb5359e87619f4fe4a70a4aff5f08c5580ba97"
+          ],
+          "id": "GHSA-6p8h-3wgx-97gf",
+          "summary": "GitPython: Incomplete unsafe_git_clone_options denylist omits --template enabling arbitrary command execution via clone hooks"
+        },
+        {
+          "classes": [
+            "path-traversal"
+          ],
+          "cve": "CVE-2026-78677",
+          "cwes": [
+            "CWE-22"
+          ],
+          "fix_commits": [
+            "b68afff45af0f49e79a3e2d2162018986b37ad5d"
+          ],
+          "id": "GHSA-8mcc-hrx5-hvxc",
+          "summary": "GitPython: clone_from()/clone() omit --separate-git-dir from unsafe_git_clone_options, enabling arbitrary git-directory creation outside the destination"
+        },
+        {
+          "classes": [
+            "command"
+          ],
+          "cve": "CVE-2026-67323",
+          "cwes": [
+            "CWE-77"
+          ],
+          "fix_commits": [
+            "701ce32fe5ba8cb622c0e0342a376a6beb47d738"
+          ],
+          "id": "GHSA-956x-8gvw-wg5v",
+          "summary": "GitPython: command injection via unguarded Git options in `Repo.archive()`, `git.ls_remote()`, and arbitrary file overwrite via `Repo.iter_commits()` / `Repo.blame()`"
+        },
+        {
+          "classes": [
+            "path-traversal"
+          ],
+          "cve": "CVE-2023-41040",
+          "cwes": [
+            "CWE-22"
+          ],
+          "fix_commits": [
+            "74e55ee4544867e1bd976b7df5a45869ee397b0b",
+            "e98f57b81f792f0f5e18d33ee658ae395f9aa3c4"
+          ],
+          "id": "GHSA-cwvm-v4w8-q58c",
+          "summary": "GitPython blind local file inclusion"
+        },
+        {
+          "classes": [
+            "path-traversal"
+          ],
+          "cve": "CVE-2026-76222",
+          "cwes": [
+            "CWE-22"
+          ],
+          "fix_commits": [
+            "4299c990e1ca21896f9485277caf7bb0ae5b404c",
+            "e4b8e7d026ca6abb4cf604f8e77093432ce23c06"
+          ],
+          "id": "GHSA-hmq2-w58f-27jc",
+          "summary": "GitPython: Arbitrary Git Repository Creation Outside the Working Tree via Unvalidated .gitmodules Submodule Name in GitPython"
+        },
+        {
+          "classes": [
+            "os-command"
+          ],
+          "cve": "CVE-2023-40267",
+          "cwes": [
+            "CWE-78"
+          ],
+          "fix_commits": [
+            "ca965ecc81853bca7675261729143f54e5bf4cdd"
+          ],
+          "id": "GHSA-pr76-5cm5-w9cj",
+          "summary": "GitPython vulnerable to remote code execution due to insufficient sanitization of input arguments"
+        },
+        {
+          "classes": [
+            "os-command"
+          ],
+          "cve": "CVE-2026-73625",
+          "cwes": [
+            "CWE-78"
+          ],
+          "fix_commits": [
+            "e8d0fbf774d1f6baa3b481adfe48bd262e43b453"
+          ],
+          "id": "GHSA-r9mr-m37c-5fr3",
+          "summary": "GitPython: Unsafe git option guard bypass via single-character kwarg value token smuggling enables arbitrary command execution"
+        }
+      ],
+      "holdout": null,
+      "licence": "BSD-3-Clause",
+      "licence_status": "permissive",
+      "loc_in_range": true,
+      "loc_source": 21595,
+      "loc_total": 38301,
+      "repo": "gitpython-developers/gitpython",
+      "role": "selected",
+      "url": "https://github.com/gitpython-developers/gitpython",
+      "verified_at_commit": "73a72c969504bb5a781d8d11dde5ac775ebb17a0",
+      "verified_on": "2026-09-27"
+    },
+    {
+      "advisories": [
+        {
+          "classes": [
+            "path-traversal"
+          ],
+          "cve": "CVE-2024-3429",
+          "cwes": [
+            "CWE-22"
+          ],
+          "fix_commits": [
+            "f4424cfc3d6dfb3ad5ac17dd46801efe784933e9"
+          ],
+          "id": "GHSA-3x47-w4rx-6pm7",
+          "summary": "LoLLMS Path Traversal vulnerability"
+        },
+        {
+          "classes": [
+            "path-traversal"
+          ],
+          "cve": "CVE-2024-6971",
+          "cwes": [
+            "CWE-22"
+          ],
+          "fix_commits": [
+            "aeace796d861e922133b769710019608a6363264"
+          ],
+          "id": "GHSA-7pgr-32fx-c6x9",
+          "summary": "Lord of Large Language Models (LoLLMs) Server path traversal vulnerability in lollms_file_system.py"
+        },
+        {
+          "classes": [
+            "path-traversal"
+          ],
+          "cve": "CVE-2024-6281",
+          "cwes": [
+            "CWE-22"
+          ],
+          "fix_commits": [
+            "26a3ff35acf152b49e1087d5698ad4864c7b6092"
+          ],
+          "id": "GHSA-8mrm-r7h3-c3hj",
+          "summary": "LoLLMS vulnerable to Expected Behavior Violation"
+        },
+        {
+          "classes": [
+            "path-traversal"
+          ],
+          "cve": "CVE-2024-5824",
+          "cwes": [
+            "CWE-22"
+          ],
+          "fix_commits": [
+            "eda3af5f5c4ea9b2f3569f72f8d05989e29367fc"
+          ],
+          "id": "GHSA-m45c-v46h-c788",
+          "summary": "lollms path traversal vulnerability allows overriding of config.yaml file, leading to RCE"
+        },
+        {
+          "classes": [
+            "path-traversal"
+          ],
+          "cve": "CVE-2024-4881",
+          "cwes": [
+            "CWE-22"
+          ],
+          "fix_commits": [
+            "95ad36eeffc6a6be3e3f35ed35a384d768f0ecf6"
+          ],
+          "id": "GHSA-p8h7-c8gw-6x8c",
+          "summary": "LoLLMS Path Traversal vulnerability"
+        },
+        {
+          "classes": [
+            "command"
+          ],
+          "cve": "CVE-2024-4078",
+          "cwes": [
+            "CWE-77"
+          ],
+          "fix_commits": [
+            "7ebe08da7e0026b155af4f7be1d6417bc64cf02f"
+          ],
+          "id": "GHSA-pwc9-q4hj-pg8g",
+          "summary": "LoLLMS Command Injection vulnerability"
+        },
+        {
+          "classes": [
+            "path-traversal"
+          ],
+          "cve": "CVE-2024-4315",
+          "cwes": [
+            "CWE-22"
+          ],
+          "fix_commits": [
+            "95ad36eeffc6a6be3e3f35ed35a384d768f0ecf6"
+          ],
+          "id": "GHSA-vqwr-q6cc-c242",
+          "summary": "parisneo/lollms Local File Inclusion (LFI) attack"
+        }
+      ],
+      "holdout": null,
+      "licence": "Apache-2.0",
+      "licence_status": "permissive",
+      "loc_in_range": true,
+      "loc_source": 47083,
+      "loc_total": 48753,
+      "repo": "parisneo/lollms",
+      "role": "selected",
+      "url": "https://github.com/parisneo/lollms",
+      "verified_at_commit": "7118471c60e5dd5e7574f5d5b73b7ec28ba62f38",
+      "verified_on": "2026-09-27"
+    },
+    {
+      "advisories": [
+        {
+          "classes": [
+            "path-traversal"
+          ],
+          "cve": "CVE-2022-23530",
+          "cwes": [
+            "CWE-22"
+          ],
+          "fix_commits": [
+            "37c7d0767ba28f4df46117d478f97652594c491c"
+          ],
+          "id": "GHSA-78m5-jpmf-ch7v",
+          "summary": "GuardDog vulnerable to arbitrary file write when scanning a specially-crafted remote PyPI package"
+        },
+        {
+          "classes": [
+            "path-traversal"
+          ],
+          "cve": "CVE-2022-23531",
+          "cwes": [
+            "CWE-22"
+          ],
+          "fix_commits": [
+            "98af5c8c1e9c15fa888c900252e76116b0ec25d1"
+          ],
+          "id": "GHSA-rp2v-v467-q9vq",
+          "summary": "GuardDog vulnerable to arbitrary file write when scanning a specially-crafted PyPI package"
+        },
+        {
+          "classes": [
+            "path-traversal"
+          ],
+          "cve": "CVE-2026-22871",
+          "cwes": [
+            "CWE-22"
+          ],
+          "fix_commits": [
+            "9aa6a725b2c71d537d3c18d1c15621395ebb879c"
+          ],
+          "id": "GHSA-xg9w-vg3g-6m68",
+          "summary": "GuardDog Path Traversal Vulnerability Leads to Arbitrary File Overwrite and RCE"
+        }
+      ],
+      "holdout": null,
+      "licence": "Apache-2.0",
+      "licence_status": "permissive",
+      "loc_in_range": true,
+      "loc_source": 10705,
+      "loc_total": 17505,
+      "repo": "datadog/guarddog",
+      "role": "selected",
+      "url": "https://github.com/datadog/guarddog",
+      "verified_at_commit": "1f4a66c064fb2087c224750507f3b65c7633deeb",
+      "verified_on": "2026-09-27"
+    },
+    {
+      "advisories": [
+        {
+          "classes": [
+            "path-traversal"
+          ],
+          "cve": null,
+          "cwes": [
+            "CWE-22"
+          ],
+          "fix_commits": [
+            "ec98f9cb4b9a8658222117df037dda473ca3f4e4"
+          ],
+          "id": "GHSA-432c-wxpg-m4q3",
+          "summary": "xml2rfc has file inclusion irregularities"
+        },
+        {
+          "classes": [
+            "path-traversal"
+          ],
+          "cve": "CVE-2025-11059",
+          "cwes": [
+            "CWE-22"
+          ],
+          "fix_commits": [
+            "73fb1c91fc62ac540bb6bd24f982f2becf84c1b0"
+          ],
+          "id": "GHSA-9mv7-3c64-mmqw",
+          "summary": "xml2rfc is vulnerable to arbitrary file reads through prepped files"
+        },
+        {
+          "classes": [
+            "path-traversal"
+          ],
+          "cve": "CVE-2025-11058",
+          "cwes": [
+            "CWE-22"
+          ],
+          "fix_commits": [
+            "f2b245bc0aeeac0667c8f74e976c466c5991f0e4"
+          ],
+          "id": "GHSA-cfmv-h8fx-85m7",
+          "summary": "xml2rfc has an arbitrary file read vulnerability"
+        }
+      ],
+      "holdout": null,
+      "licence": "BSD-3-Clause",
+      "licence_status": "permissive",
+      "loc_in_range": true,
+      "loc_source": 22559,
+      "loc_total": 22559,
+      "repo": "ietf-tools/xml2rfc",
+      "role": "selected",
+      "url": "https://github.com/ietf-tools/xml2rfc",
+      "verified_at_commit": "9c796f9458c0b8844c7056a4d9894318ed0857e0",
+      "verified_on": "2026-09-27"
+    },
+    {
+      "advisories": [
+        {
+          "classes": [
+            "path-traversal"
+          ],
+          "cve": "CVE-2025-66645",
+          "cwes": [
+            "CWE-22"
+          ],
+          "fix_commits": [
+            "a1b89e2a24e1911a40389ace2153a37f4eea92a9"
+          ],
+          "id": "GHSA-hxp3-63hc-5366",
+          "summary": "NiceGUI has a path traversal in app.add_media_files() allows arbitrary file read"
+        },
+        {
+          "classes": [
+            "path-traversal"
+          ],
+          "cve": "CVE-2024-32005",
+          "cwes": [
+            "CWE-22"
+          ],
+          "fix_commits": [
+            "ed12eb14f2a6c48b388a05c04b3c5a107ea9d330"
+          ],
+          "id": "GHSA-mwc7-64wg-pgvj",
+          "summary": "NiceGUI allows potential access to local file system"
+        },
+        {
+          "classes": [
+            "path-traversal"
+          ],
+          "cve": "CVE-2026-39844",
+          "cwes": [
+            "CWE-22"
+          ],
+          "fix_commits": [
+            "d38a702e3af2da5b0708f689be8d71413fc77056"
+          ],
+          "id": "GHSA-w8wv-vfpc-hw2w",
+          "summary": "NiceGUI: Upload filename sanitization bypass via backslashes allows path traversal on Windows"
+        }
+      ],
+      "holdout": null,
+      "licence": "MIT",
+      "licence_status": "permissive",
+      "loc_in_range": true,
+      "loc_source": 29396,
+      "loc_total": 48034,
+      "repo": "zauberzeug/nicegui",
+      "role": "selected",
+      "url": "https://github.com/zauberzeug/nicegui",
+      "verified_at_commit": "255fb9b1812ca50399b4731bf27e086433d78535",
+      "verified_on": "2026-09-27"
+    },
+    {
+      "advisories": [
+        {
+          "classes": [
+            "sql"
+          ],
+          "cve": "CVE-2026-55509",
+          "cwes": [
+            "CWE-89"
+          ],
+          "fix_commits": [
+            "6f35776c9188f130ab044ce557015d51aaa83500"
+          ],
+          "id": "GHSA-p6gw-4frg-j7jw",
+          "summary": "WsgiDAV MySQL provider has a blind SQL injection"
+        },
+        {
+          "classes": [
+            "path-traversal"
+          ],
+          "cve": "CVE-2026-48099",
+          "cwes": [
+            "CWE-22"
+          ],
+          "fix_commits": [
+            "f894ed8656d7bdd7438ab8148c5a02546cb15183"
+          ],
+          "id": "GHSA-wxq4-cc2q-338q",
+          "summary": "WsgiDAV encoded dot segments can escape filesystem share roots"
+        }
+      ],
+      "holdout": null,
+      "licence": "MIT",
+      "licence_status": "permissive",
+      "loc_in_range": true,
+      "loc_source": 12763,
+      "loc_total": 15997,
+      "repo": "mar10/wsgidav",
+      "role": "selected",
+      "url": "https://github.com/mar10/wsgidav",
+      "verified_at_commit": "04ae4eac35f49e9987120fb970147139d8f22088",
+      "verified_on": "2026-09-27"
+    },
+    {
+      "advisories": [
+        {
+          "classes": [
+            "path-traversal"
+          ],
+          "cve": "CVE-2026-44307",
+          "cwes": [
+            "CWE-22"
+          ],
+          "fix_commits": [
+            "72e10c573ca0fbcbddd4455abca8ce92a61780d7"
+          ],
+          "id": "GHSA-2h4p-vjrc-8xpq",
+          "summary": "Mako vulnerable to path traversal via backslash URI on Windows in TemplateLookup"
+        },
+        {
+          "classes": [
+            "path-traversal"
+          ],
+          "cve": "CVE-2026-41205",
+          "cwes": [
+            "CWE-22"
+          ],
+          "fix_commits": [
+            "e05ac61989a7fb9dd7dcde6cfd72dc48328719a3"
+          ],
+          "id": "GHSA-v92g-xgxw-vvmm",
+          "summary": "Mako: Path traversal via double-slash URI prefix in TemplateLookup"
+        }
+      ],
+      "holdout": null,
+      "licence": "MIT",
+      "licence_status": "permissive",
+      "loc_in_range": true,
+      "loc_source": 6865,
+      "loc_total": 17142,
+      "repo": "sqlalchemy/mako",
+      "role": "selected",
+      "url": "https://github.com/sqlalchemy/mako",
+      "verified_at_commit": "14889bc0feacd12102ee61f0769677be2fddbc1b",
+      "verified_on": "2026-09-27"
+    },
+    {
+      "advisories": [
+        {
+          "classes": [
+            "sql"
+          ],
+          "cve": "CVE-2026-34400",
+          "cwes": [
+            "CWE-89"
+          ],
+          "fix_commits": [
+            "aeba85a37a09e5769a7a2da56481aa979ff99a00",
+            "fdd52cd1abad8d02d1dfb8ecdcdbb43b6af3b883"
+          ],
+          "id": "GHSA-8prr-286p-4w7j",
+          "summary": "alerta-server has potential SQL Injection vulnerability in Query String Syntax (q=) API"
+        }
+      ],
+      "holdout": null,
+      "licence": "Apache-2.0",
+      "licence_status": "permissive",
+      "loc_in_range": true,
+      "loc_source": 13788,
+      "loc_total": 25717,
+      "repo": "alerta/alerta",
+      "role": "selected",
+      "url": "https://github.com/alerta/alerta",
+      "verified_at_commit": "4ac0106300cd428b26ad4b373cf4a78f55f6b542",
+      "verified_on": "2026-09-27"
+    },
+    {
+      "advisories": [
+        {
+          "classes": [
+            "sql"
+          ],
+          "cve": "CVE-2016-8640",
+          "cwes": [
+            "CWE-89"
+          ],
+          "fix_commits": [
+            "522873e5ce48bb9cbd4e7e8168ca881ce709c222",
+            "69546e13527c82e4f9191769215490381ad511b2",
+            "daaf09b4b920708a415be3c7f446739661ba3753"
+          ],
+          "id": "GHSA-hg4c-rgvm-964g",
+          "summary": "SQL Injection in pycsw"
+        }
+      ],
+      "holdout": null,
+      "licence": "MIT",
+      "licence_status": "permissive",
+      "loc_in_range": true,
+      "loc_source": 18761,
+      "loc_total": 23463,
+      "repo": "geopython/pycsw",
+      "role": "selected",
+      "url": "https://github.com/geopython/pycsw",
+      "verified_at_commit": "d87813f7f2d5a63728c04345a31a140f199449c8",
+      "verified_on": "2026-09-27"
+    },
+    {
+      "advisories": [
+        {
+          "classes": [
+            "sql"
+          ],
+          "cve": "CVE-2023-47128",
+          "cwes": [
+            "CWE-89"
+          ],
+          "fix_commits": [
+            "82679eb8cd1449cf31d87c9914a072e70168b6eb"
+          ],
+          "id": "GHSA-xq59-7jf3-rjc6",
+          "summary": "piccolo SQL Injection via named transaction savepoints"
+        }
+      ],
+      "holdout": null,
+      "licence": "MIT",
+      "licence_status": "permissive",
+      "loc_in_range": true,
+      "loc_source": 21104,
+      "loc_total": 41553,
+      "repo": "piccolo-orm/piccolo",
+      "role": "selected",
+      "url": "https://github.com/piccolo-orm/piccolo",
+      "verified_at_commit": "2556bbf2af69070d9a0d2ea468d7b9cd576fd2d3",
+      "verified_on": "2026-09-27"
+    },
+    {
+      "advisories": [
+        {
+          "classes": [
+            "sql"
+          ],
+          "cve": "CVE-2020-11010",
+          "cwes": [
+            "CWE-89"
+          ],
+          "fix_commits": [
+            "91c364053e0ddf77edc5442914c6f049512678b3"
+          ],
+          "id": "GHSA-9j2c-x8qm-qmjq",
+          "summary": "SQL injection in Tortoise ORM"
+        }
+      ],
+      "holdout": null,
+      "licence": "Apache-2.0",
+      "licence_status": "permissive",
+      "loc_in_range": true,
+      "loc_source": 23886,
+      "loc_total": 60224,
+      "repo": "tortoise/tortoise-orm",
+      "role": "selected",
+      "url": "https://github.com/tortoise/tortoise-orm",
+      "verified_at_commit": "1979f27d6a37db991ca5c934e2394faa6c942d52",
+      "verified_on": "2026-09-27"
+    },
+    {
+      "advisories": [
+        {
+          "classes": [
+            "sql"
+          ],
+          "cve": "CVE-2026-26198",
+          "cwes": [
+            "CWE-89"
+          ],
+          "fix_commits": [
+            "a03bae14fe01358d3eaf7e319fcd5db2e4956b16"
+          ],
+          "id": "GHSA-xxh2-68g9-8jqr",
+          "summary": "ormar is vulnerable to SQL Injection through aggregate functions min() and max()"
+        }
+      ],
+      "holdout": null,
+      "licence": "MIT",
+      "licence_status": "permissive",
+      "loc_in_range": true,
+      "loc_source": 16700,
+      "loc_total": 35240,
+      "repo": "collerek/ormar",
+      "role": "selected",
+      "url": "https://github.com/collerek/ormar",
+      "verified_at_commit": "199ec9d76145b7797ea05222524abe96b46355d4",
+      "verified_on": "2026-09-27"
+    },
+    {
+      "advisories": [
+        {
+          "classes": [
+            "sql"
+          ],
+          "cve": "CVE-2025-69662",
+          "cwes": [
+            "CWE-89"
+          ],
+          "fix_commits": [
+            "6aa8ef14ffdee4ba1044349ab948e1a1fbfaf419"
+          ],
+          "id": "GHSA-6497-prx7-gpmq",
+          "summary": "geopandas SQL Injection Vulnerability in to_postgis() Allows Information Disclosure"
+        }
+      ],
+      "holdout": null,
+      "licence": "BSD-3-Clause",
+      "licence_status": "permissive",
+      "loc_in_range": true,
+      "loc_source": 19476,
+      "loc_total": 41458,
+      "repo": "geopandas/geopandas",
+      "role": "reserve",
+      "url": "https://github.com/geopandas/geopandas",
+      "verified_at_commit": "6302753ef93da57ed386af3fc4787c7f923fbf19",
+      "verified_on": "2026-09-27"
+    },
+    {
+      "advisories": [
+        {
+          "classes": [
+            "sql"
+          ],
+          "cve": "CVE-2024-35374",
+          "cwes": [
+            "CWE-89"
+          ],
+          "fix_commits": [
+            "f9368df28518b6c4a92fd207c260f1978ec34d6e"
+          ],
+          "id": "GHSA-j6cv-98jx-mrwr",
+          "summary": "Mocodo vulnerable to SQL injection in `/web/generate.php`"
+        }
+      ],
+      "holdout": null,
+      "licence": "MIT",
+      "licence_status": "permissive",
+      "loc_in_range": true,
+      "loc_source": 10145,
+      "loc_total": 13671,
+      "repo": "laowantong/mocodo",
+      "role": "reserve",
+      "url": "https://github.com/laowantong/mocodo",
+      "verified_at_commit": "720053a53c601ac8fddeb08d3055fddc4fca06bb",
+      "verified_on": "2026-09-27"
+    },
+    {
+      "advisories": [
+        {
+          "classes": [
+            "sql"
+          ],
+          "cve": "CVE-2026-21892",
+          "cwes": [
+            "CWE-89"
+          ],
+          "fix_commits": [
+            "013a928461e70f38a33258bd525a351ed828e974"
+          ],
+          "id": "GHSA-f2mf-q878-gh58",
+          "summary": "Parsl Monitoring Visualization Vulnerable to SQL Injection"
+        }
+      ],
+      "holdout": null,
+      "licence": "Apache-2.0",
+      "licence_status": "permissive",
+      "loc_in_range": true,
+      "loc_source": 20871,
+      "loc_total": 32601,
+      "repo": "parsl/parsl",
+      "role": "reserve",
+      "url": "https://github.com/parsl/parsl",
+      "verified_at_commit": "139caab94a7f2eb306512f9107b992c825974de8",
+      "verified_on": "2026-09-27"
+    },
+    {
+      "advisories": [
+        {
+          "classes": [
+            "path-traversal"
+          ],
+          "cve": "CVE-2025-55201",
+          "cwes": [
+            "CWE-22"
+          ],
+          "fix_commits": [
+            "3feea3b3ff3c20d80cbb16a2f3b9567ffc5606d1"
+          ],
+          "id": "GHSA-3xw7-v6cj-5q8h",
+          "summary": "Copier's safe template has arbitrary filesystem read/write access"
+        },
+        {
+          "classes": [
+            "path-traversal"
+          ],
+          "cve": "CVE-2026-34726",
+          "cwes": [
+            "CWE-22"
+          ],
+          "fix_commits": [
+            "cb80a3ffc9c3787de3ed837e04ca29a0ff8ca3df"
+          ],
+          "id": "GHSA-85v3-4m8g-hrh6",
+          "summary": "Copier `_subdirectory` allows template root escape via parent-directory traversal"
+        },
+        {
+          "classes": [
+            "path-traversal"
+          ],
+          "cve": "CVE-2026-34730",
+          "cwes": [
+            "CWE-22"
+          ],
+          "fix_commits": [
+            "5413062eb17b73dc885f5e645cdc161e69ef641b"
+          ],
+          "id": "GHSA-hgjq-p8cr-gg4h",
+          "summary": "Copier `_external_data` allows path traversal and absolute-path local file read without unsafe mode"
+        },
+        {
+          "classes": [
+            "path-traversal"
+          ],
+          "cve": "CVE-2025-55214",
+          "cwes": [
+            "CWE-22"
+          ],
+          "fix_commits": [
+            "fdbc0167cc22780b497e4db176feaf6f024757d6"
+          ],
+          "id": "GHSA-p7q8-grrj-3m8w",
+          "summary": "Copier's safe template has filesystem write access outside destination path"
+        }
+      ],
+      "holdout": null,
+      "licence": "MIT",
+      "licence_status": "permissive",
+      "loc_in_range": false,
+      "loc_source": 4985,
+      "loc_total": 19732,
+      "repo": "copier-org/copier",
+      "role": "reserve",
+      "url": "https://github.com/copier-org/copier",
+      "verified_at_commit": "01c68328a384777da8a4297b9e511b0e2e57f8c1",
+      "verified_on": "2026-09-27"
+    }
+  ],
+  "schema_version": 1,
+  "source": {
+    "dataset": "OSV PyPI export",
+    "file": "PyPI-all-2026-09-27.zip",
+    "funnel": {
+      "injection_advisories": 775,
+      "repos_with_usable_advisories": 243,
+      "skipped": {
+        "no injection-class CWE": 5364,
+        "not GHSA (no CWE ids)": 19400,
+        "withdrawn": 199
+      },
+      "usable_with_fix_commit": 468
+    },
+    "retrieved": "2026-09-27",
+    "sha256": "e62619a343809e8152df3676f3a1d4a42fbff055235434a04f276acb81136db4",
+    "url": "https://osv-vulnerabilities.storage.googleapis.com/PyPI/all.zip"
+  },
+  "status": "provisional — final after BUILD_PLAN 2.3 validation"
+}

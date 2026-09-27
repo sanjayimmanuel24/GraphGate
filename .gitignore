@@ -36,6 +36,8 @@ out/
 # (The holdout set in particular must stay untouched by tuning — see BUILD_PLAN 5.3.)
 data/raw/
 data/holdout/
+# Regenerated from data/raw/ by the dataset scripts.
+data/interim/
 
 # OS
 Thumbs.db

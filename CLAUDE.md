@@ -73,6 +73,14 @@ that reintroduces the hallucination surface the design specifically avoids.
   *discussion* exists in the proposal; there is no cross-language code.)
 - **Vulnerability family: injection-class only** (SQL/command/path injection, missing
   sanitization). Do not add XSS, deserialization, crypto-misuse, etc. detection rules.
+  Operationally: CWE-89 (SQL), CWE-78 (OS command), CWE-77 (command injection, the general
+  weakness — many advisories file command injection under it instead of 78), CWE-22 (path
+  traversal). CWE-77 was added 2026-09-27 as a reading of "command injection", not an expansion.
+- **Seed repositories** (decided 2026-09-27): the projects whose real injection CVE fixes supply
+  the ground truth, recorded in `data/seed_repos.json` (built by `scripts/build_seed_manifest.py`
+  from the OSV PyPI export). "5k–50k LOC" means non-blank `.py` lines outside test/doc/example
+  directories. The set is heavy on path traversal (22 of 34 advisories) because that is what the
+  permissive, mid-sized pool contains; report results per class rather than pooled.
 - **Bounded retrieval**: default 2-hop neighborhood around changed symbols. Hop depth is an
   ablation variable (1/2/3), not something to "improve" beyond the plan.
 - **Deployment targets**: CI pre-merge gate and agent-framework middleware (e.g., a LangGraph
@@ -177,4 +185,6 @@ response protocol and byte-identical replay on real output, and surfaced problem
 research framing in the fixture, seeds collapsing under the cache, Opus-only request settings
 breaking Haiku 4.5, requested-vs-reported model IDs breaking replay, and replay rejecting traces
 whose first seed stopped early. The code-generation model is decided (`claude-opus-4-8`, see
-`docs/MODEL_CHOICE.md`). **Next: M1.2 step 2.1 (seed repository selection).**
+`docs/MODEL_CHOICE.md`). **M1.2 in progress:** step 2.1 done provisionally — 12 seed repos with 34
+injection advisories plus 4 reserves in `data/seed_repos.json`. **Next: 2.2, resolving each advisory's
+fix commits to vulnerable/fixed pairs with changed file paths.**
