@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "note": "Hand-curated corrections to the automatic vulnerable/fixed pair, applied by scripts/resolve_fix_pairs.py. Each entry is a case where both independent reviewers (data/fix_review.json) agreed the resolver's pair was wrong and named the right commits, and the git facts were re-checked by hand. vulnerable_commit null means the fix commit's first parent. Confirm in BUILD_PLAN 2.3.",
+  "advisories": {
+    "GHSA-2f96-g7mh-g2hx": {
+      "repo": "gitpython-developers/gitpython",
+      "fix_commit": "181e8ede7543dbbdcee92756cea260f675316c63",
+      "vulnerable_commit": "b920dcd4d97242e5a40ccbd742ecc9d5ef2511d1",
+      "reason": "fixed by the first two commits of PR #2168 (2ab05169 adds prefix-aware option matching, 181e8ede refines it); the advisory links the third, 56806080, which fixes the separate joined-short-option bypass GHSA-v396-v7q4-x2qj. Both reviewers put the pre-fix commit at b920dcd4 and suggested b920dcd4 -> 56806080; ending at 181e8ede keeps this pair disjoint from GHSA-v396's 181e8ede -> 56806080",
+      "decided_on": "2026-09-28"
+    },
+    "GHSA-8prr-286p-4w7j": {
+      "repo": "alerta/alerta",
+      "fix_commit": "fdd52cd1abad8d02d1dfb8ecdcdbb43b6af3b883",
+      "vulnerable_commit": null,
+      "reason": "the advisory links both the 2018 commit that introduced the vulnerable Postgres query parser (aeba85a3, PR #712) and the fix (fdd52cd1, PR #2040, first in v9.1.0); the earliest-commit rule took the introducing one, reversing the pair. Both reviewers: wrong commit, fix is fdd52cd1",
+      "decided_on": "2026-09-28"
+    },
+    "GHSA-cwvm-v4w8-q58c": {
+      "repo": "gitpython-developers/gitpython",
+      "fix_commit": "e98f57b81f792f0f5e18d33ee658ae395f9aa3c4",
+      "vulnerable_commit": null,
+      "reason": "fixed in two parts: 74e55ee4 (PR #1644, 3.1.35) blocks '..' only and was bypassed with absolute paths; e98f57b8 (PR #1672, 3.1.37, the advisory's patched version) completes it. The first-parent pair of e98f57b8 has the first part but is still open to the absolute-path variant; the span from 74e55ee4's parent covers 70 files of unrelated changes. Both reviewers: canonical fix e98f57b8",
+      "decided_on": "2026-09-28"
+    },
+    "GHSA-hg4c-rgvm-964g": {
+      "repo": "geopython/pycsw",
+      "fix_commit": "d83df944b1fc0f266444c31852c7730f0f41db87",
+      "vulnerable_commit": null,
+      "reason": "the advisory links only release-branch backports (69546e13 on 2.0, 522873e on 1.10, daaf09b on 1.8); d83df944 is the main-line commit merged by PR #474, identical to the 2.0 backport apart from one log call. Both reviewers: main-line fix is d83df944",
+      "decided_on": "2026-09-28"
+    }
+  }
+}

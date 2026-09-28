@@ -1,0 +1,60 @@
+{
+  "advisories": {
+    "GHSA-7545-fcxq-7j24": {
+      "confirmed_by": [
+        "confirm reviewer",
+        "refute reviewer"
+      ],
+      "evidence": "The advisory is GHSA-7545-fcxq-7j24 / CVE-2026-44243. It covers path traversal in the GitPython ref APIs SymbolicReference.create, Reference.create, set_reference, rename and delete. It lists affected versions as <= 3.1.47 and gives 3.1.48 as the first patched version (confirmed with `gh api advisories/GHSA-7545-fcxq-7j24`), and it links the 3.1.48 release. In the clone, `git log 3.1.47..3.1.48` has only four commits:\n- 25ba54dd, \"prevent out-of-repo access when manipulating references.\"\n- 4af8463c, \"address review feedback and CI failures\"\n- dbfa2647, \"Merge pull request #2134 from gitpython-developers/validate-ref-creation\". This is the merge into main and is on main's first-parent history.\n- 5a15361e, the release commit. It only changes VERSION and the changelog, whose 3.1.48 entry reads \"Safe reference creation in the face of untrusted input.\"\n\n`gh api repos/gitpython-developers/GitPython/pulls/2134` shows base=main, merged 2026-04-28, merge_commit_sha dbfa26476445169cdc9d64a539ba6959fd0a2643. The PR's commits are exactly 25ba54dd and 4af8463c.\n\n25ba54dd is the main fix, and its diff matches the advisory point by point. In git/refs/symbolic.py it adds `_get_validated_path`, which resolves the path with realpath and checks commonpath against the base. It also adds `_get_validated_ref_path` and `_get_validated_reflog_path`, which call `_check_ref_name_valid` and then the containment check. It replaces the raw path builds in the vulnerable spots:\n- `set_reference`: `fpath = self.abspath` becomes a validated path.\n- `delete`: `os.path.join(repo.common_dir, full_ref_path)` becomes a validated path.\n- `_create`: `os.path.join(git_dir, full_ref_path)` becomes a validated path.\n- `rename`: both the new and current absolute paths are validated.\n\nThe same commit validates RemoteReference.delete in git/refs/remote.py and RefLog.path in git/refs/log.py, and adds traversal tests to test/test_refs.py.\n\n4af8463c is the follow-up in the same PR. It moves ref-name validation in RemoteReference.delete to before `git branch -d -r` runs, adds tests for escapes through symlinks, and fixes lint and mypy issues.\n\nBoth commits are reachable from origin/main through the merge dbfa26476445169cdc9d64a539ba6959fd0a2643. I left the merge commit and the release commit out of fix_commits so the dataset doesn't double-count the diff.",
+      "fix_commits": [
+        "25ba54dd3fb374b8fade7de4be1ac2ac84722190",
+        "4af8463cca31c2369312fcaa5309dfc30756c7b6"
+      ],
+      "recovery_confidence": "high",
+      "repo": "gitpython-developers/gitpython",
+      "reviewed_on": "2026-09-28"
+    },
+    "GHSA-9ffm-fxg3-xrhh": {
+      "confirmed_by": [
+        "confirm reviewer",
+        "refute reviewer"
+      ],
+      "evidence": "Four pieces of evidence tie the commit to this advisory:\n\n1. **Version range.** The GitHub advisory API lists `<= 3.6.1` as vulnerable and 3.7.0 as the first patched version. `git log v3.6.1..v3.7.0` shows 35 commits. Two of them are private-fork security merges titled \"Merge commit from fork\": f1f75335 and f88924c6.\n\n2. **Official release notes.** The v3.7.0 notes (from `gh api repos/zauberzeug/nicegui/releases/tags/v3.7.0`) have a Security section with two entries:\n   - \"Prevent path traversal via unsanitized `FileUpload.name` enabling arbitrary file write (GHSA-9ffm-fxg3-xrhh by @k14uz, @evnchn, @falkoschindler)\"\n   - An XSS fix in `ui.markdown()` (GHSA-v82v-c5x8-w282)\n\n3. **Matching the two merges to the two advisories.**\n   - f1f75335 is the XSS fix (GHSA-v82v-c5x8-w282). It adds DOMPurify and touches `html.js`, `markdown.py`, `interactive_image.py` and similar files, but not the upload code.\n   - f88924c6ed830f05ba25f32b046ba470543eeb36 (Falko Schindler, 2026-02-05, tagged `v3.7.0~3`, on `origin/main`) changes only `nicegui/elements/upload_files.py`, the component named in the advisory. In `create_file_upload()` it adds `filename = PurePosixPath(upload.filename or '').name  # strips all path components`. It then passes that stripped `filename` to both `LargeFileUpload` and `SmallFileUpload`, where the raw `upload.filename` was used before. So `FileUpload.name` can no longer carry `../` components, which is exactly the root cause the advisory describes.\n\n4. **Only candidate.** Within the release range, it is the only commit touching `upload_files.py` apart from the #5696 Python-3.10 type-annotation refactor.\n\n**Excluded on purpose:** d38a702e3af2da5b0708f689be8d71413fc77056 (v3.10.0) also changes upload filename handling. It fixes a Windows backslash bypass of this fix, but its commit message says \"Fixes GHSA-w8wv-vfpc-hw2w\", which is a separate advisory. It is not included here.",
+      "fix_commits": [
+        "f88924c6ed830f05ba25f32b046ba470543eeb36"
+      ],
+      "recovery_confidence": "high",
+      "repo": "zauberzeug/nicegui",
+      "reviewed_on": "2026-09-28"
+    },
+    "GHSA-rpm5-65cw-6hj4": {
+      "confirmed_by": [
+        "confirm reviewer",
+        "refute reviewer"
+      ],
+      "evidence": "The GitHub advisory API lists 3.1.47 as the first patched version, with vulnerable range >=3.1.30,<3.1.47. `git log 3.1.46..3.1.47` shows PR #2131 (merge 0f68db0710f9125762fca5dbc2328593537ae923, \"Merge pull request #2131 from WesR/main\"). The PR is titled \"Block unsafe underscored git kwargs / Fix for GHSA-rpm5-65cw-6hj4\". `gh api repos/gitpython-developers/GitPython/pulls/2131` shows it was merged into main with that merge SHA. It has three commits.\n\n(1) 142195888e713542189533a52cdfc333f05c3af6. Its commit message names GHSA-rpm5-65cw-6hj4 directly. This is the core fix. In git/cmd.py it adds `Git._canonicalize_option_name()`, which strips leading dashes and the `=value` / ` value` part, then calls `dashify()`. `check_unsafe_options()` now compares these canonical names, so the kwargs `upload_pack` and `receive_pack` match `--upload-pack` and `--receive-pack`. That is exactly the bypass the advisory describes: the check ran on raw kwarg names before `transform_kwarg` turned them into dashed flags. It also adds tests for the underscore spelling in test_clone.py, test_remote.py (fetch, pull and push with `receive_pack`) and test_git.py (`test_check_unsafe_options_normalizes_kwargs`). These are the same tests the advisory says were missing.\n\n(2) 43d92dec4683568d11495956dd556161f17c3ea8 (\"git.cmd: harden unsafe option canonicalization and isolate push test cases\"). This is a follow-up in the same PR. It fixes an IndexError in the new canonicalizer when the option is empty or only whitespace, and splits the push test cases so each unsafe kwarg is checked on its own.\n\nThe third PR commit, 9aed7cf8c20f69effcfcf7ebef09f312f73ab826 (\"linter fix\"), only reformats one raise statement, so I left it out. All three commits are on origin/main, which is the default branch (origin/HEAD -> origin/main). The merge is an ancestor of tag 3.1.47 and not of 3.1.46. The other security-looking commit in that range, c9a26789 (splitting multi_options with shlex, PR #2130), deals with a different issue and is not tied to this advisory.",
+      "fix_commits": [
+        "142195888e713542189533a52cdfc333f05c3af6",
+        "43d92dec4683568d11495956dd556161f17c3ea8"
+      ],
+      "recovery_confidence": "high",
+      "repo": "gitpython-developers/gitpython",
+      "reviewed_on": "2026-09-28"
+    },
+    "GHSA-v396-v7q4-x2qj": {
+      "confirmed_by": [
+        "confirm reviewer",
+        "refute reviewer"
+      ],
+      "evidence": "The advisory's PR reference is a dead end. PR #2162, \"fix: block joined short unsafe clone options\", has one commit, 2568f2b7, whose message names GHSA-v396-v7q4-x2qj. The PR was closed without merging and 2568f2b7 is not on main. Byron closed it because it was \"a partial implementation of #2161\", the PR that also covers concatenated short options. #2161 (GHSA-2f96-g7mh-g2hx, head branch fix-aut-joined-short-bypass-2) was then closed as \"superseded by #2168\". PR #2168 (advisory-fix-1) was merged to main on 2026-07-12T12:57Z as merge commit 65a72839c92768754bd51a37381235842a5ae0d8. It contains three commits: 2ab05169, 181e8ede and 56806080.\n\nCommit 56806080c1348749b07daa4a2024ce47b3cad285, \"fix: reject joined unsafe short options\", is the fix for this advisory:\n- **Message:** it says Git accepts \"-uVALUE, -fuVALUE, -cVALUE, and -vcVALUE\", which \"could therefore bypass an exact-token check\". That is the advisory's bug, where -u<helper> or -c<key=value> in multi_options get past allow_unsafe_options=False.\n- **Code:** in git/cmd.py `Git.check_unsafe_options`, it adds short-option parsing. It builds an `unsafe_short_options` map, walks the characters of single-dash tokens (letting clusterable flags `46flnqsv` sit in front) and raises UnsafeOptionError on `u` or `c`.\n- **Tests:** it adds regression tests in test_clone.py (`-utouch ...`, `-cprotocol.ext.allow=always`, `-vc...`, `-fu...`) and in test_git.py (`test_check_unsafe_options_rejects_joined_unsafe_short_options`).\n\nThe two sibling commits are not this fix. 2ab05169 and 181e8ede only add prefix matching for abbreviated long options; their own comment says \"single-character short options remain exact-match only\". So before 56806080, a joined `-u...` still got through.\n\nThe versions and timing match:\n- The advisory's first patched version is 3.1.51, and its vulnerable range is exactly 3.1.50.\n- 56806080 is an ancestor of the 3.1.51 tag and not of 3.1.50, and it is on origin/main.\n- It is in `git log 3.1.50..3.1.51`.\n- The repo advisory was published 2026-07-12T13:41Z, about 45 minutes after #2168 was merged.\n\nOne caveat: the 56806080 message cites the related GHSA-2f96-g7mh-g2hx (\"completes the option-validation hardening\"), not GHSA-v396. It is tied to GHSA-v396 by what it changes and by the maintainer's close-out of #2162 and #2161. No other commit on main mentions GHSA-v396.",
+      "fix_commits": [
+        "56806080c1348749b07daa4a2024ce47b3cad285"
+      ],
+      "recovery_confidence": "high",
+      "repo": "gitpython-developers/gitpython",
+      "reviewed_on": "2026-09-28"
+    }
+  },
+  "note": "Fix commits for advisories that link none, found by review and confirmed by both reviewers. Not from the advisory data; audit before relying on them.",
+  "schema_version": 1
+}

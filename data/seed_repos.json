@@ -68,6 +68,18 @@
           "classes": [
             "path-traversal"
           ],
+          "cve": "CVE-2026-44243",
+          "cwes": [
+            "CWE-22"
+          ],
+          "fix_commits": [],
+          "id": "GHSA-7545-fcxq-7j24",
+          "summary": "GitPython reference APIs has a path traversal vulnerability that allows arbitrary file write and delete outside the repository"
+        },
+        {
+          "classes": [
+            "path-traversal"
+          ],
           "cve": "CVE-2026-78677",
           "cwes": [
             "CWE-22"
@@ -149,8 +161,33 @@
           ],
           "id": "GHSA-r9mr-m37c-5fr3",
           "summary": "GitPython: Unsafe git option guard bypass via single-character kwarg value token smuggling enables arbitrary command execution"
+        },
+        {
+          "classes": [
+            "os-command"
+          ],
+          "cve": "CVE-2026-42215",
+          "cwes": [
+            "CWE-78"
+          ],
+          "fix_commits": [],
+          "id": "GHSA-rpm5-65cw-6hj4",
+          "summary": "GitPython has Command Injection via Git options bypass"
+        },
+        {
+          "classes": [
+            "os-command"
+          ],
+          "cve": "CVE-2026-67324",
+          "cwes": [
+            "CWE-78"
+          ],
+          "fix_commits": [],
+          "id": "GHSA-v396-v7q4-x2qj",
+          "summary": "GitPython unsafe clone option gate bypass through joined short options"
         }
       ],
+      "advisories_filed_under": "gitpython-developers/gitpython",
       "holdout": null,
       "licence": "BSD-3-Clause",
       "licence_status": "permissive",
@@ -181,6 +218,18 @@
         },
         {
           "classes": [
+            "os-command"
+          ],
+          "cve": "CVE-2024-3121",
+          "cwes": [
+            "CWE-78"
+          ],
+          "fix_commits": [],
+          "id": "GHSA-79h8-gxhq-q3jg",
+          "summary": "Remote Code Execution in create_conda_env function in lollms"
+        },
+        {
+          "classes": [
             "path-traversal"
           ],
           "cve": "CVE-2024-6971",
@@ -206,6 +255,18 @@
           ],
           "id": "GHSA-8mrm-r7h3-c3hj",
           "summary": "LoLLMS vulnerable to Expected Behavior Violation"
+        },
+        {
+          "classes": [
+            "path-traversal"
+          ],
+          "cve": "CVE-2024-6085",
+          "cwes": [
+            "CWE-22"
+          ],
+          "fix_commits": [],
+          "id": "GHSA-9chm-m6x2-6fvc",
+          "summary": "lollms vulnerable to path traversal due to unauthenticated root folder settings change"
         },
         {
           "classes": [
@@ -264,16 +325,17 @@
           "summary": "parisneo/lollms Local File Inclusion (LFI) attack"
         }
       ],
+      "advisories_filed_under": "parisneo/lollms",
       "holdout": null,
       "licence": "Apache-2.0",
       "licence_status": "permissive",
       "loc_in_range": true,
-      "loc_source": 47083,
-      "loc_total": 48753,
-      "repo": "parisneo/lollms",
+      "loc_source": 29618,
+      "loc_total": 29694,
+      "repo": "parisneo/lollms_legacy",
       "role": "selected",
-      "url": "https://github.com/parisneo/lollms",
-      "verified_at_commit": "7118471c60e5dd5e7574f5d5b73b7ec28ba62f38",
+      "url": "https://github.com/parisneo/lollms_legacy",
+      "verified_at_commit": "f8b01687d9cbefb0fe5bc15584ecf8a1a8f59a7a",
       "verified_on": "2026-09-27"
     },
     {
@@ -321,6 +383,7 @@
           "summary": "GuardDog Path Traversal Vulnerability Leads to Arbitrary File Overwrite and RCE"
         }
       ],
+      "advisories_filed_under": "datadog/guarddog",
       "holdout": null,
       "licence": "Apache-2.0",
       "licence_status": "permissive",
@@ -378,6 +441,7 @@
           "summary": "xml2rfc has an arbitrary file read vulnerability"
         }
       ],
+      "advisories_filed_under": "ietf-tools/xml2rfc",
       "holdout": null,
       "licence": "BSD-3-Clause",
       "licence_status": "permissive",
@@ -392,6 +456,18 @@
     },
     {
       "advisories": [
+        {
+          "classes": [
+            "path-traversal"
+          ],
+          "cve": "CVE-2026-25732",
+          "cwes": [
+            "CWE-22"
+          ],
+          "fix_commits": [],
+          "id": "GHSA-9ffm-fxg3-xrhh",
+          "summary": "NiceGUI's Path Traversal via Unsanitized FileUpload.name Enables Arbitrary File Write"
+        },
         {
           "classes": [
             "path-traversal"
@@ -435,6 +511,7 @@
           "summary": "NiceGUI: Upload filename sanitization bypass via backslashes allows path traversal on Windows"
         }
       ],
+      "advisories_filed_under": "zauberzeug/nicegui",
       "holdout": null,
       "licence": "MIT",
       "licence_status": "permissive",
@@ -478,6 +555,7 @@
           "summary": "WsgiDAV encoded dot segments can escape filesystem share roots"
         }
       ],
+      "advisories_filed_under": "mar10/wsgidav",
       "holdout": null,
       "licence": "MIT",
       "licence_status": "permissive",
@@ -521,6 +599,7 @@
           "summary": "Mako: Path traversal via double-slash URI prefix in TemplateLookup"
         }
       ],
+      "advisories_filed_under": "sqlalchemy/mako",
       "holdout": null,
       "licence": "MIT",
       "licence_status": "permissive",
@@ -551,6 +630,7 @@
           "summary": "alerta-server has potential SQL Injection vulnerability in Query String Syntax (q=) API"
         }
       ],
+      "advisories_filed_under": "alerta/alerta",
       "holdout": null,
       "licence": "Apache-2.0",
       "licence_status": "permissive",
@@ -582,6 +662,7 @@
           "summary": "SQL Injection in pycsw"
         }
       ],
+      "advisories_filed_under": "geopython/pycsw",
       "holdout": null,
       "licence": "MIT",
       "licence_status": "permissive",
@@ -611,6 +692,7 @@
           "summary": "piccolo SQL Injection via named transaction savepoints"
         }
       ],
+      "advisories_filed_under": "piccolo-orm/piccolo",
       "holdout": null,
       "licence": "MIT",
       "licence_status": "permissive",
@@ -640,6 +722,7 @@
           "summary": "SQL injection in Tortoise ORM"
         }
       ],
+      "advisories_filed_under": "tortoise/tortoise-orm",
       "holdout": null,
       "licence": "Apache-2.0",
       "licence_status": "permissive",
@@ -669,6 +752,7 @@
           "summary": "ormar is vulnerable to SQL Injection through aggregate functions min() and max()"
         }
       ],
+      "advisories_filed_under": "collerek/ormar",
       "holdout": null,
       "licence": "MIT",
       "licence_status": "permissive",
@@ -698,6 +782,7 @@
           "summary": "geopandas SQL Injection Vulnerability in to_postgis() Allows Information Disclosure"
         }
       ],
+      "advisories_filed_under": "geopandas/geopandas",
       "holdout": null,
       "licence": "BSD-3-Clause",
       "licence_status": "permissive",
@@ -727,6 +812,7 @@
           "summary": "Mocodo vulnerable to SQL injection in `/web/generate.php`"
         }
       ],
+      "advisories_filed_under": "laowantong/mocodo",
       "holdout": null,
       "licence": "MIT",
       "licence_status": "permissive",
@@ -756,6 +842,7 @@
           "summary": "Parsl Monitoring Visualization Vulnerable to SQL Injection"
         }
       ],
+      "advisories_filed_under": "parsl/parsl",
       "holdout": null,
       "licence": "Apache-2.0",
       "licence_status": "permissive",
@@ -802,6 +889,18 @@
           "classes": [
             "path-traversal"
           ],
+          "cve": "CVE-2026-53951",
+          "cwes": [
+            "CWE-22"
+          ],
+          "fix_commits": [],
+          "id": "GHSA-9gmc-jqmh-3rvm",
+          "summary": "Copier has a trust-prefix bypass via path traversal that runs tasks unprompted"
+        },
+        {
+          "classes": [
+            "path-traversal"
+          ],
           "cve": "CVE-2026-34730",
           "cwes": [
             "CWE-22"
@@ -827,6 +926,7 @@
           "summary": "Copier's safe template has filesystem write access outside destination path"
         }
       ],
+      "advisories_filed_under": "copier-org/copier",
       "holdout": null,
       "licence": "MIT",
       "licence_status": "permissive",

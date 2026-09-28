@@ -58,6 +58,47 @@ Python projects from CVEfixes (or equivalent public source). *As built: the advi
 done in 2.1 (`graphgate.dataset.advisories`, OSV source); 2.2 starts from the advisories and fix
 commits listed in `data/seed_repos.json` and resolves each to a vulnerable/fixed commit pair with
 the changed file paths.*
+
+*As built (2026-09-28): `scripts/resolve_fix_pairs.py` (`graphgate.dataset.fix_pairs`) works in
+blobless clones. Canonical fix = earliest linked commit on the default branch; vulnerable = its
+first parent. It records changed files by kind and re-checks source LOC and licence **at the
+vulnerable commit**, writing `data/fix_pairs.json` with every uncertainty as a flag. Two amendments
+to the 2.1 manifest: parisneo/lollms was recreated in 2025, so its advisories resolve against
+ParisNeo/lollms_legacy; and advisories linking no fix commit are kept for recovery (40 in the
+selected repos, 34 linked).*
+
+*Every pair then went through an independent review workflow: one reviewer establishing the link,
+one instructed to refute it, plus a history search for unlinked advisories
+(`scripts/prepare_fix_review.py` stages the inputs; `scripts/apply_fix_review.py` writes
+`data/fix_review.json` with every verdict and a source/sink/scope pre-screen for 2.3). Of 40
+items: 30 confirmed, 4 contested, 4 needs-human, 1 rejected, 1 not recovered. Each non-confirmed
+case was read by hand:*
+- *The earliest-commit rule was wrong 4 times, and both reviewers named the same alternative.
+  These are corrected in `data/fix_pair_corrections.json` after re-checking the git facts:
+  - GHSA-8prr: the advisory also links the commit that introduced the bug.
+  - GHSA-hg4c: only backports are linked.
+  - GHSA-cwvm and GHSA-2f96: multi-part fixes.*
+- *Recovered with both reviewers confirming: GHSA-7545, -rpm5, -v396 and -9ffm
+  (`data/recovered_fix_commits.json`).*
+- *Contested means the link is right but the fix was incomplete, with a later commit or advisory
+  closing a bypass. These pairs are kept.*
+- *Not paired:*
+  - *GHSA-79h8: the only candidate adds a bypassable sanitizer.*
+  - *GHSA-9chm: the vulnerable code is in xtts-api-server, not lollms.*
+
+*Result: 35 candidate pairs in the selected repos. By reviewed class: 22 path traversal, 7 command
+(6 CWE-78, 1 CWE-77) and 6 SQL. The reviewers' scope pre-screen: 25 cross-file, 7 local, 3 split.*
+- *datadog/guarddog drops out: 1.2k–4.2k source LOC at its vulnerable commits.*
+- *Usable reserve is 2 SQL pairs (geopandas, parsl). copier is under 5k LOC, and mocodo's fix is
+  PHP. The resolver now flags a fix that changes more non-Python code than Python.*
+
+*Open for 2.3:*
+- *The contested fixes: confirm the fixed side is actually fixed. GHSA-9mv7's refuter thinks the
+  fix never runs on the CLI `--pdf` path.*
+- *GHSA-pwc9 is filed as CWE-77 but is path traversal to code loading.*
+- *GHSA-p8h7 and GHSA-vqwr share one fix commit, so they are one pair.*
+- *GHSA-2f96 and GHSA-v396 are consecutive, disjoint pairs from one PR.*
+- *The lollms advisories appear in the public SM-100 benchmark (threat to validity).*
 > Prompt: *"Write a script that queries [CVEfixes/public source] for Python CVE fix commits
 > tagged with injection-class CWEs (CWE-89, CWE-78, CWE-22), and outputs candidate
 > vulnerable-commit / fixed-commit pairs with repo URL and file paths."*

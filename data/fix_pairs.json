@@ -1,0 +1,2940 @@
+{
+  "events": [
+    {
+      "advisory": "GHSA-2f96-g7mh-g2hx",
+      "candidates": [
+        {
+          "committed_at": "2026-07-12T14:27:23+02:00",
+          "on_default_branch": true,
+          "parents": [
+            "2ab051697940144545a14d2f4a639c6409c3187f"
+          ],
+          "resolved": true,
+          "sha": "181e8ede7543dbbdcee92756cea260f675316c63",
+          "subject": "Address review feedback about unsafe option abbreviations"
+        }
+      ],
+      "changed_files": [
+        {
+          "added": 18,
+          "deleted": 1,
+          "kind": "py-source",
+          "path": "git/cmd.py",
+          "status": "M"
+        },
+        {
+          "added": 25,
+          "deleted": 0,
+          "kind": "py-test",
+          "path": "test/test_clone.py",
+          "status": "M"
+        },
+        {
+          "added": 10,
+          "deleted": 0,
+          "kind": "py-test",
+          "path": "test/test_git.py",
+          "status": "M"
+        }
+      ],
+      "classes": [
+        "os-command"
+      ],
+      "cve": "CVE-2026-67325",
+      "default_branch": "origin/main",
+      "fix_commit": "181e8ede7543dbbdcee92756cea260f675316c63",
+      "fix_committed_at": "2026-07-12T14:27:23+02:00",
+      "fix_subject": "Address review feedback about unsafe option abbreviations",
+      "flags": [
+        "pair corrected by review (data/fix_pair_corrections.json): fixed by the first two commits of PR #2168 (2ab05169 adds prefix-aware option matching, 181e8ede refines it); the advisory links the third, 56806080, which fixes the separate joined-short-option bypass GHSA-v396-v7q4-x2qj. Both reviewers put the pre-fix commit at b920dcd4 and suggested b920dcd4 -> 56806080; ending at 181e8ede keeps this pair disjoint from GHSA-v396's 181e8ede -> 56806080"
+      ],
+      "licence_at_vulnerable": {
+        "detected": "BSD-3-Clause",
+        "file": "LICENSE"
+      },
+      "linked_fix_commits": [
+        "56806080c1348749b07daa4a2024ce47b3cad285"
+      ],
+      "loc_at_vulnerable": {
+        "source": 16192,
+        "total": 27962
+      },
+      "py_source_files_changed": 1,
+      "repo": "gitpython-developers/gitpython",
+      "role": "selected",
+      "summary": "GitPython: Command Injection via git long-option prefix abbreviation bypass of CVE-2026-42215 blocklist",
+      "vulnerable_commit": "b920dcd4d97242e5a40ccbd742ecc9d5ef2511d1"
+    },
+    {
+      "advisory": "GHSA-3f7w-8rr8-f37f",
+      "candidates": [
+        {
+          "committed_at": "2026-07-26T07:37:08+02:00",
+          "on_default_branch": true,
+          "parents": [
+            "07e8055585491aa3d0b42f79c5bc2bdd027fa6c0"
+          ],
+          "resolved": true,
+          "sha": "3af0c2516c5e18c829da30338614688f6b69b49c",
+          "subject": "Block unsafe checkout-index and tag file options"
+        }
+      ],
+      "changed_files": [
+        {
+          "added": 12,
+          "deleted": 0,
+          "kind": "py-source",
+          "path": "git/index/base.py",
+          "status": "M"
+        },
+        {
+          "added": 13,
+          "deleted": 0,
+          "kind": "py-source",
+          "path": "git/refs/tag.py",
+          "status": "M"
+        },
+        {
+          "added": 10,
+          "deleted": 0,
+          "kind": "py-test",
+          "path": "test/test_index.py",
+          "status": "M"
+        },
+        {
+          "added": 13,
+          "deleted": 0,
+          "kind": "py-test",
+          "path": "test/test_refs.py",
+          "status": "M"
+        }
+      ],
+      "classes": [
+        "path-traversal"
+      ],
+      "cve": "CVE-2026-73620",
+      "default_branch": "origin/main",
+      "fix_commit": "3af0c2516c5e18c829da30338614688f6b69b49c",
+      "fix_committed_at": "2026-07-26T07:37:08+02:00",
+      "fix_subject": "Block unsafe checkout-index and tag file options",
+      "flags": [],
+      "licence_at_vulnerable": {
+        "detected": "BSD-3-Clause",
+        "file": "LICENSE"
+      },
+      "linked_fix_commits": [
+        "3af0c2516c5e18c829da30338614688f6b69b49c"
+      ],
+      "loc_at_vulnerable": {
+        "source": 20840,
+        "total": 35187
+      },
+      "py_source_files_changed": 2,
+      "repo": "gitpython-developers/gitpython",
+      "role": "selected",
+      "summary": "GitPython: Unguarded git option forwarding in IndexFile.checkout() and TagReference.create() enables arbitrary file overwrite and arbitrary file read",
+      "vulnerable_commit": "07e8055585491aa3d0b42f79c5bc2bdd027fa6c0"
+    },
+    {
+      "advisory": "GHSA-6p8h-3wgx-97gf",
+      "candidates": [
+        {
+          "committed_at": "2026-07-22T05:56:02+02:00",
+          "on_default_branch": true,
+          "parents": [
+            "e8d0fbf774d1f6baa3b481adfe48bd262e43b453"
+          ],
+          "resolved": true,
+          "sha": "ffcb5359e87619f4fe4a70a4aff5f08c5580ba97",
+          "subject": "fix: reject unsafe clone templates"
+        }
+      ],
+      "changed_files": [
+        {
+          "added": 5,
+          "deleted": 0,
+          "kind": "py-source",
+          "path": "git/repo/base.py",
+          "status": "M"
+        },
+        {
+          "added": 2,
+          "deleted": 0,
+          "kind": "py-test",
+          "path": "test/test_clone.py",
+          "status": "M"
+        }
+      ],
+      "classes": [
+        "os-command"
+      ],
+      "cve": "CVE-2026-73623",
+      "default_branch": "origin/main",
+      "fix_commit": "ffcb5359e87619f4fe4a70a4aff5f08c5580ba97",
+      "fix_committed_at": "2026-07-22T05:56:02+02:00",
+      "fix_subject": "fix: reject unsafe clone templates",
+      "flags": [],
+      "licence_at_vulnerable": {
+        "detected": "BSD-3-Clause",
+        "file": "LICENSE"
+      },
+      "linked_fix_commits": [
+        "ffcb5359e87619f4fe4a70a4aff5f08c5580ba97"
+      ],
+      "loc_at_vulnerable": {
+        "source": 16441,
+        "total": 28671
+      },
+      "py_source_files_changed": 1,
+      "repo": "gitpython-developers/gitpython",
+      "role": "selected",
+      "summary": "GitPython: Incomplete unsafe_git_clone_options denylist omits --template enabling arbitrary command execution via clone hooks",
+      "vulnerable_commit": "e8d0fbf774d1f6baa3b481adfe48bd262e43b453"
+    },
+    {
+      "advisory": "GHSA-7545-fcxq-7j24",
+      "candidates": [
+        {
+          "committed_at": "2026-04-28T09:24:58+08:00",
+          "on_default_branch": true,
+          "parents": [
+            "4199cb89755f705801a4cb241723325b46201f51"
+          ],
+          "resolved": true,
+          "sha": "25ba54dd3fb374b8fade7de4be1ac2ac84722190",
+          "subject": "prevent out-of-repo access when manipulating references."
+        },
+        {
+          "committed_at": "2026-04-28T13:10:03+08:00",
+          "on_default_branch": true,
+          "parents": [
+            "25ba54dd3fb374b8fade7de4be1ac2ac84722190"
+          ],
+          "resolved": true,
+          "sha": "4af8463cca31c2369312fcaa5309dfc30756c7b6",
+          "subject": "address review feedback and CI failures"
+        }
+      ],
+      "changed_files": [
+        {
+          "added": 1,
+          "deleted": 1,
+          "kind": "py-source",
+          "path": "git/refs/log.py",
+          "status": "M"
+        },
+        {
+          "added": 3,
+          "deleted": 2,
+          "kind": "py-source",
+          "path": "git/refs/remote.py",
+          "status": "M"
+        },
+        {
+          "added": 31,
+          "deleted": 6,
+          "kind": "py-source",
+          "path": "git/refs/symbolic.py",
+          "status": "M"
+        },
+        {
+          "added": 91,
+          "deleted": 0,
+          "kind": "py-test",
+          "path": "test/test_refs.py",
+          "status": "M"
+        }
+      ],
+      "classes": [
+        "path-traversal"
+      ],
+      "cve": "CVE-2026-44243",
+      "default_branch": "origin/main",
+      "fix_commit": "25ba54dd3fb374b8fade7de4be1ac2ac84722190",
+      "fix_committed_at": "2026-04-28T09:24:58+08:00",
+      "fix_subject": "prevent out-of-repo access when manipulating references.",
+      "flags": [
+        "2 candidate fix commits (backports or multi-part fix)",
+        "fix commit recovered by review (data/recovered_fix_commits.json); the advisory links none"
+      ],
+      "licence_at_vulnerable": {
+        "detected": "BSD-3-Clause",
+        "file": "LICENSE"
+      },
+      "linked_fix_commits": [],
+      "loc_at_vulnerable": {
+        "source": 15798,
+        "total": 27063
+      },
+      "py_source_files_changed": 3,
+      "repo": "gitpython-developers/gitpython",
+      "role": "selected",
+      "summary": "GitPython reference APIs has a path traversal vulnerability that allows arbitrary file write and delete outside the repository",
+      "vulnerable_commit": "4199cb89755f705801a4cb241723325b46201f51"
+    },
+    {
+      "advisory": "GHSA-8mcc-hrx5-hvxc",
+      "candidates": [
+        {
+          "committed_at": "2026-08-10T12:24:36+02:00",
+          "on_default_branch": true,
+          "parents": [
+            "9729ed3b948f2bde09f1f188c5311e172212b67e"
+          ],
+          "resolved": true,
+          "sha": "b68afff45af0f49e79a3e2d2162018986b37ad5d",
+          "subject": "Block separate git directories during clone"
+        }
+      ],
+      "changed_files": [
+        {
+          "added": 10,
+          "deleted": 0,
+          "kind": "py-source",
+          "path": "git/objects/submodule/base.py",
+          "status": "M"
+        },
+        {
+          "added": 2,
+          "deleted": 0,
+          "kind": "py-source",
+          "path": "git/repo/base.py",
+          "status": "M"
+        },
+        {
+          "added": 4,
+          "deleted": 0,
+          "kind": "py-test",
+          "path": "test/test_clone.py",
+          "status": "M"
+        },
+        {
+          "added": 1,
+          "deleted": 0,
+          "kind": "py-test",
+          "path": "test/test_submodule.py",
+          "status": "M"
+        }
+      ],
+      "classes": [
+        "path-traversal"
+      ],
+      "cve": "CVE-2026-78677",
+      "default_branch": "origin/main",
+      "fix_commit": "b68afff45af0f49e79a3e2d2162018986b37ad5d",
+      "fix_committed_at": "2026-08-10T12:24:36+02:00",
+      "fix_subject": "Block separate git directories during clone",
+      "flags": [],
+      "licence_at_vulnerable": {
+        "detected": "BSD-3-Clause",
+        "file": "LICENSE"
+      },
+      "linked_fix_commits": [
+        "b68afff45af0f49e79a3e2d2162018986b37ad5d"
+      ],
+      "loc_at_vulnerable": {
+        "source": 21178,
+        "total": 36102
+      },
+      "py_source_files_changed": 2,
+      "repo": "gitpython-developers/gitpython",
+      "role": "selected",
+      "summary": "GitPython: clone_from()/clone() omit --separate-git-dir from unsafe_git_clone_options, enabling arbitrary git-directory creation outside the destination",
+      "vulnerable_commit": "9729ed3b948f2bde09f1f188c5311e172212b67e"
+    },
+    {
+      "advisory": "GHSA-956x-8gvw-wg5v",
+      "candidates": [
+        {
+          "committed_at": "2026-07-12T15:30:21+02:00",
+          "on_default_branch": true,
+          "parents": [
+            "65a72839c92768754bd51a37381235842a5ae0d8"
+          ],
+          "resolved": true,
+          "sha": "701ce32fe5ba8cb622c0e0342a376a6beb47d738",
+          "subject": "fix: Guard unsafe git command options (GHSA-956x-8gvw-wg5v)"
+        }
+      ],
+      "changed_files": [
+        {
+          "added": 36,
+          "deleted": 1,
+          "kind": "py-source",
+          "path": "git/cmd.py",
+          "status": "M"
+        },
+        {
+          "added": 12,
+          "deleted": 0,
+          "kind": "py-source",
+          "path": "git/objects/commit.py",
+          "status": "M"
+        },
+        {
+          "added": 12,
+          "deleted": 3,
+          "kind": "py-source",
+          "path": "git/remote.py",
+          "status": "M"
+        },
+        {
+          "added": 73,
+          "deleted": 7,
+          "kind": "py-source",
+          "path": "git/repo/base.py",
+          "status": "M"
+        },
+        {
+          "added": 4,
+          "deleted": 0,
+          "kind": "py-test",
+          "path": "test/test_clone.py",
+          "status": "M"
+        },
+        {
+          "added": 13,
+          "deleted": 0,
+          "kind": "py-test",
+          "path": "test/test_commit.py",
+          "status": "M"
+        },
+        {
+          "added": 16,
+          "deleted": 0,
+          "kind": "py-test",
+          "path": "test/test_git.py",
+          "status": "M"
+        },
+        {
+          "added": 42,
+          "deleted": 1,
+          "kind": "py-test",
+          "path": "test/test_remote.py",
+          "status": "M"
+        },
+        {
+          "added": 71,
+          "deleted": 0,
+          "kind": "py-test",
+          "path": "test/test_repo.py",
+          "status": "M"
+        }
+      ],
+      "classes": [
+        "command"
+      ],
+      "cve": "CVE-2026-67323",
+      "default_branch": "origin/main",
+      "fix_commit": "701ce32fe5ba8cb622c0e0342a376a6beb47d738",
+      "fix_committed_at": "2026-07-12T15:30:21+02:00",
+      "fix_subject": "fix: Guard unsafe git command options (GHSA-956x-8gvw-wg5v)",
+      "flags": [],
+      "licence_at_vulnerable": {
+        "detected": "BSD-3-Clause",
+        "file": "LICENSE"
+      },
+      "linked_fix_commits": [
+        "701ce32fe5ba8cb622c0e0342a376a6beb47d738"
+      ],
+      "loc_at_vulnerable": {
+        "source": 16244,
+        "total": 28091
+      },
+      "py_source_files_changed": 4,
+      "repo": "gitpython-developers/gitpython",
+      "role": "selected",
+      "summary": "GitPython: command injection via unguarded Git options in `Repo.archive()`, `git.ls_remote()`, and arbitrary file overwrite via `Repo.iter_commits()` / `Repo.blame()`",
+      "vulnerable_commit": "65a72839c92768754bd51a37381235842a5ae0d8"
+    },
+    {
+      "advisory": "GHSA-cwvm-v4w8-q58c",
+      "candidates": [
+        {
+          "committed_at": "2023-09-22T08:59:37+02:00",
+          "on_default_branch": true,
+          "parents": [
+            "1774f1e32307deb755f80dc51b220566c7aef755",
+            "46d3d0520d8877b1979e6385bada9d9e1e0731ec"
+          ],
+          "resolved": true,
+          "sha": "e98f57b81f792f0f5e18d33ee658ae395f9aa3c4",
+          "subject": "Merge pull request #1672 from trail-of-forks/robust-refname-checks"
+        }
+      ],
+      "changed_files": [
+        {
+          "added": 48,
+          "deleted": 2,
+          "kind": "py-source",
+          "path": "git/refs/symbolic.py",
+          "status": "M"
+        },
+        {
+          "added": 36,
+          "deleted": 0,
+          "kind": "py-test",
+          "path": "test/test_refs.py",
+          "status": "M"
+        }
+      ],
+      "classes": [
+        "path-traversal"
+      ],
+      "cve": "CVE-2023-41040",
+      "default_branch": "origin/main",
+      "fix_commit": "e98f57b81f792f0f5e18d33ee658ae395f9aa3c4",
+      "fix_committed_at": "2023-09-22T08:59:37+02:00",
+      "fix_subject": "Merge pull request #1672 from trail-of-forks/robust-refname-checks",
+      "flags": [
+        "fix commit is a merge; diff taken against its first parent",
+        "pair corrected by review (data/fix_pair_corrections.json): fixed in two parts: 74e55ee4 (PR #1644, 3.1.35) blocks '..' only and was bypassed with absolute paths; e98f57b8 (PR #1672, 3.1.37, the advisory's patched version) completes it. The first-parent pair of e98f57b8 has the first part but is still open to the absolute-path variant; the span from 74e55ee4's parent covers 70 files of unrelated changes. Both reviewers: canonical fix e98f57b8"
+      ],
+      "licence_at_vulnerable": {
+        "detected": "BSD-3-Clause",
+        "file": "LICENSE"
+      },
+      "linked_fix_commits": [
+        "74e55ee4544867e1bd976b7df5a45869ee397b0b",
+        "e98f57b81f792f0f5e18d33ee658ae395f9aa3c4"
+      ],
+      "loc_at_vulnerable": {
+        "source": 13487,
+        "total": 22353
+      },
+      "py_source_files_changed": 1,
+      "repo": "gitpython-developers/gitpython",
+      "role": "selected",
+      "summary": "GitPython blind local file inclusion",
+      "vulnerable_commit": "1774f1e32307deb755f80dc51b220566c7aef755"
+    },
+    {
+      "advisory": "GHSA-hmq2-w58f-27jc",
+      "candidates": [
+        {
+          "committed_at": "2026-08-04T11:17:11+02:00",
+          "on_default_branch": true,
+          "parents": [
+            "b324c831cbc02c82b99c18113b622d03539d23cd"
+          ],
+          "resolved": true,
+          "sha": "4299c990e1ca21896f9485277caf7bb0ae5b404c",
+          "subject": "Validate submodule names on every module path branch"
+        },
+        {
+          "committed_at": "2026-08-04T09:44:10+02:00",
+          "on_default_branch": true,
+          "parents": [
+            "6e61b1d3bdcd2d9b81bac4eb4d17c18b270e5787"
+          ],
+          "resolved": true,
+          "sha": "e4b8e7d026ca6abb4cf604f8e77093432ce23c06",
+          "subject": "Validate submodule names before filesystem operations"
+        }
+      ],
+      "changed_files": [
+        {
+          "added": 22,
+          "deleted": 1,
+          "kind": "py-source",
+          "path": "git/objects/submodule/base.py",
+          "status": "M"
+        },
+        {
+          "added": 69,
+          "deleted": 0,
+          "kind": "py-test",
+          "path": "test/test_submodule.py",
+          "status": "M"
+        }
+      ],
+      "classes": [
+        "path-traversal"
+      ],
+      "cve": "CVE-2026-76222",
+      "default_branch": "origin/main",
+      "fix_commit": "e4b8e7d026ca6abb4cf604f8e77093432ce23c06",
+      "fix_committed_at": "2026-08-04T09:44:10+02:00",
+      "fix_subject": "Validate submodule names before filesystem operations",
+      "flags": [
+        "2 candidate fix commits (backports or multi-part fix)"
+      ],
+      "licence_at_vulnerable": {
+        "detected": "BSD-3-Clause",
+        "file": "LICENSE"
+      },
+      "linked_fix_commits": [
+        "4299c990e1ca21896f9485277caf7bb0ae5b404c",
+        "e4b8e7d026ca6abb4cf604f8e77093432ce23c06"
+      ],
+      "loc_at_vulnerable": {
+        "source": 20901,
+        "total": 35342
+      },
+      "py_source_files_changed": 1,
+      "repo": "gitpython-developers/gitpython",
+      "role": "selected",
+      "summary": "GitPython: Arbitrary Git Repository Creation Outside the Working Tree via Unvalidated .gitmodules Submodule Name in GitPython",
+      "vulnerable_commit": "6e61b1d3bdcd2d9b81bac4eb4d17c18b270e5787"
+    },
+    {
+      "advisory": "GHSA-pr76-5cm5-w9cj",
+      "candidates": [
+        {
+          "committed_at": "2023-07-10T19:41:35+02:00",
+          "on_default_branch": true,
+          "parents": [
+            "c09a71e2caefd5c25195b0b2decc8177d658216a",
+            "5c59e0d63da6180db8a0b349f0ad36fef42aceed"
+          ],
+          "resolved": true,
+          "sha": "ca965ecc81853bca7675261729143f54e5bf4cdd",
+          "subject": "Merge pull request #1609 from Beuc/block-insecure-options-clone-non-multi"
+        }
+      ],
+      "changed_files": [
+        {
+          "added": 2,
+          "deleted": 0,
+          "kind": "py-source",
+          "path": "git/repo/base.py",
+          "status": "M"
+        },
+        {
+          "added": 23,
+          "deleted": 1,
+          "kind": "py-test",
+          "path": "test/test_repo.py",
+          "status": "M"
+        }
+      ],
+      "classes": [
+        "os-command"
+      ],
+      "cve": "CVE-2023-40267",
+      "default_branch": "origin/main",
+      "fix_commit": "ca965ecc81853bca7675261729143f54e5bf4cdd",
+      "fix_committed_at": "2023-07-10T19:41:35+02:00",
+      "fix_subject": "Merge pull request #1609 from Beuc/block-insecure-options-clone-non-multi",
+      "flags": [
+        "fix commit is a merge; diff taken against its first parent"
+      ],
+      "licence_at_vulnerable": {
+        "detected": "BSD-3-Clause",
+        "file": "LICENSE"
+      },
+      "linked_fix_commits": [
+        "ca965ecc81853bca7675261729143f54e5bf4cdd"
+      ],
+      "loc_at_vulnerable": {
+        "source": 13489,
+        "total": 22058
+      },
+      "py_source_files_changed": 1,
+      "repo": "gitpython-developers/gitpython",
+      "role": "selected",
+      "summary": "GitPython vulnerable to remote code execution due to insufficient sanitization of input arguments",
+      "vulnerable_commit": "c09a71e2caefd5c25195b0b2decc8177d658216a"
+    },
+    {
+      "advisory": "GHSA-r9mr-m37c-5fr3",
+      "candidates": [
+        {
+          "committed_at": "2026-07-22T05:54:45+02:00",
+          "on_default_branch": true,
+          "parents": [
+            "faf3c09038b03bc2bdd8545ef34bbf6d7f1cd11f"
+          ],
+          "resolved": true,
+          "sha": "e8d0fbf774d1f6baa3b481adfe48bd262e43b453",
+          "subject": "fix: validate split short-option values"
+        }
+      ],
+      "changed_files": [
+        {
+          "added": 7,
+          "deleted": 0,
+          "kind": "py-source",
+          "path": "git/cmd.py",
+          "status": "M"
+        },
+        {
+          "added": 17,
+          "deleted": 0,
+          "kind": "py-test",
+          "path": "test/test_git.py",
+          "status": "M"
+        }
+      ],
+      "classes": [
+        "os-command"
+      ],
+      "cve": "CVE-2026-73625",
+      "default_branch": "origin/main",
+      "fix_commit": "e8d0fbf774d1f6baa3b481adfe48bd262e43b453",
+      "fix_committed_at": "2026-07-22T05:54:45+02:00",
+      "fix_subject": "fix: validate split short-option values",
+      "flags": [],
+      "licence_at_vulnerable": {
+        "detected": "BSD-3-Clause",
+        "file": "LICENSE"
+      },
+      "linked_fix_commits": [
+        "e8d0fbf774d1f6baa3b481adfe48bd262e43b453"
+      ],
+      "loc_at_vulnerable": {
+        "source": 16434,
+        "total": 28651
+      },
+      "py_source_files_changed": 1,
+      "repo": "gitpython-developers/gitpython",
+      "role": "selected",
+      "summary": "GitPython: Unsafe git option guard bypass via single-character kwarg value token smuggling enables arbitrary command execution",
+      "vulnerable_commit": "faf3c09038b03bc2bdd8545ef34bbf6d7f1cd11f"
+    },
+    {
+      "advisory": "GHSA-rpm5-65cw-6hj4",
+      "candidates": [
+        {
+          "committed_at": "2026-04-20T23:29:50-04:00",
+          "on_default_branch": true,
+          "parents": [
+            "da545232d0401fb9fb7660f9ff67991996674dda"
+          ],
+          "resolved": true,
+          "sha": "142195888e713542189533a52cdfc333f05c3af6",
+          "subject": "Block unsafe underscored git kwargs / Fix for GHSA-rpm5-65cw-6hj4"
+        },
+        {
+          "committed_at": "2026-04-21T12:03:20-04:00",
+          "on_default_branch": true,
+          "parents": [
+            "9aed7cf8c20f69effcfcf7ebef09f312f73ab826"
+          ],
+          "resolved": true,
+          "sha": "43d92dec4683568d11495956dd556161f17c3ea8",
+          "subject": "git.cmd: harden unsafe option canonicalization and isolate push test cases"
+        }
+      ],
+      "changed_files": [
+        {
+          "added": 13,
+          "deleted": 8,
+          "kind": "py-source",
+          "path": "git/cmd.py",
+          "status": "M"
+        },
+        {
+          "added": 2,
+          "deleted": 0,
+          "kind": "py-test",
+          "path": "test/test_clone.py",
+          "status": "M"
+        },
+        {
+          "added": 16,
+          "deleted": 0,
+          "kind": "py-test",
+          "path": "test/test_git.py",
+          "status": "M"
+        },
+        {
+          "added": 3,
+          "deleted": 2,
+          "kind": "py-test",
+          "path": "test/test_remote.py",
+          "status": "M"
+        }
+      ],
+      "classes": [
+        "os-command"
+      ],
+      "cve": "CVE-2026-42215",
+      "default_branch": "origin/main",
+      "fix_commit": "142195888e713542189533a52cdfc333f05c3af6",
+      "fix_committed_at": "2026-04-20T23:29:50-04:00",
+      "fix_subject": "Block unsafe underscored git kwargs / Fix for GHSA-rpm5-65cw-6hj4",
+      "flags": [
+        "2 candidate fix commits (backports or multi-part fix)",
+        "fix commit recovered by review (data/recovered_fix_commits.json); the advisory links none"
+      ],
+      "licence_at_vulnerable": {
+        "detected": "BSD-3-Clause",
+        "file": "LICENSE"
+      },
+      "linked_fix_commits": [],
+      "loc_at_vulnerable": {
+        "source": 15788,
+        "total": 27039
+      },
+      "py_source_files_changed": 1,
+      "repo": "gitpython-developers/gitpython",
+      "role": "selected",
+      "summary": "GitPython has Command Injection via Git options bypass",
+      "vulnerable_commit": "da545232d0401fb9fb7660f9ff67991996674dda"
+    },
+    {
+      "advisory": "GHSA-v396-v7q4-x2qj",
+      "candidates": [
+        {
+          "committed_at": "2026-07-12T14:28:03+02:00",
+          "on_default_branch": true,
+          "parents": [
+            "181e8ede7543dbbdcee92756cea260f675316c63"
+          ],
+          "resolved": true,
+          "sha": "56806080c1348749b07daa4a2024ce47b3cad285",
+          "subject": "fix: reject joined unsafe short options"
+        }
+      ],
+      "changed_files": [
+        {
+          "added": 36,
+          "deleted": 4,
+          "kind": "py-source",
+          "path": "git/cmd.py",
+          "status": "M"
+        },
+        {
+          "added": 12,
+          "deleted": 0,
+          "kind": "py-test",
+          "path": "test/test_clone.py",
+          "status": "M"
+        },
+        {
+          "added": 18,
+          "deleted": 0,
+          "kind": "py-test",
+          "path": "test/test_git.py",
+          "status": "M"
+        },
+        {
+          "added": 12,
+          "deleted": 2,
+          "kind": "py-test",
+          "path": "test/test_remote.py",
+          "status": "M"
+        }
+      ],
+      "classes": [
+        "os-command"
+      ],
+      "cve": "CVE-2026-67324",
+      "default_branch": "origin/main",
+      "fix_commit": "56806080c1348749b07daa4a2024ce47b3cad285",
+      "fix_committed_at": "2026-07-12T14:28:03+02:00",
+      "fix_subject": "fix: reject joined unsafe short options",
+      "flags": [
+        "fix commit recovered by review (data/recovered_fix_commits.json); the advisory links none"
+      ],
+      "licence_at_vulnerable": {
+        "detected": "BSD-3-Clause",
+        "file": "LICENSE"
+      },
+      "linked_fix_commits": [],
+      "loc_at_vulnerable": {
+        "source": 16209,
+        "total": 28009
+      },
+      "py_source_files_changed": 1,
+      "repo": "gitpython-developers/gitpython",
+      "role": "selected",
+      "summary": "GitPython unsafe clone option gate bypass through joined short options",
+      "vulnerable_commit": "181e8ede7543dbbdcee92756cea260f675316c63"
+    },
+    {
+      "advisory": "GHSA-3x47-w4rx-6pm7",
+      "candidates": [
+        {
+          "committed_at": "2024-04-04T18:20:13+02:00",
+          "on_default_branch": true,
+          "parents": [
+            "5f406b9bbdc1b7c4ed7145090044514e3a684544"
+          ],
+          "resolved": true,
+          "sha": "f4424cfc3d6dfb3ad5ac17dd46801efe784933e9",
+          "subject": "fixed vulenerability"
+        }
+      ],
+      "changed_files": [
+        {
+          "added": 5,
+          "deleted": 0,
+          "kind": "py-source",
+          "path": "lollms/security.py",
+          "status": "M"
+        }
+      ],
+      "classes": [
+        "path-traversal"
+      ],
+      "cve": "CVE-2024-3429",
+      "default_branch": "origin/main",
+      "fix_commit": "f4424cfc3d6dfb3ad5ac17dd46801efe784933e9",
+      "fix_committed_at": "2024-04-04T18:20:13+02:00",
+      "fix_subject": "fixed vulenerability",
+      "flags": [],
+      "licence_at_vulnerable": {
+        "detected": "Apache-2.0",
+        "file": "LICENSE"
+      },
+      "linked_fix_commits": [
+        "f4424cfc3d6dfb3ad5ac17dd46801efe784933e9"
+      ],
+      "loc_at_vulnerable": {
+        "source": 15490,
+        "total": 15549
+      },
+      "py_source_files_changed": 1,
+      "repo": "parisneo/lollms_legacy",
+      "role": "selected",
+      "summary": "LoLLMS Path Traversal vulnerability",
+      "vulnerable_commit": "5f406b9bbdc1b7c4ed7145090044514e3a684544"
+    },
+    {
+      "advisory": "GHSA-79h8-gxhq-q3jg",
+      "candidates": [],
+      "classes": [
+        "os-command"
+      ],
+      "cve": "CVE-2024-3121",
+      "default_branch": "origin/main",
+      "fix_commit": null,
+      "flags": [
+        "no fix commit linked by the advisory"
+      ],
+      "linked_fix_commits": [],
+      "repo": "parisneo/lollms_legacy",
+      "role": "selected",
+      "summary": "Remote Code Execution in create_conda_env function in lollms",
+      "vulnerable_commit": null
+    },
+    {
+      "advisory": "GHSA-7pgr-32fx-c6x9",
+      "candidates": [
+        {
+          "committed_at": "2024-07-22T00:57:48+02:00",
+          "on_default_branch": true,
+          "parents": [
+            "28ee567a9a120967215ff19b96ab7515ce469620"
+          ],
+          "resolved": true,
+          "sha": "aeace796d861e922133b769710019608a6363264",
+          "subject": "added sanitization to vectorize_folder paths"
+        }
+      ],
+      "changed_files": [
+        {
+          "added": 2,
+          "deleted": 2,
+          "kind": "py-source",
+          "path": "lollms/server/endpoints/lollms_file_system.py",
+          "status": "M"
+        }
+      ],
+      "classes": [
+        "path-traversal"
+      ],
+      "cve": "CVE-2024-6971",
+      "default_branch": "origin/main",
+      "fix_commit": "aeace796d861e922133b769710019608a6363264",
+      "fix_committed_at": "2024-07-22T00:57:48+02:00",
+      "fix_subject": "added sanitization to vectorize_folder paths",
+      "flags": [],
+      "licence_at_vulnerable": {
+        "detected": "Apache-2.0",
+        "file": "LICENSE"
+      },
+      "linked_fix_commits": [
+        "aeace796d861e922133b769710019608a6363264"
+      ],
+      "loc_at_vulnerable": {
+        "source": 25931,
+        "total": 25990
+      },
+      "py_source_files_changed": 1,
+      "repo": "parisneo/lollms_legacy",
+      "role": "selected",
+      "summary": "Lord of Large Language Models (LoLLMs) Server path traversal vulnerability in lollms_file_system.py",
+      "vulnerable_commit": "28ee567a9a120967215ff19b96ab7515ce469620"
+    },
+    {
+      "advisory": "GHSA-8mrm-r7h3-c3hj",
+      "candidates": [
+        {
+          "committed_at": "2024-06-23T23:32:19+02:00",
+          "on_default_branch": true,
+          "parents": [
+            "473ae0a0e883c9b4c0ff16bd22eff63a4afaac20"
+          ],
+          "resolved": true,
+          "sha": "26a3ff35acf152b49e1087d5698ad4864c7b6092",
+          "subject": "Fixed endpoint sanitization of discussion_db_name and user_avatar"
+        }
+      ],
+      "changed_files": [
+        {
+          "added": 1,
+          "deleted": 1,
+          "kind": "py-source",
+          "path": "lollms/server/endpoints/lollms_configuration_infos.py",
+          "status": "M"
+        }
+      ],
+      "classes": [
+        "path-traversal"
+      ],
+      "cve": "CVE-2024-6281",
+      "default_branch": "origin/main",
+      "fix_commit": "26a3ff35acf152b49e1087d5698ad4864c7b6092",
+      "fix_committed_at": "2024-06-23T23:32:19+02:00",
+      "fix_subject": "Fixed endpoint sanitization of discussion_db_name and user_avatar",
+      "flags": [],
+      "licence_at_vulnerable": {
+        "detected": "Apache-2.0",
+        "file": "LICENSE"
+      },
+      "linked_fix_commits": [
+        "26a3ff35acf152b49e1087d5698ad4864c7b6092"
+      ],
+      "loc_at_vulnerable": {
+        "source": 25164,
+        "total": 25223
+      },
+      "py_source_files_changed": 1,
+      "repo": "parisneo/lollms_legacy",
+      "role": "selected",
+      "summary": "LoLLMS vulnerable to Expected Behavior Violation",
+      "vulnerable_commit": "473ae0a0e883c9b4c0ff16bd22eff63a4afaac20"
+    },
+    {
+      "advisory": "GHSA-9chm-m6x2-6fvc",
+      "candidates": [],
+      "classes": [
+        "path-traversal"
+      ],
+      "cve": "CVE-2024-6085",
+      "default_branch": "origin/main",
+      "fix_commit": null,
+      "flags": [
+        "no fix commit linked by the advisory"
+      ],
+      "linked_fix_commits": [],
+      "repo": "parisneo/lollms_legacy",
+      "role": "selected",
+      "summary": "lollms vulnerable to path traversal due to unauthenticated root folder settings change",
+      "vulnerable_commit": null
+    },
+    {
+      "advisory": "GHSA-m45c-v46h-c788",
+      "candidates": [
+        {
+          "committed_at": "2024-05-19T17:38:38+02:00",
+          "on_default_branch": true,
+          "parents": [
+            "104293d5e922d0631f307e23da30069efcc8e2de"
+          ],
+          "resolved": true,
+          "sha": "eda3af5f5c4ea9b2f3569f72f8d05989e29367fc",
+          "subject": "Added sanitize_svg function and forbid_remote_access is used for setting personality settings"
+        }
+      ],
+      "changed_files": [
+        {
+          "added": 30,
+          "deleted": 0,
+          "kind": "py-source",
+          "path": "lollms/security.py",
+          "status": "M"
+        },
+        {
+          "added": 16,
+          "deleted": 2,
+          "kind": "py-source",
+          "path": "lollms/server/endpoints/lollms_personalities_infos.py",
+          "status": "M"
+        },
+        {
+          "added": 4,
+          "deleted": 1,
+          "kind": "py-source",
+          "path": "lollms/utilities.py",
+          "status": "M"
+        }
+      ],
+      "classes": [
+        "path-traversal"
+      ],
+      "cve": "CVE-2024-5824",
+      "default_branch": "origin/main",
+      "fix_commit": "eda3af5f5c4ea9b2f3569f72f8d05989e29367fc",
+      "fix_committed_at": "2024-05-19T17:38:38+02:00",
+      "fix_subject": "Added sanitize_svg function and forbid_remote_access is used for setting personality settings",
+      "flags": [],
+      "licence_at_vulnerable": {
+        "detected": "Apache-2.0",
+        "file": "LICENSE"
+      },
+      "linked_fix_commits": [
+        "eda3af5f5c4ea9b2f3569f72f8d05989e29367fc"
+      ],
+      "loc_at_vulnerable": {
+        "source": 19901,
+        "total": 19960
+      },
+      "py_source_files_changed": 3,
+      "repo": "parisneo/lollms_legacy",
+      "role": "selected",
+      "summary": "lollms path traversal vulnerability allows overriding of config.yaml file, leading to RCE",
+      "vulnerable_commit": "104293d5e922d0631f307e23da30069efcc8e2de"
+    },
+    {
+      "advisory": "GHSA-p8h7-c8gw-6x8c",
+      "candidates": [
+        {
+          "committed_at": "2024-04-29T18:06:40+02:00",
+          "on_default_branch": true,
+          "parents": [
+            "41577f470d46743616f2379fa114c40baf1b605e"
+          ],
+          "resolved": true,
+          "sha": "95ad36eeffc6a6be3e3f35ed35a384d768f0ecf6",
+          "subject": "updated security"
+        }
+      ],
+      "changed_files": [
+        {
+          "added": 12,
+          "deleted": 9,
+          "kind": "py-source",
+          "path": "lollms/security.py",
+          "status": "M"
+        }
+      ],
+      "classes": [
+        "path-traversal"
+      ],
+      "cve": "CVE-2024-4881",
+      "default_branch": "origin/main",
+      "fix_commit": "95ad36eeffc6a6be3e3f35ed35a384d768f0ecf6",
+      "fix_committed_at": "2024-04-29T18:06:40+02:00",
+      "fix_subject": "updated security",
+      "flags": [],
+      "licence_at_vulnerable": {
+        "detected": "Apache-2.0",
+        "file": "LICENSE"
+      },
+      "linked_fix_commits": [
+        "95ad36eeffc6a6be3e3f35ed35a384d768f0ecf6"
+      ],
+      "loc_at_vulnerable": {
+        "source": 16182,
+        "total": 16241
+      },
+      "py_source_files_changed": 1,
+      "repo": "parisneo/lollms_legacy",
+      "role": "selected",
+      "summary": "LoLLMS Path Traversal vulnerability",
+      "vulnerable_commit": "41577f470d46743616f2379fa114c40baf1b605e"
+    },
+    {
+      "advisory": "GHSA-pwc9-q4hj-pg8g",
+      "candidates": [
+        {
+          "committed_at": "2024-03-09T23:57:16+01:00",
+          "on_default_branch": true,
+          "parents": [
+            "b0da52f5fd2c01352b4c8d3e43c1c8fc7667d28e"
+          ],
+          "resolved": true,
+          "sha": "7ebe08da7e0026b155af4f7be1d6417bc64cf02f",
+          "subject": "Fixed some vulenerabilities"
+        }
+      ],
+      "changed_files": [
+        {
+          "added": 5,
+          "deleted": 5,
+          "kind": "py-source",
+          "path": "lollms/server/endpoints/lollms_binding_infos.py",
+          "status": "M"
+        },
+        {
+          "added": 1,
+          "deleted": 1,
+          "kind": "py-source",
+          "path": "lollms/server/endpoints/lollms_extensions_infos.py",
+          "status": "M"
+        }
+      ],
+      "classes": [
+        "command"
+      ],
+      "cve": "CVE-2024-4078",
+      "default_branch": "origin/main",
+      "fix_commit": "7ebe08da7e0026b155af4f7be1d6417bc64cf02f",
+      "fix_committed_at": "2024-03-09T23:57:16+01:00",
+      "fix_subject": "Fixed some vulenerabilities",
+      "flags": [],
+      "licence_at_vulnerable": {
+        "detected": "Apache-2.0",
+        "file": "LICENSE"
+      },
+      "linked_fix_commits": [
+        "7ebe08da7e0026b155af4f7be1d6417bc64cf02f"
+      ],
+      "loc_at_vulnerable": {
+        "source": 14339,
+        "total": 14398
+      },
+      "py_source_files_changed": 2,
+      "repo": "parisneo/lollms_legacy",
+      "role": "selected",
+      "summary": "LoLLMS Command Injection vulnerability",
+      "vulnerable_commit": "b0da52f5fd2c01352b4c8d3e43c1c8fc7667d28e"
+    },
+    {
+      "advisory": "GHSA-vqwr-q6cc-c242",
+      "candidates": [
+        {
+          "committed_at": "2024-04-29T18:06:40+02:00",
+          "on_default_branch": true,
+          "parents": [
+            "41577f470d46743616f2379fa114c40baf1b605e"
+          ],
+          "resolved": true,
+          "sha": "95ad36eeffc6a6be3e3f35ed35a384d768f0ecf6",
+          "subject": "updated security"
+        }
+      ],
+      "changed_files": [
+        {
+          "added": 12,
+          "deleted": 9,
+          "kind": "py-source",
+          "path": "lollms/security.py",
+          "status": "M"
+        }
+      ],
+      "classes": [
+        "path-traversal"
+      ],
+      "cve": "CVE-2024-4315",
+      "default_branch": "origin/main",
+      "fix_commit": "95ad36eeffc6a6be3e3f35ed35a384d768f0ecf6",
+      "fix_committed_at": "2024-04-29T18:06:40+02:00",
+      "fix_subject": "updated security",
+      "flags": [],
+      "licence_at_vulnerable": {
+        "detected": "Apache-2.0",
+        "file": "LICENSE"
+      },
+      "linked_fix_commits": [
+        "95ad36eeffc6a6be3e3f35ed35a384d768f0ecf6"
+      ],
+      "loc_at_vulnerable": {
+        "source": 16182,
+        "total": 16241
+      },
+      "py_source_files_changed": 1,
+      "repo": "parisneo/lollms_legacy",
+      "role": "selected",
+      "summary": "parisneo/lollms Local File Inclusion (LFI) attack",
+      "vulnerable_commit": "41577f470d46743616f2379fa114c40baf1b605e"
+    },
+    {
+      "advisory": "GHSA-78m5-jpmf-ch7v",
+      "candidates": [
+        {
+          "committed_at": "2022-12-05T17:08:54+01:00",
+          "on_default_branch": true,
+          "parents": [
+            "8e814deb3ae6457ea1a4f7b0d3a0e64db0734f13"
+          ],
+          "resolved": true,
+          "sha": "37c7d0767ba28f4df46117d478f97652594c491c",
+          "subject": "Securely extract PyPI .tar.gz archives (#102)"
+        }
+      ],
+      "changed_files": [
+        {
+          "added": 21,
+          "deleted": 0,
+          "kind": "other",
+          "path": ".github/semgrep-rules/insecure-unpack-archive.yml",
+          "status": "A"
+        },
+        {
+          "added": 9,
+          "deleted": 1,
+          "kind": "other",
+          "path": ".github/workflows/semgrep.yml",
+          "status": "M"
+        },
+        {
+          "added": 6,
+          "deleted": 4,
+          "kind": "py-source",
+          "path": "guarddog/scanners/package_scanner.py",
+          "status": "M"
+        }
+      ],
+      "classes": [
+        "path-traversal"
+      ],
+      "cve": "CVE-2022-23530",
+      "default_branch": "origin/v3",
+      "fix_commit": "37c7d0767ba28f4df46117d478f97652594c491c",
+      "fix_committed_at": "2022-12-05T17:08:54+01:00",
+      "fix_subject": "Securely extract PyPI .tar.gz archives (#102)",
+      "flags": [
+        "1265 source LOC at vulnerable commit, outside 5000-50000"
+      ],
+      "licence_at_vulnerable": {
+        "detected": "Apache-2.0",
+        "file": "LICENSE"
+      },
+      "linked_fix_commits": [
+        "37c7d0767ba28f4df46117d478f97652594c491c"
+      ],
+      "loc_at_vulnerable": {
+        "source": 1265,
+        "total": 2164
+      },
+      "py_source_files_changed": 1,
+      "repo": "datadog/guarddog",
+      "role": "selected",
+      "summary": "GuardDog vulnerable to arbitrary file write when scanning a specially-crafted remote PyPI package",
+      "vulnerable_commit": "8e814deb3ae6457ea1a4f7b0d3a0e64db0734f13"
+    },
+    {
+      "advisory": "GHSA-rp2v-v467-q9vq",
+      "candidates": [
+        {
+          "committed_at": "2022-11-29T11:30:04+01:00",
+          "on_default_branch": true,
+          "parents": [
+            "14b3858005c52ccae64953b2920beefd0514a2e4"
+          ],
+          "resolved": true,
+          "sha": "98af5c8c1e9c15fa888c900252e76116b0ec25d1",
+          "subject": "Use tarsafe instead of built-in tarfile to extract archives (#89)"
+        }
+      ],
+      "changed_files": [
+        {
+          "added": 2,
+          "deleted": 2,
+          "kind": "py-source",
+          "path": "guarddog/scanners/package_scanner.py",
+          "status": "M"
+        },
+        {
+          "added": 18,
+          "deleted": 7,
+          "kind": "other",
+          "path": "poetry.lock",
+          "status": "M"
+        },
+        {
+          "added": 3,
+          "deleted": 1,
+          "kind": "other",
+          "path": "pyproject.toml",
+          "status": "M"
+        },
+        {
+          "added": 55,
+          "deleted": 289,
+          "kind": "other",
+          "path": "requirements.txt",
+          "status": "M"
+        }
+      ],
+      "classes": [
+        "path-traversal"
+      ],
+      "cve": "CVE-2022-23531",
+      "default_branch": "origin/v3",
+      "fix_commit": "98af5c8c1e9c15fa888c900252e76116b0ec25d1",
+      "fix_committed_at": "2022-11-29T11:30:04+01:00",
+      "fix_subject": "Use tarsafe instead of built-in tarfile to extract archives (#89)",
+      "flags": [
+        "1226 source LOC at vulnerable commit, outside 5000-50000"
+      ],
+      "licence_at_vulnerable": {
+        "detected": "Apache-2.0",
+        "file": "LICENSE"
+      },
+      "linked_fix_commits": [
+        "98af5c8c1e9c15fa888c900252e76116b0ec25d1"
+      ],
+      "loc_at_vulnerable": {
+        "source": 1226,
+        "total": 2111
+      },
+      "py_source_files_changed": 1,
+      "repo": "datadog/guarddog",
+      "role": "selected",
+      "summary": "GuardDog vulnerable to arbitrary file write when scanning a specially-crafted PyPI package",
+      "vulnerable_commit": "14b3858005c52ccae64953b2920beefd0514a2e4"
+    },
+    {
+      "advisory": "GHSA-xg9w-vg3g-6m68",
+      "candidates": [
+        {
+          "committed_at": "2026-01-09T12:59:33+01:00",
+          "on_default_branch": true,
+          "parents": [
+            "5ca1d2e930c4f2c423c94306e2cfba28b6066c02",
+            "61ddd72c9b5042eaf00f542e7750c8f4ed2cd5b6"
+          ],
+          "resolved": true,
+          "sha": "9aa6a725b2c71d537d3c18d1c15621395ebb879c",
+          "subject": "Merge pull request #644 from ejortega/zip-duplicate-path"
+        }
+      ],
+      "changed_files": [
+        {
+          "added": 1,
+          "deleted": 1,
+          "kind": "py-source",
+          "path": "guarddog/utils/archives.py",
+          "status": "M"
+        }
+      ],
+      "classes": [
+        "path-traversal"
+      ],
+      "cve": "CVE-2026-22871",
+      "default_branch": "origin/v3",
+      "fix_commit": "9aa6a725b2c71d537d3c18d1c15621395ebb879c",
+      "fix_committed_at": "2026-01-09T12:59:33+01:00",
+      "fix_subject": "Merge pull request #644 from ejortega/zip-duplicate-path",
+      "flags": [
+        "fix commit is a merge; diff taken against its first parent",
+        "4224 source LOC at vulnerable commit, outside 5000-50000"
+      ],
+      "licence_at_vulnerable": {
+        "detected": "Apache-2.0",
+        "file": "LICENSE"
+      },
+      "linked_fix_commits": [
+        "9aa6a725b2c71d537d3c18d1c15621395ebb879c"
+      ],
+      "loc_at_vulnerable": {
+        "source": 4224,
+        "total": 7179
+      },
+      "py_source_files_changed": 1,
+      "repo": "datadog/guarddog",
+      "role": "selected",
+      "summary": "GuardDog Path Traversal Vulnerability Leads to Arbitrary File Overwrite and RCE",
+      "vulnerable_commit": "5ca1d2e930c4f2c423c94306e2cfba28b6066c02"
+    },
+    {
+      "advisory": "GHSA-432c-wxpg-m4q3",
+      "candidates": [
+        {
+          "committed_at": "2025-02-07T12:56:46+13:00",
+          "on_default_branch": true,
+          "parents": [
+            "a46fad0649ce7f201db319cfb64eda6e44323d0b"
+          ],
+          "resolved": true,
+          "sha": "ec98f9cb4b9a8658222117df037dda473ca3f4e4",
+          "subject": "feat: Respect --allow-local-file-access flag in artwork and sourcecode"
+        }
+      ],
+      "changed_files": [
+        {
+          "added": 42,
+          "deleted": 0,
+          "kind": "py-source",
+          "path": "test.py",
+          "status": "M"
+        },
+        {
+          "added": 8,
+          "deleted": 8,
+          "kind": "py-source",
+          "path": "xml2rfc/parser.py",
+          "status": "M"
+        },
+        {
+          "added": 9,
+          "deleted": 3,
+          "kind": "py-source",
+          "path": "xml2rfc/util/__init__.py",
+          "status": "M"
+        },
+        {
+          "added": 46,
+          "deleted": 0,
+          "kind": "py-source",
+          "path": "xml2rfc/util/file.py",
+          "status": "A"
+        },
+        {
+          "added": 6,
+          "deleted": 4,
+          "kind": "py-source",
+          "path": "xml2rfc/writers/base.py",
+          "status": "M"
+        },
+        {
+          "added": 6,
+          "deleted": 10,
+          "kind": "py-source",
+          "path": "xml2rfc/writers/preptool.py",
+          "status": "M"
+        }
+      ],
+      "classes": [
+        "path-traversal"
+      ],
+      "cve": null,
+      "default_branch": "origin/main",
+      "fix_commit": "ec98f9cb4b9a8658222117df037dda473ca3f4e4",
+      "fix_committed_at": "2025-02-07T12:56:46+13:00",
+      "fix_subject": "feat: Respect --allow-local-file-access flag in artwork and sourcecode",
+      "flags": [],
+      "licence_at_vulnerable": {
+        "detected": "BSD-3-Clause",
+        "file": "LICENSE"
+      },
+      "linked_fix_commits": [
+        "ec98f9cb4b9a8658222117df037dda473ca3f4e4"
+      ],
+      "loc_at_vulnerable": {
+        "source": 22198,
+        "total": 22198
+      },
+      "py_source_files_changed": 6,
+      "repo": "ietf-tools/xml2rfc",
+      "role": "selected",
+      "summary": "xml2rfc has file inclusion irregularities",
+      "vulnerable_commit": "a46fad0649ce7f201db319cfb64eda6e44323d0b"
+    },
+    {
+      "advisory": "GHSA-9mv7-3c64-mmqw",
+      "candidates": [
+        {
+          "committed_at": "2025-09-09T10:37:15+12:00",
+          "on_default_branch": true,
+          "parents": [
+            "e14cd440c4e1212d5e4180d746f397dec163865a"
+          ],
+          "resolved": true,
+          "sha": "73fb1c91fc62ac540bb6bd24f982f2becf84c1b0",
+          "subject": "fix: Add sanitize step to the parser"
+        }
+      ],
+      "changed_files": [
+        {
+          "added": 5,
+          "deleted": 0,
+          "kind": "py-source",
+          "path": "xml2rfc/parser.py",
+          "status": "M"
+        },
+        {
+          "added": 3,
+          "deleted": 0,
+          "kind": "py-source",
+          "path": "xml2rfc/run.py",
+          "status": "M"
+        },
+        {
+          "added": 1,
+          "deleted": 4,
+          "kind": "py-source",
+          "path": "xml2rfc/writers/base.py",
+          "status": "M"
+        }
+      ],
+      "classes": [
+        "path-traversal"
+      ],
+      "cve": "CVE-2025-11059",
+      "default_branch": "origin/main",
+      "fix_commit": "73fb1c91fc62ac540bb6bd24f982f2becf84c1b0",
+      "fix_committed_at": "2025-09-09T10:37:15+12:00",
+      "fix_subject": "fix: Add sanitize step to the parser",
+      "flags": [],
+      "licence_at_vulnerable": {
+        "detected": "BSD-3-Clause",
+        "file": "LICENSE"
+      },
+      "linked_fix_commits": [
+        "73fb1c91fc62ac540bb6bd24f982f2becf84c1b0"
+      ],
+      "loc_at_vulnerable": {
+        "source": 22428,
+        "total": 22428
+      },
+      "py_source_files_changed": 3,
+      "repo": "ietf-tools/xml2rfc",
+      "role": "selected",
+      "summary": "xml2rfc is vulnerable to arbitrary file reads through prepped files",
+      "vulnerable_commit": "e14cd440c4e1212d5e4180d746f397dec163865a"
+    },
+    {
+      "advisory": "GHSA-cfmv-h8fx-85m7",
+      "candidates": [
+        {
+          "committed_at": "2025-08-26T10:04:58+12:00",
+          "on_default_branch": true,
+          "parents": [
+            "b4f349facd58feb56fd6cc13350a590eebb18ed9"
+          ],
+          "resolved": true,
+          "sha": "f2b245bc0aeeac0667c8f74e976c466c5991f0e4",
+          "subject": "Merge commit from fork"
+        }
+      ],
+      "changed_files": [
+        {
+          "added": 33,
+          "deleted": 0,
+          "kind": "py-source",
+          "path": "test.py",
+          "status": "M"
+        },
+        {
+          "added": 9,
+          "deleted": 0,
+          "kind": "py-source",
+          "path": "xml2rfc/utils.py",
+          "status": "M"
+        },
+        {
+          "added": 4,
+          "deleted": 1,
+          "kind": "py-source",
+          "path": "xml2rfc/writers/base.py",
+          "status": "M"
+        }
+      ],
+      "classes": [
+        "path-traversal"
+      ],
+      "cve": "CVE-2025-11058",
+      "default_branch": "origin/main",
+      "fix_commit": "f2b245bc0aeeac0667c8f74e976c466c5991f0e4",
+      "fix_committed_at": "2025-08-26T10:04:58+12:00",
+      "fix_subject": "Merge commit from fork",
+      "flags": [],
+      "licence_at_vulnerable": {
+        "detected": "BSD-3-Clause",
+        "file": "LICENSE"
+      },
+      "linked_fix_commits": [
+        "f2b245bc0aeeac0667c8f74e976c466c5991f0e4"
+      ],
+      "loc_at_vulnerable": {
+        "source": 22392,
+        "total": 22392
+      },
+      "py_source_files_changed": 3,
+      "repo": "ietf-tools/xml2rfc",
+      "role": "selected",
+      "summary": "xml2rfc has an arbitrary file read vulnerability",
+      "vulnerable_commit": "b4f349facd58feb56fd6cc13350a590eebb18ed9"
+    },
+    {
+      "advisory": "GHSA-9ffm-fxg3-xrhh",
+      "candidates": [
+        {
+          "committed_at": "2026-02-05T09:57:30+01:00",
+          "on_default_branch": true,
+          "parents": [
+            "f1f7533577875af7d23f161ed3627f73584cb561"
+          ],
+          "resolved": true,
+          "sha": "f88924c6ed830f05ba25f32b046ba470543eeb36",
+          "subject": "Merge commit from fork"
+        }
+      ],
+      "changed_files": [
+        {
+          "added": 4,
+          "deleted": 3,
+          "kind": "py-source",
+          "path": "nicegui/elements/upload_files.py",
+          "status": "M"
+        }
+      ],
+      "classes": [
+        "path-traversal"
+      ],
+      "cve": "CVE-2026-25732",
+      "default_branch": "origin/main",
+      "fix_commit": "f88924c6ed830f05ba25f32b046ba470543eeb36",
+      "fix_committed_at": "2026-02-05T09:57:30+01:00",
+      "fix_subject": "Merge commit from fork",
+      "flags": [
+        "fix commit recovered by review (data/recovered_fix_commits.json); the advisory links none"
+      ],
+      "licence_at_vulnerable": {
+        "detected": "MIT",
+        "file": "LICENSE"
+      },
+      "linked_fix_commits": [],
+      "loc_at_vulnerable": {
+        "source": 25330,
+        "total": 39195
+      },
+      "py_source_files_changed": 1,
+      "repo": "zauberzeug/nicegui",
+      "role": "selected",
+      "summary": "NiceGUI's Path Traversal via Unsanitized FileUpload.name Enables Arbitrary File Write",
+      "vulnerable_commit": "f1f7533577875af7d23f161ed3627f73584cb561"
+    },
+    {
+      "advisory": "GHSA-hxp3-63hc-5366",
+      "candidates": [
+        {
+          "committed_at": "2025-12-08T17:00:58+01:00",
+          "on_default_branch": true,
+          "parents": [
+            "a8fd25b7d5e23afb1952d0f60a1940e18b5f1ca8"
+          ],
+          "resolved": true,
+          "sha": "a1b89e2a24e1911a40389ace2153a37f4eea92a9",
+          "subject": "Merge commit from fork"
+        }
+      ],
+      "changed_files": [
+        {
+          "added": 3,
+          "deleted": 2,
+          "kind": "py-source",
+          "path": "nicegui/app/app.py",
+          "status": "M"
+        },
+        {
+          "added": 23,
+          "deleted": 0,
+          "kind": "py-test",
+          "path": "tests/test_serving_files.py",
+          "status": "M"
+        }
+      ],
+      "classes": [
+        "path-traversal"
+      ],
+      "cve": "CVE-2025-66645",
+      "default_branch": "origin/main",
+      "fix_commit": "a1b89e2a24e1911a40389ace2153a37f4eea92a9",
+      "fix_committed_at": "2025-12-08T17:00:58+01:00",
+      "fix_subject": "Merge commit from fork",
+      "flags": [],
+      "licence_at_vulnerable": {
+        "detected": "MIT",
+        "file": "LICENSE"
+      },
+      "linked_fix_commits": [
+        "a1b89e2a24e1911a40389ace2153a37f4eea92a9"
+      ],
+      "loc_at_vulnerable": {
+        "source": 24099,
+        "total": 37306
+      },
+      "py_source_files_changed": 1,
+      "repo": "zauberzeug/nicegui",
+      "role": "selected",
+      "summary": "NiceGUI has a path traversal in app.add_media_files() allows arbitrary file read",
+      "vulnerable_commit": "a8fd25b7d5e23afb1952d0f60a1940e18b5f1ca8"
+    },
+    {
+      "advisory": "GHSA-mwc7-64wg-pgvj",
+      "candidates": [
+        {
+          "committed_at": "2024-04-12T14:27:19+02:00",
+          "on_default_branch": true,
+          "parents": [
+            "7c3e01af16dc5166814410c4a609db3ddc1a4cc5"
+          ],
+          "resolved": true,
+          "sha": "ed12eb14f2a6c48b388a05c04b3c5a107ea9d330",
+          "subject": "prevent local file access (see security advisory GHSA-mwc7-64wg-pgvj)"
+        }
+      ],
+      "changed_files": [
+        {
+          "added": 4,
+          "deleted": 0,
+          "kind": "py-source",
+          "path": "nicegui/nicegui.py",
+          "status": "M"
+        }
+      ],
+      "classes": [
+        "path-traversal"
+      ],
+      "cve": "CVE-2024-32005",
+      "default_branch": "origin/main",
+      "fix_commit": "ed12eb14f2a6c48b388a05c04b3c5a107ea9d330",
+      "fix_committed_at": "2024-04-12T14:27:19+02:00",
+      "fix_subject": "prevent local file access (see security advisory GHSA-mwc7-64wg-pgvj)",
+      "flags": [],
+      "licence_at_vulnerable": {
+        "detected": "MIT",
+        "file": "LICENSE"
+      },
+      "linked_fix_commits": [
+        "ed12eb14f2a6c48b388a05c04b3c5a107ea9d330"
+      ],
+      "loc_at_vulnerable": {
+        "source": 26410,
+        "total": 33284
+      },
+      "py_source_files_changed": 1,
+      "repo": "zauberzeug/nicegui",
+      "role": "selected",
+      "summary": "NiceGUI allows potential access to local file system",
+      "vulnerable_commit": "7c3e01af16dc5166814410c4a609db3ddc1a4cc5"
+    },
+    {
+      "advisory": "GHSA-w8wv-vfpc-hw2w",
+      "candidates": [
+        {
+          "committed_at": "2026-04-07T10:59:10+02:00",
+          "on_default_branch": true,
+          "parents": [
+            "2580928afff6e34d31b77ff22769d773feb817a8"
+          ],
+          "resolved": true,
+          "sha": "d38a702e3af2da5b0708f689be8d71413fc77056",
+          "subject": "Merge commit from fork"
+        }
+      ],
+      "changed_files": [
+        {
+          "added": 7,
+          "deleted": 2,
+          "kind": "py-source",
+          "path": "nicegui/elements/upload_files.py",
+          "status": "M"
+        },
+        {
+          "added": 13,
+          "deleted": 0,
+          "kind": "py-test",
+          "path": "tests/test_upload.py",
+          "status": "M"
+        }
+      ],
+      "classes": [
+        "path-traversal"
+      ],
+      "cve": "CVE-2026-39844",
+      "default_branch": "origin/main",
+      "fix_commit": "d38a702e3af2da5b0708f689be8d71413fc77056",
+      "fix_committed_at": "2026-04-07T10:59:10+02:00",
+      "fix_subject": "Merge commit from fork",
+      "flags": [],
+      "licence_at_vulnerable": {
+        "detected": "MIT",
+        "file": "LICENSE"
+      },
+      "linked_fix_commits": [
+        "d38a702e3af2da5b0708f689be8d71413fc77056"
+      ],
+      "loc_at_vulnerable": {
+        "source": 26454,
+        "total": 40869
+      },
+      "py_source_files_changed": 1,
+      "repo": "zauberzeug/nicegui",
+      "role": "selected",
+      "summary": "NiceGUI: Upload filename sanitization bypass via backslashes allows path traversal on Windows",
+      "vulnerable_commit": "2580928afff6e34d31b77ff22769d773feb817a8"
+    },
+    {
+      "advisory": "GHSA-p6gw-4frg-j7jw",
+      "candidates": [
+        {
+          "committed_at": "2026-06-27T08:28:42+02:00",
+          "on_default_branch": true,
+          "parents": [
+            "67abdbd7d622fcf29aefdfbd0c9910de9e0c8b3d"
+          ],
+          "resolved": true,
+          "sha": "6f35776c9188f130ab044ce557015d51aaa83500",
+          "subject": "Merge commit from fork"
+        }
+      ],
+      "changed_files": [
+        {
+          "added": 44,
+          "deleted": 96,
+          "kind": "py-source",
+          "path": "wsgidav/samples/mysql_dav_provider.py",
+          "status": "M"
+        }
+      ],
+      "classes": [
+        "sql"
+      ],
+      "cve": "CVE-2026-55509",
+      "default_branch": "origin/master",
+      "fix_commit": "6f35776c9188f130ab044ce557015d51aaa83500",
+      "fix_committed_at": "2026-06-27T08:28:42+02:00",
+      "fix_subject": "Merge commit from fork",
+      "flags": [],
+      "licence_at_vulnerable": {
+        "detected": "MIT",
+        "file": "LICENSE"
+      },
+      "linked_fix_commits": [
+        "6f35776c9188f130ab044ce557015d51aaa83500"
+      ],
+      "loc_at_vulnerable": {
+        "source": 12653,
+        "total": 15479
+      },
+      "py_source_files_changed": 1,
+      "repo": "mar10/wsgidav",
+      "role": "selected",
+      "summary": "WsgiDAV MySQL provider has a blind SQL injection",
+      "vulnerable_commit": "67abdbd7d622fcf29aefdfbd0c9910de9e0c8b3d"
+    },
+    {
+      "advisory": "GHSA-wxq4-cc2q-338q",
+      "candidates": [
+        {
+          "committed_at": "2026-05-24T13:18:05+02:00",
+          "on_default_branch": true,
+          "parents": [
+            "593a3b3dbe357480c26ae252282b327759044541"
+          ],
+          "resolved": true,
+          "sha": "f894ed8656d7bdd7438ab8148c5a02546cb15183",
+          "subject": "Fix CVE-2026-48099"
+        }
+      ],
+      "changed_files": [
+        {
+          "added": 4,
+          "deleted": 0,
+          "kind": "other",
+          "path": "CHANGELOG.md",
+          "status": "M"
+        },
+        {
+          "added": 7,
+          "deleted": 2,
+          "kind": "py-source",
+          "path": "wsgidav/fs_dav_provider.py",
+          "status": "M"
+        }
+      ],
+      "classes": [
+        "path-traversal"
+      ],
+      "cve": "CVE-2026-48099",
+      "default_branch": "origin/master",
+      "fix_commit": "f894ed8656d7bdd7438ab8148c5a02546cb15183",
+      "fix_committed_at": "2026-05-24T13:18:05+02:00",
+      "fix_subject": "Fix CVE-2026-48099",
+      "flags": [],
+      "licence_at_vulnerable": {
+        "detected": "MIT",
+        "file": "LICENSE"
+      },
+      "linked_fix_commits": [
+        "f894ed8656d7bdd7438ab8148c5a02546cb15183"
+      ],
+      "loc_at_vulnerable": {
+        "source": 12651,
+        "total": 15477
+      },
+      "py_source_files_changed": 1,
+      "repo": "mar10/wsgidav",
+      "role": "selected",
+      "summary": "WsgiDAV encoded dot segments can escape filesystem share roots",
+      "vulnerable_commit": "593a3b3dbe357480c26ae252282b327759044541"
+    },
+    {
+      "advisory": "GHSA-2h4p-vjrc-8xpq",
+      "candidates": [
+        {
+          "committed_at": "2026-04-28T14:12:40-04:00",
+          "on_default_branch": true,
+          "parents": [
+            "4ae11bd1289b2873153f3525a0dd6fffd6ee8ad8"
+          ],
+          "resolved": true,
+          "sha": "72e10c573ca0fbcbddd4455abca8ce92a61780d7",
+          "subject": "Fix path traversal via backslash URI on Windows in TemplateLookup"
+        }
+      ],
+      "changed_files": [
+        {
+          "added": 10,
+          "deleted": 0,
+          "kind": "other",
+          "path": "doc/build/unreleased/435.rst",
+          "status": "A"
+        },
+        {
+          "added": 1,
+          "deleted": 1,
+          "kind": "py-source",
+          "path": "mako/lookup.py",
+          "status": "M"
+        },
+        {
+          "added": 1,
+          "deleted": 1,
+          "kind": "py-source",
+          "path": "mako/template.py",
+          "status": "M"
+        },
+        {
+          "added": 40,
+          "deleted": 0,
+          "kind": "py-test",
+          "path": "test/test_lookup.py",
+          "status": "M"
+        }
+      ],
+      "classes": [
+        "path-traversal"
+      ],
+      "cve": "CVE-2026-44307",
+      "default_branch": "origin/main",
+      "fix_commit": "72e10c573ca0fbcbddd4455abca8ce92a61780d7",
+      "fix_committed_at": "2026-04-28T14:12:40-04:00",
+      "fix_subject": "Fix path traversal via backslash URI on Windows in TemplateLookup",
+      "flags": [],
+      "licence_at_vulnerable": {
+        "detected": "MIT",
+        "file": "LICENSE"
+      },
+      "linked_fix_commits": [
+        "72e10c573ca0fbcbddd4455abca8ce92a61780d7"
+      ],
+      "loc_at_vulnerable": {
+        "source": 6509,
+        "total": 16771
+      },
+      "py_source_files_changed": 2,
+      "repo": "sqlalchemy/mako",
+      "role": "selected",
+      "summary": "Mako vulnerable to path traversal via backslash URI on Windows in TemplateLookup",
+      "vulnerable_commit": "4ae11bd1289b2873153f3525a0dd6fffd6ee8ad8"
+    },
+    {
+      "advisory": "GHSA-v92g-xgxw-vvmm",
+      "candidates": [
+        {
+          "committed_at": "2026-04-14T15:57:59-04:00",
+          "on_default_branch": true,
+          "parents": [
+            "91232d80e4914fd82b42628bb2e2b061abb3dcfc"
+          ],
+          "resolved": true,
+          "sha": "e05ac61989a7fb9dd7dcde6cfd72dc48328719a3",
+          "subject": "Fix path traversal via double-slash URI prefix in TemplateLookup"
+        }
+      ],
+      "changed_files": [
+        {
+          "added": 10,
+          "deleted": 0,
+          "kind": "other",
+          "path": "doc/build/unreleased/434.rst",
+          "status": "A"
+        },
+        {
+          "added": 1,
+          "deleted": 3,
+          "kind": "py-source",
+          "path": "mako/template.py",
+          "status": "M"
+        },
+        {
+          "added": 41,
+          "deleted": 0,
+          "kind": "py-test",
+          "path": "test/test_lookup.py",
+          "status": "M"
+        }
+      ],
+      "classes": [
+        "path-traversal"
+      ],
+      "cve": "CVE-2026-41205",
+      "default_branch": "origin/main",
+      "fix_commit": "e05ac61989a7fb9dd7dcde6cfd72dc48328719a3",
+      "fix_committed_at": "2026-04-14T15:57:59-04:00",
+      "fix_subject": "Fix path traversal via double-slash URI prefix in TemplateLookup",
+      "flags": [],
+      "licence_at_vulnerable": {
+        "detected": "MIT",
+        "file": "LICENSE"
+      },
+      "linked_fix_commits": [
+        "e05ac61989a7fb9dd7dcde6cfd72dc48328719a3"
+      ],
+      "loc_at_vulnerable": {
+        "source": 6511,
+        "total": 16738
+      },
+      "py_source_files_changed": 1,
+      "repo": "sqlalchemy/mako",
+      "role": "selected",
+      "summary": "Mako: Path traversal via double-slash URI prefix in TemplateLookup",
+      "vulnerable_commit": "91232d80e4914fd82b42628bb2e2b061abb3dcfc"
+    },
+    {
+      "advisory": "GHSA-8prr-286p-4w7j",
+      "candidates": [
+        {
+          "committed_at": "2026-03-27T23:09:59+01:00",
+          "on_default_branch": true,
+          "parents": [
+            "71c098d8bb8091e76edaefeef4662eb77c753ce7"
+          ],
+          "resolved": true,
+          "sha": "fdd52cd1abad8d02d1dfb8ecdcdbb43b6af3b883",
+          "subject": "fix(security): parameterize Postgres query parser to prevent SQL injection (#2040)"
+        }
+      ],
+      "changed_files": [
+        {
+          "added": 106,
+          "deleted": 1,
+          "kind": "py-source",
+          "path": "alerta/database/backends/postgres/queryparser.py",
+          "status": "M"
+        },
+        {
+          "added": 8,
+          "deleted": 6,
+          "kind": "py-source",
+          "path": "alerta/database/backends/postgres/utils.py",
+          "status": "M"
+        },
+        {
+          "added": 133,
+          "deleted": 80,
+          "kind": "py-test",
+          "path": "tests/test_queryparser.py",
+          "status": "M"
+        }
+      ],
+      "classes": [
+        "sql"
+      ],
+      "cve": "CVE-2026-34400",
+      "default_branch": "origin/master",
+      "fix_commit": "fdd52cd1abad8d02d1dfb8ecdcdbb43b6af3b883",
+      "fix_committed_at": "2026-03-27T23:09:59+01:00",
+      "fix_subject": "fix(security): parameterize Postgres query parser to prevent SQL injection (#2040)",
+      "flags": [
+        "pair corrected by review (data/fix_pair_corrections.json): the advisory links both the 2018 commit that introduced the vulnerable Postgres query parser (aeba85a3, PR #712) and the fix (fdd52cd1, PR #2040, first in v9.1.0); the earliest-commit rule took the introducing one, reversing the pair. Both reviewers: wrong commit, fix is fdd52cd1"
+      ],
+      "licence_at_vulnerable": {
+        "detected": "Apache-2.0",
+        "file": "LICENSE"
+      },
+      "linked_fix_commits": [
+        "aeba85a37a09e5769a7a2da56481aa979ff99a00",
+        "fdd52cd1abad8d02d1dfb8ecdcdbb43b6af3b883"
+      ],
+      "loc_at_vulnerable": {
+        "source": 13513,
+        "total": 24904
+      },
+      "py_source_files_changed": 2,
+      "repo": "alerta/alerta",
+      "role": "selected",
+      "summary": "alerta-server has potential SQL Injection vulnerability in Query String Syntax (q=) API",
+      "vulnerable_commit": "71c098d8bb8091e76edaefeef4662eb77c753ce7"
+    },
+    {
+      "advisory": "GHSA-hg4c-rgvm-964g",
+      "candidates": [
+        {
+          "committed_at": "2016-10-11T07:51:33-04:00",
+          "on_default_branch": true,
+          "parents": [
+            "cd425019eea7809f48609821c68c6afc42bf2dde"
+          ],
+          "resolved": true,
+          "sha": "d83df944b1fc0f266444c31852c7730f0f41db87",
+          "subject": "implement CQL to OGC filter transforms"
+        }
+      ],
+      "changed_files": [
+        {
+          "added": 113,
+          "deleted": 0,
+          "kind": "py-source",
+          "path": "pycsw/ogc/csw/cql.py",
+          "status": "A"
+        },
+        {
+          "added": 30,
+          "deleted": 11,
+          "kind": "py-source",
+          "path": "pycsw/ogc/csw/csw2.py",
+          "status": "M"
+        },
+        {
+          "added": 30,
+          "deleted": 11,
+          "kind": "py-source",
+          "path": "pycsw/ogc/csw/csw3.py",
+          "status": "M"
+        },
+        {
+          "added": 23,
+          "deleted": 0,
+          "kind": "other",
+          "path": "tests/expected/suites_default_get_GetRecords-filter-cql-title-or-abstract.xml",
+          "status": "A"
+        },
+        {
+          "added": 23,
+          "deleted": 0,
+          "kind": "other",
+          "path": "tests/expected/suites_default_get_GetRecords-filter-cql-title.xml",
+          "status": "A"
+        },
+        {
+          "added": 12,
+          "deleted": 0,
+          "kind": "other",
+          "path": "tests/expected/suites_default_post_GetRecords-cql-title-and-abstract.xml",
+          "status": "A"
+        },
+        {
+          "added": 2,
+          "deleted": 0,
+          "kind": "other",
+          "path": "tests/suites/default/get/requests.txt",
+          "status": "M"
+        },
+        {
+          "added": 9,
+          "deleted": 0,
+          "kind": "other",
+          "path": "tests/suites/default/post/GetRecords-cql-title-and-abstract.xml",
+          "status": "A"
+        }
+      ],
+      "classes": [
+        "sql"
+      ],
+      "cve": "CVE-2016-8640",
+      "default_branch": "origin/master",
+      "fix_commit": "d83df944b1fc0f266444c31852c7730f0f41db87",
+      "fix_committed_at": "2016-10-11T07:51:33-04:00",
+      "fix_subject": "implement CQL to OGC filter transforms",
+      "flags": [
+        "pair corrected by review (data/fix_pair_corrections.json): the advisory links only release-branch backports (69546e13 on 2.0, 522873e on 1.10, daaf09b on 1.8); d83df944 is the main-line commit merged by PR #474, identical to the 2.0 backport apart from one log call. Both reviewers: main-line fix is d83df944"
+      ],
+      "licence_at_vulnerable": {
+        "detected": "MIT",
+        "file": "LICENSE.txt"
+      },
+      "linked_fix_commits": [
+        "522873e5ce48bb9cbd4e7e8168ca881ce709c222",
+        "69546e13527c82e4f9191769215490381ad511b2",
+        "daaf09b4b920708a415be3c7f446739661ba3753"
+      ],
+      "loc_at_vulnerable": {
+        "source": 11749,
+        "total": 12638
+      },
+      "py_source_files_changed": 3,
+      "repo": "geopython/pycsw",
+      "role": "selected",
+      "summary": "SQL Injection in pycsw",
+      "vulnerable_commit": "cd425019eea7809f48609821c68c6afc42bf2dde"
+    },
+    {
+      "advisory": "GHSA-xq59-7jf3-rjc6",
+      "candidates": [
+        {
+          "committed_at": "2023-11-10T17:20:01Z",
+          "on_default_branch": true,
+          "parents": [
+            "e4946d858e1aae1a9a4cf7714957d07983d94cde"
+          ],
+          "resolved": true,
+          "sha": "82679eb8cd1449cf31d87c9914a072e70168b6eb",
+          "subject": "Merge pull request from GHSA-xq59-7jf3-rjc6"
+        }
+      ],
+      "changed_files": [
+        {
+          "added": 15,
+          "deleted": 0,
+          "kind": "py-source",
+          "path": "piccolo/engine/base.py",
+          "status": "M"
+        },
+        {
+          "added": 4,
+          "deleted": 1,
+          "kind": "py-source",
+          "path": "piccolo/engine/postgres.py",
+          "status": "M"
+        },
+        {
+          "added": 4,
+          "deleted": 1,
+          "kind": "py-source",
+          "path": "piccolo/engine/sqlite.py",
+          "status": "M"
+        },
+        {
+          "added": 13,
+          "deleted": 0,
+          "kind": "py-test",
+          "path": "tests/engine/test_transaction.py",
+          "status": "M"
+        }
+      ],
+      "classes": [
+        "sql"
+      ],
+      "cve": "CVE-2023-47128",
+      "default_branch": "origin/master",
+      "fix_commit": "82679eb8cd1449cf31d87c9914a072e70168b6eb",
+      "fix_committed_at": "2023-11-10T17:20:01Z",
+      "fix_subject": "Merge pull request from GHSA-xq59-7jf3-rjc6",
+      "flags": [],
+      "licence_at_vulnerable": {
+        "detected": "MIT",
+        "file": "LICENSE"
+      },
+      "linked_fix_commits": [
+        "82679eb8cd1449cf31d87c9914a072e70168b6eb"
+      ],
+      "loc_at_vulnerable": {
+        "source": 17514,
+        "total": 34468
+      },
+      "py_source_files_changed": 3,
+      "repo": "piccolo-orm/piccolo",
+      "role": "selected",
+      "summary": "piccolo SQL Injection via named transaction savepoints",
+      "vulnerable_commit": "e4946d858e1aae1a9a4cf7714957d07983d94cde"
+    },
+    {
+      "advisory": "GHSA-9j2c-x8qm-qmjq",
+      "candidates": [
+        {
+          "committed_at": "2020-04-18T16:58:20+02:00",
+          "on_default_branch": true,
+          "parents": [
+            "816ff00e988f79b4ff1601f247062bb5eb9db802"
+          ],
+          "resolved": true,
+          "sha": "91c364053e0ddf77edc5442914c6f049512678b3",
+          "subject": "Fixed various SQL generation issues"
+        }
+      ],
+      "changed_files": [
+        {
+          "added": 3,
+          "deleted": 0,
+          "kind": "other",
+          "path": "CHANGELOG.rst",
+          "status": "M"
+        },
+        {
+          "added": 127,
+          "deleted": 0,
+          "kind": "py-test",
+          "path": "tests/test_fuzz.py",
+          "status": "A"
+        },
+        {
+          "added": 52,
+          "deleted": 15,
+          "kind": "py-source",
+          "path": "tortoise/backends/mysql/executor.py",
+          "status": "M"
+        },
+        {
+          "added": 83,
+          "deleted": 8,
+          "kind": "py-source",
+          "path": "tortoise/filters.py",
+          "status": "M"
+        }
+      ],
+      "classes": [
+        "sql"
+      ],
+      "cve": "CVE-2020-11010",
+      "default_branch": "origin/develop",
+      "fix_commit": "91c364053e0ddf77edc5442914c6f049512678b3",
+      "fix_committed_at": "2020-04-18T16:58:20+02:00",
+      "fix_subject": "Fixed various SQL generation issues",
+      "flags": [],
+      "licence_at_vulnerable": {
+        "detected": "Apache-2.0",
+        "file": "LICENSE.txt"
+      },
+      "linked_fix_commits": [
+        "91c364053e0ddf77edc5442914c6f049512678b3"
+      ],
+      "loc_at_vulnerable": {
+        "source": 7469,
+        "total": 19804
+      },
+      "py_source_files_changed": 2,
+      "repo": "tortoise/tortoise-orm",
+      "role": "selected",
+      "summary": "SQL injection in Tortoise ORM",
+      "vulnerable_commit": "816ff00e988f79b4ff1601f247062bb5eb9db802"
+    },
+    {
+      "advisory": "GHSA-xxh2-68g9-8jqr",
+      "candidates": [
+        {
+          "committed_at": "2026-02-22T20:50:28+07:00",
+          "on_default_branch": true,
+          "parents": [
+            "ef95d3214daf9ccfd5591ae51d8b2fbe4b66c633"
+          ],
+          "resolved": true,
+          "sha": "a03bae14fe01358d3eaf7e319fcd5db2e4956b16",
+          "subject": "fix vulnerability by column filtering (#1557)"
+        }
+      ],
+      "changed_files": [
+        {
+          "added": 22,
+          "deleted": 2,
+          "kind": "other",
+          "path": "docs/releases.md",
+          "status": "M"
+        },
+        {
+          "added": 6,
+          "deleted": 1,
+          "kind": "py-source",
+          "path": "ormar/queryset/queryset.py",
+          "status": "M"
+        },
+        {
+          "added": 1,
+          "deleted": 1,
+          "kind": "other",
+          "path": "pyproject.toml",
+          "status": "M"
+        },
+        {
+          "added": 0,
+          "deleted": 0,
+          "kind": "py-test",
+          "path": "tests/test_vulnerabilities/__init__.py",
+          "status": "A"
+        },
+        {
+          "added": 69,
+          "deleted": 0,
+          "kind": "py-test",
+          "path": "tests/test_vulnerabilities/test_aggregated_functions.py",
+          "status": "A"
+        }
+      ],
+      "classes": [
+        "sql"
+      ],
+      "cve": "CVE-2026-26198",
+      "default_branch": "origin/master",
+      "fix_commit": "a03bae14fe01358d3eaf7e319fcd5db2e4956b16",
+      "fix_committed_at": "2026-02-22T20:50:28+07:00",
+      "fix_subject": "fix vulnerability by column filtering (#1557)",
+      "flags": [],
+      "licence_at_vulnerable": {
+        "detected": "MIT",
+        "file": "LICENSE.md"
+      },
+      "linked_fix_commits": [
+        "a03bae14fe01358d3eaf7e319fcd5db2e4956b16"
+      ],
+      "loc_at_vulnerable": {
+        "source": 14776,
+        "total": 29683
+      },
+      "py_source_files_changed": 1,
+      "repo": "collerek/ormar",
+      "role": "selected",
+      "summary": "ormar is vulnerable to SQL Injection through aggregate functions min() and max()",
+      "vulnerable_commit": "ef95d3214daf9ccfd5591ae51d8b2fbe4b66c633"
+    },
+    {
+      "advisory": "GHSA-6497-prx7-gpmq",
+      "candidates": [
+        {
+          "committed_at": "2025-12-14T15:05:51+01:00",
+          "on_default_branch": true,
+          "parents": [
+            "c301579e0ac4034c19bece63c08bf628613700b4"
+          ],
+          "resolved": true,
+          "sha": "6aa8ef14ffdee4ba1044349ab948e1a1fbfaf419",
+          "subject": "Fix SQL injection in to_postgis via geometry column name (#3681)"
+        }
+      ],
+      "changed_files": [
+        {
+          "added": 1,
+          "deleted": 0,
+          "kind": "other",
+          "path": "CHANGELOG.md",
+          "status": "M"
+        },
+        {
+          "added": 5,
+          "deleted": 1,
+          "kind": "py-source",
+          "path": "geopandas/io/sql.py",
+          "status": "M"
+        },
+        {
+          "added": 256,
+          "deleted": 0,
+          "kind": "py-test",
+          "path": "geopandas/io/tests/test_sql.py",
+          "status": "M"
+        }
+      ],
+      "classes": [
+        "sql"
+      ],
+      "cve": "CVE-2025-69662",
+      "default_branch": "origin/main",
+      "fix_commit": "6aa8ef14ffdee4ba1044349ab948e1a1fbfaf419",
+      "fix_committed_at": "2025-12-14T15:05:51+01:00",
+      "fix_subject": "Fix SQL injection in to_postgis via geometry column name (#3681)",
+      "flags": [],
+      "licence_at_vulnerable": {
+        "detected": "BSD-3-Clause",
+        "file": "LICENSE.txt"
+      },
+      "linked_fix_commits": [
+        "6aa8ef14ffdee4ba1044349ab948e1a1fbfaf419"
+      ],
+      "loc_at_vulnerable": {
+        "source": 20124,
+        "total": 39899
+      },
+      "py_source_files_changed": 1,
+      "repo": "geopandas/geopandas",
+      "role": "reserve",
+      "summary": "geopandas SQL Injection Vulnerability in to_postgis() Allows Information Disclosure",
+      "vulnerable_commit": "c301579e0ac4034c19bece63c08bf628613700b4"
+    },
+    {
+      "advisory": "GHSA-j6cv-98jx-mrwr",
+      "candidates": [
+        {
+          "committed_at": "2024-05-09T11:33:06+02:00",
+          "on_default_branch": true,
+          "parents": [
+            "3ef367a33d5d61c608a8a37afa79e454c15a6a7b",
+            "8eb7b870dd54ef3cec78edd987869b03c6c3c1ed"
+          ],
+          "resolved": true,
+          "sha": "f9368df28518b6c4a92fd207c260f1978ec34d6e",
+          "subject": "Merge pull request #113 from laowantong/fix-RCE-vulnerabilities"
+        }
+      ],
+      "changed_files": [
+        {
+          "added": 1,
+          "deleted": 1,
+          "kind": "py-source",
+          "path": "mocodo/__init__.py",
+          "status": "M"
+        },
+        {
+          "added": 2,
+          "deleted": 2,
+          "kind": "other",
+          "path": "web/generate.php",
+          "status": "M"
+        },
+        {
+          "added": 1,
+          "deleted": 1,
+          "kind": "other",
+          "path": "web/rewrite.php",
+          "status": "M"
+        }
+      ],
+      "classes": [
+        "sql"
+      ],
+      "cve": "CVE-2024-35374",
+      "default_branch": "origin/master",
+      "fix_commit": "f9368df28518b6c4a92fd207c260f1978ec34d6e",
+      "fix_committed_at": "2024-05-09T11:33:06+02:00",
+      "fix_subject": "Merge pull request #113 from laowantong/fix-RCE-vulnerabilities",
+      "flags": [
+        "fix commit is a merge; diff taken against its first parent",
+        "fix changes more non-Python code (6 lines) than Python source (2 lines); check the vulnerable code is Python"
+      ],
+      "licence_at_vulnerable": {
+        "detected": "MIT",
+        "file": "LICENSE"
+      },
+      "linked_fix_commits": [
+        "f9368df28518b6c4a92fd207c260f1978ec34d6e"
+      ],
+      "loc_at_vulnerable": {
+        "source": 10044,
+        "total": 13570
+      },
+      "py_source_files_changed": 1,
+      "repo": "laowantong/mocodo",
+      "role": "reserve",
+      "summary": "Mocodo vulnerable to SQL injection in `/web/generate.php`",
+      "vulnerable_commit": "3ef367a33d5d61c608a8a37afa79e454c15a6a7b"
+    },
+    {
+      "advisory": "GHSA-f2mf-q878-gh58",
+      "candidates": [
+        {
+          "committed_at": "2026-01-05T16:22:27Z",
+          "on_default_branch": true,
+          "parents": [
+            "2c37ae3e75137095302dac5f9cd3ca956cb51a47"
+          ],
+          "resolved": true,
+          "sha": "013a928461e70f38a33258bd525a351ed828e974",
+          "subject": "Switch two visualization views to safer SQL parameter style (#4049)"
+        }
+      ],
+      "changed_files": [
+        {
+          "added": 8,
+          "deleted": 6,
+          "kind": "py-source",
+          "path": "parsl/monitoring/visualization/views.py",
+          "status": "M"
+        }
+      ],
+      "classes": [
+        "sql"
+      ],
+      "cve": "CVE-2026-21892",
+      "default_branch": "origin/master",
+      "fix_commit": "013a928461e70f38a33258bd525a351ed828e974",
+      "fix_committed_at": "2026-01-05T16:22:27Z",
+      "fix_subject": "Switch two visualization views to safer SQL parameter style (#4049)",
+      "flags": [],
+      "licence_at_vulnerable": {
+        "detected": "Apache-2.0",
+        "file": "LICENSE"
+      },
+      "linked_fix_commits": [
+        "013a928461e70f38a33258bd525a351ed828e974"
+      ],
+      "loc_at_vulnerable": {
+        "source": 20557,
+        "total": 31440
+      },
+      "py_source_files_changed": 1,
+      "repo": "parsl/parsl",
+      "role": "reserve",
+      "summary": "Parsl Monitoring Visualization Vulnerable to SQL Injection",
+      "vulnerable_commit": "2c37ae3e75137095302dac5f9cd3ca956cb51a47"
+    },
+    {
+      "advisory": "GHSA-3xw7-v6cj-5q8h",
+      "candidates": [
+        {
+          "committed_at": "2025-08-18T11:42:09+02:00",
+          "on_default_branch": true,
+          "parents": [
+            "0e7fb3661f91e8d49fff8af564a4fd99c3e5487d"
+          ],
+          "resolved": true,
+          "sha": "3feea3b3ff3c20d80cbb16a2f3b9567ffc5606d1",
+          "subject": "fix: cast Jinja context path variables to `pathlib.PurePath`"
+        }
+      ],
+      "changed_files": [
+        {
+          "added": 13,
+          "deleted": 8,
+          "kind": "py-source",
+          "path": "copier/_main.py",
+          "status": "M"
+        },
+        {
+          "added": 3,
+          "deleted": 3,
+          "kind": "other",
+          "path": "docs/creating.md",
+          "status": "M"
+        },
+        {
+          "added": 56,
+          "deleted": 0,
+          "kind": "py-test",
+          "path": "tests/test_context.py",
+          "status": "M"
+        }
+      ],
+      "classes": [
+        "path-traversal"
+      ],
+      "cve": "CVE-2025-55201",
+      "default_branch": "origin/master",
+      "fix_commit": "3feea3b3ff3c20d80cbb16a2f3b9567ffc5606d1",
+      "fix_committed_at": "2025-08-18T11:42:09+02:00",
+      "fix_subject": "fix: cast Jinja context path variables to `pathlib.PurePath`",
+      "flags": [
+        "3877 source LOC at vulnerable commit, outside 5000-50000"
+      ],
+      "licence_at_vulnerable": {
+        "detected": "MIT",
+        "file": "LICENSE"
+      },
+      "linked_fix_commits": [
+        "3feea3b3ff3c20d80cbb16a2f3b9567ffc5606d1"
+      ],
+      "loc_at_vulnerable": {
+        "source": 3877,
+        "total": 15213
+      },
+      "py_source_files_changed": 1,
+      "repo": "copier-org/copier",
+      "role": "reserve",
+      "summary": "Copier's safe template has arbitrary filesystem read/write access",
+      "vulnerable_commit": "0e7fb3661f91e8d49fff8af564a4fd99c3e5487d"
+    },
+    {
+      "advisory": "GHSA-85v3-4m8g-hrh6",
+      "candidates": [
+        {
+          "committed_at": "2026-03-31T13:39:56+02:00",
+          "on_default_branch": true,
+          "parents": [
+            "7aa7021bd73797c982492bac3535515d4484fdb7"
+          ],
+          "resolved": true,
+          "sha": "cb80a3ffc9c3787de3ed837e04ca29a0ff8ca3df",
+          "subject": "fix: disallow `_subdirectory` path outside template root"
+        }
+      ],
+      "changed_files": [
+        {
+          "added": 4,
+          "deleted": 1,
+          "kind": "py-source",
+          "path": "copier/_main.py",
+          "status": "M"
+        },
+        {
+          "added": 67,
+          "deleted": 0,
+          "kind": "py-test",
+          "path": "tests/test_subdirectory.py",
+          "status": "M"
+        }
+      ],
+      "classes": [
+        "path-traversal"
+      ],
+      "cve": "CVE-2026-34726",
+      "default_branch": "origin/master",
+      "fix_commit": "cb80a3ffc9c3787de3ed837e04ca29a0ff8ca3df",
+      "fix_committed_at": "2026-03-31T13:39:56+02:00",
+      "fix_subject": "fix: disallow `_subdirectory` path outside template root",
+      "flags": [
+        "4356 source LOC at vulnerable commit, outside 5000-50000"
+      ],
+      "licence_at_vulnerable": {
+        "detected": "MIT",
+        "file": "LICENSE"
+      },
+      "linked_fix_commits": [
+        "cb80a3ffc9c3787de3ed837e04ca29a0ff8ca3df"
+      ],
+      "loc_at_vulnerable": {
+        "source": 4356,
+        "total": 17201
+      },
+      "py_source_files_changed": 1,
+      "repo": "copier-org/copier",
+      "role": "reserve",
+      "summary": "Copier `_subdirectory` allows template root escape via parent-directory traversal",
+      "vulnerable_commit": "7aa7021bd73797c982492bac3535515d4484fdb7"
+    },
+    {
+      "advisory": "GHSA-9gmc-jqmh-3rvm",
+      "candidates": [],
+      "classes": [
+        "path-traversal"
+      ],
+      "cve": "CVE-2026-53951",
+      "default_branch": "origin/master",
+      "fix_commit": null,
+      "flags": [
+        "no fix commit linked by the advisory"
+      ],
+      "linked_fix_commits": [],
+      "repo": "copier-org/copier",
+      "role": "reserve",
+      "summary": "Copier has a trust-prefix bypass via path traversal that runs tasks unprompted",
+      "vulnerable_commit": null
+    },
+    {
+      "advisory": "GHSA-hgjq-p8cr-gg4h",
+      "candidates": [
+        {
+          "committed_at": "2026-03-31T13:50:21+02:00",
+          "on_default_branch": true,
+          "parents": [
+            "cb80a3ffc9c3787de3ed837e04ca29a0ff8ca3df"
+          ],
+          "resolved": true,
+          "sha": "5413062eb17b73dc885f5e645cdc161e69ef641b",
+          "subject": "fix: require `--trust` for `_external_data` paths outside subproject root"
+        }
+      ],
+      "changed_files": [
+        {
+          "added": 20,
+          "deleted": 3,
+          "kind": "py-source",
+          "path": "copier/_main.py",
+          "status": "M"
+        },
+        {
+          "added": 2,
+          "deleted": 2,
+          "kind": "py-source",
+          "path": "copier/errors.py",
+          "status": "M"
+        },
+        {
+          "added": 6,
+          "deleted": 0,
+          "kind": "other",
+          "path": "docs/configuring.md",
+          "status": "M"
+        },
+        {
+          "added": 97,
+          "deleted": 0,
+          "kind": "py-test",
+          "path": "tests/test_answersfile.py",
+          "status": "M"
+        }
+      ],
+      "classes": [
+        "path-traversal"
+      ],
+      "cve": "CVE-2026-34730",
+      "default_branch": "origin/master",
+      "fix_commit": "5413062eb17b73dc885f5e645cdc161e69ef641b",
+      "fix_committed_at": "2026-03-31T13:50:21+02:00",
+      "fix_subject": "fix: require `--trust` for `_external_data` paths outside subproject root",
+      "flags": [
+        "4359 source LOC at vulnerable commit, outside 5000-50000"
+      ],
+      "licence_at_vulnerable": {
+        "detected": "MIT",
+        "file": "LICENSE"
+      },
+      "linked_fix_commits": [
+        "5413062eb17b73dc885f5e645cdc161e69ef641b"
+      ],
+      "loc_at_vulnerable": {
+        "source": 4359,
+        "total": 17263
+      },
+      "py_source_files_changed": 2,
+      "repo": "copier-org/copier",
+      "role": "reserve",
+      "summary": "Copier `_external_data` allows path traversal and absolute-path local file read without unsafe mode",
+      "vulnerable_commit": "cb80a3ffc9c3787de3ed837e04ca29a0ff8ca3df"
+    },
+    {
+      "advisory": "GHSA-p7q8-grrj-3m8w",
+      "candidates": [
+        {
+          "committed_at": "2025-08-18T13:25:56+02:00",
+          "on_default_branch": true,
+          "parents": [
+            "3feea3b3ff3c20d80cbb16a2f3b9567ffc5606d1"
+          ],
+          "resolved": true,
+          "sha": "fdbc0167cc22780b497e4db176feaf6f024757d6",
+          "subject": "fix: disallow render paths outside destination directory"
+        }
+      ],
+      "changed_files": [
+        {
+          "added": 10,
+          "deleted": 6,
+          "kind": "py-source",
+          "path": "copier/_main.py",
+          "status": "M"
+        },
+        {
+          "added": 7,
+          "deleted": 0,
+          "kind": "py-source",
+          "path": "copier/errors.py",
+          "status": "M"
+        },
+        {
+          "added": 82,
+          "deleted": 0,
+          "kind": "py-test",
+          "path": "tests/test_copy.py",
+          "status": "M"
+        }
+      ],
+      "classes": [
+        "path-traversal"
+      ],
+      "cve": "CVE-2025-55214",
+      "default_branch": "origin/master",
+      "fix_commit": "fdbc0167cc22780b497e4db176feaf6f024757d6",
+      "fix_committed_at": "2025-08-18T13:25:56+02:00",
+      "fix_subject": "fix: disallow render paths outside destination directory",
+      "flags": [
+        "3880 source LOC at vulnerable commit, outside 5000-50000"
+      ],
+      "licence_at_vulnerable": {
+        "detected": "MIT",
+        "file": "LICENSE"
+      },
+      "linked_fix_commits": [
+        "fdbc0167cc22780b497e4db176feaf6f024757d6"
+      ],
+      "loc_at_vulnerable": {
+        "source": 3880,
+        "total": 15266
+      },
+      "py_source_files_changed": 2,
+      "repo": "copier-org/copier",
+      "role": "reserve",
+      "summary": "Copier's safe template has filesystem write access outside destination path",
+      "vulnerable_commit": "3feea3b3ff3c20d80cbb16a2f3b9567ffc5606d1"
+    }
+  ],
+  "manifest_sha256": "e7f969c1250d163488551290c62280f40af51d08715bfbbfb97436589641672a",
+  "schema_version": 1,
+  "status": "automatic resolution — every flag needs a human decision in BUILD_PLAN 2.3"
+}

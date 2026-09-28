@@ -79,8 +79,13 @@ that reintroduces the hallucination surface the design specifically avoids.
 - **Seed repositories** (decided 2026-09-27): the projects whose real injection CVE fixes supply
   the ground truth, recorded in `data/seed_repos.json` (built by `scripts/build_seed_manifest.py`
   from the OSV PyPI export). "5k–50k LOC" means non-blank `.py` lines outside test/doc/example
-  directories. The set is heavy on path traversal (22 of 34 advisories) because that is what the
-  permissive, mid-sized pool contains; report results per class rather than pooled.
+  directories, measured at each advisory's vulnerable commit (2.2). The set is heavy on path
+  traversal (22 of the 35 candidate pairs after 2.2) because that is what the permissive,
+  mid-sized pool contains; report results per class rather than pooled.
+- **Commit pairs** (2.2): commits not taken from an advisory itself live in their own files so
+  each is auditable: `data/recovered_fix_commits.json` (fixes for advisories linking none) and
+  `data/fix_pair_corrections.json` (hand-curated, only where both independent reviewers agreed).
+  Never edit a pair in `data/fix_pairs.json` directly — it is regenerated.
 - **Bounded retrieval**: default 2-hop neighborhood around changed symbols. Hop depth is an
   ablation variable (1/2/3), not something to "improve" beyond the plan.
 - **Deployment targets**: CI pre-merge gate and agent-framework middleware (e.g., a LangGraph
@@ -185,6 +190,8 @@ response protocol and byte-identical replay on real output, and surfaced problem
 research framing in the fixture, seeds collapsing under the cache, Opus-only request settings
 breaking Haiku 4.5, requested-vs-reported model IDs breaking replay, and replay rejecting traces
 whose first seed stopped early. The code-generation model is decided (`claude-opus-4-8`, see
-`docs/MODEL_CHOICE.md`). **M1.2 in progress:** step 2.1 done provisionally — 12 seed repos with 34
-injection advisories plus 4 reserves in `data/seed_repos.json`. **Next: 2.2, resolving each advisory's
-fix commits to vulnerable/fixed pairs with changed file paths.**
+`docs/MODEL_CHOICE.md`). **M1.2 in progress:** step 2.1 done provisionally — 12 seed repos plus 4
+reserves in `data/seed_repos.json`. Step 2.2 done — 35 candidate vulnerable/fixed pairs in the
+selected repos (`data/fix_pairs.json`), each reviewed by two independent reviewers
+(`data/fix_review.json`). **Next: 2.3, manual validation of those 35** — open issues are listed in
+BUILD_PLAN 2.2's as-built note.

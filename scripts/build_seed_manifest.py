@@ -43,7 +43,7 @@ from graphgate.dataset.seed_repos import (
 # three ORMs exercise query construction itself.
 SELECTED = [
     "gitpython-developers/gitpython",
-    "parisneo/lollms",
+    "parisneo/lollms_legacy",
     "datadog/guarddog",
     "ietf-tools/xml2rfc",
     "zauberzeug/nicegui",
@@ -55,6 +55,14 @@ SELECTED = [
     "tortoise/tortoise-orm",
     "collerek/ormar",
 ]
+
+# A seed repo whose advisories were filed under a different repo name. The
+# current parisneo/lollms is a new repository created 2025-05-07 that reused the
+# name; the history containing every linked fix commit (GitHub reports them
+# missing from parisneo/lollms) lives in parisneo/lollms_legacy. Found in 2.2.
+ADVISORY_REPO_ALIASES = {
+    "parisneo/lollms_legacy": "parisneo/lollms",
+}
 
 # Swapped in if BUILD_PLAN 2.3 validation drops events below the M1 target.
 # copier is 15 lines under LOC_MIN on the source-only rule; it is listed so the
@@ -85,18 +93,26 @@ def main(argv: list[str] | None = None) -> int:
 
     advisories, skipped = extract_injection_advisories(load_osv_zip(args.osv_zip))
     groups = group_by_repo(advisories)
+    # Advisories naming a repo but linking no fix commit. Recorded so the
+    # manifest lists every known injection advisory per repo, not only the
+    # ones whose fix is linked; 2.2 tries to recover their fixes.
+    unlinked: dict[str, list] = {}
+    for a in advisories:
+        if a.repo and not a.fix_commits:
+            unlinked.setdefault(a.repo, []).append(a)
     today = date.today().isoformat()
     problems: list[str] = []
 
     def entry(repo: str, role: str) -> dict:
-        advs = groups.get(repo, [])
+        source = ADVISORY_REPO_ALIASES.get(repo, repo)
+        advs = groups.get(source, []) + unlinked.get(source, [])
         meta = fetch_repo_meta(repo)
         measured = measure_repo(repo, args.clones)
         status = licence_status(meta.licence)
         in_range = LOC_MIN <= measured["source"] <= LOC_MAX
         if role == "selected":
-            if not advs:
-                problems.append(f"{repo}: no usable advisory")
+            if not any(a.fix_commits for a in advs):
+                problems.append(f"{repo}: no advisory with a linked fix commit")
             if status != "permissive":
                 problems.append(f"{repo}: licence {meta.licence!r} is {status}")
             if not in_range:
@@ -120,6 +136,7 @@ def main(argv: list[str] | None = None) -> int:
             # Repository-level holdout (BUILD_PLAN 5.4) is assigned before any
             # rule or allowlist tuning; null until then.
             "holdout": None,
+            "advisories_filed_under": source,
             "advisories": [
                 {
                     "id": a.id,
