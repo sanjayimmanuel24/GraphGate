@@ -1,0 +1,61 @@
+{
+  "event_id": "ormar-xxh2",
+  "advisories": [
+    "GHSA-xxh2-68g9-8jqr"
+  ],
+  "repo": "collerek/ormar",
+  "clean_commit": "a03bae14fe01358d3eaf7e319fcd5db2e4956b16",
+  "regressed_commit": "ef95d3214daf9ccfd5591ae51d8b2fbe4b66c633",
+  "vulnerability_class": "sql",
+  "flow": {
+    "entry": [
+      {
+        "symbol": "ormar/queryset/queryset.py::QuerySet.max",
+        "kind": "library-api",
+        "note": "public aggregate API: the caller's column string (or list of strings) is wrapped in a list and passed unchanged to self._query_aggr_function(func_name='max', columns=columns)"
+      },
+      {
+        "symbol": "ormar/queryset/queryset.py::QuerySet.min",
+        "kind": "library-api",
+        "note": "same as max with func_name='min'; sum/avg take the same route but are stopped at both commits by the is_numeric lookup (KeyError on an unknown field name)"
+      }
+    ],
+    "guards": [
+      {
+        "symbol": "ormar/queryset/queryset.py::QuerySet._query_aggr_function",
+        "note": "clean: after building the SelectAction objects and before apply_func, raises QueryDefinitionError if any x.field_name is not a key of x.target_model.model_fields, so only declared field names reach the SQL text. regressed: the membership check is absent; only func_name in ['sum','avg'] is checked (is_numeric), so min/max pass any string through"
+      }
+    ],
+    "sinks": [
+      {
+        "symbol": "ormar/queryset/actions/select_action.py::SelectAction.get_text_clause",
+        "kind": "sql",
+        "note": "sqlalchemy.text(f\"{alias}{self.field_name}\") turns the caller's string into literal SQL; field_name is the last '__' segment set by SelectAction._split_value_into_parts. SelectAction.apply_func wraps it in func.max/min(...), and QuerySet._query_aggr_function (queryset.py) executes the resulting select via executor.fetch_one(expr)"
+      }
+    ]
+  },
+  "slice": {
+    "ormar/queryset/queryset.py": [
+      "QuerySet.__init__",
+      "QuerySet.model_config",
+      "QuerySet.model",
+      "QuerySet.build_select_expression",
+      "QuerySet._query_aggr_function",
+      "QuerySet.max",
+      "QuerySet.min",
+      "QuerySet.sum",
+      "QuerySet.avg"
+    ],
+    "ormar/queryset/actions/select_action.py": [
+      "SelectAction"
+    ],
+    "ormar/queryset/actions/query_action.py": [
+      "QueryAction"
+    ],
+    "ormar/queryset/utils.py": [
+      "get_relationship_alias_model_and_str",
+      "_process_through_field"
+    ]
+  },
+  "notes": "Written at 2.3 (no pilot spec). Fix a03bae1 (PR #1557, release 0.23.0) changes one Python file, ormar/queryset/queryset.py: it adds a field-name membership check in QuerySet._query_aggr_function. The rest of the commit diff is docs/releases.md, pyproject.toml version bump and new tests, none in the slice. Flow at ef95d32: QuerySet.max/min(columns) -> _query_aggr_function builds SelectAction(select_str=column, model_cls=self.model) -> QueryAction.__init__ calls SelectAction._split_value_into_parts (field_name = last '__' segment, related_parts = the rest) and _determine_filter_target_table -> get_relationship_alias_model_and_str (utils.py; indexes ormar_config.model_fields[relation] for each related part, so relation segments must already be real fields at both commits; table_prefix comes from the alias manager) -> apply_func(func) -> get_text_clause -> sqlalchemy.text(alias + field_name) -> func.max/min(...) -> sqlalchemy.select(...) -> executor.fetch_one(expr). Clean: the new check raises QueryDefinitionError before apply_func unless field_name is a key of target_model.model_fields (declared field names, i.e. Python identifiers), so the advisory payloads ('1 + 1', 'category__1 + 1', a sqlite_master subquery) are rejected; SelectAction is constructed only in _query_aggr_function, so the one check covers every route to the sink (QuerysetProxy.min/max delegate to QuerySet). sum/avg were not exploitable before the fix: is_numeric -> get_target_field_type indexes model_fields[field_name] and raises KeyError for unknown names; they are kept in the slice because they share the guard function. Sink choice: the raw-SQL construction sqlalchemy.text() in select_action.py is recorded as the sink (where the string becomes SQL); the statement is executed back in queryset.py::QuerySet._query_aggr_function via executor.fetch_one. Entry and guard are in queryset.py, sink in select_action.py, hence cross_file. The regression diff also reverts a cosmetic string-literal change in the neighbouring sum/avg error message (\"only with\" \"numeric\" vs \"only with numeric\"), part of the real fix commit. Upstream later replaced sqlalchemy.text() with sqlalchemy.column() (9b405ab, 0.25.0) as hardening; not part of this pair. Cut from the slice: the Query class behind build_select_expression (ormar/queryset/queries/query.py), the database executor, and the rest of QuerySet (filter/order/CRUD methods); none carries the column string."
+}

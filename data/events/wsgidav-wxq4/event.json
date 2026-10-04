@@ -1,0 +1,223 @@
+{
+  "advisories": [
+    "GHSA-wxq4-cc2q-338q"
+  ],
+  "checks": [
+    {
+      "detail": "regressed commit is an ancestor of the clean commit",
+      "name": "commits",
+      "status": "ok"
+    },
+    {
+      "detail": "every requested symbol exists in at least one variant",
+      "name": "symbols-found",
+      "status": "ok"
+    },
+    {
+      "detail": "entry and sinks exist in both variants, guards in the clean one",
+      "name": "flow-present",
+      "status": "ok"
+    },
+    {
+      "detail": "files changed by the regression: wsgidav/fs_dav_provider.py",
+      "name": "regression-nonempty",
+      "status": "ok"
+    },
+    {
+      "detail": "every slice file parses",
+      "name": "parses",
+      "status": "ok"
+    },
+    {
+      "detail": "clean slice is 14741 bytes (soft limit 24576, hard limit 49152)",
+      "name": "size",
+      "status": "ok"
+    },
+    {
+      "detail": "referenced but cut: wsgidav/fs_dav_provider.py::FolderResource, wsgidav/request_server.py::RequestServer._evaluate_if_headers",
+      "name": "dropped-references",
+      "status": "warn"
+    },
+    {
+      "detail": "string literals with security wording (kept, review them): wsgidav/fs_dav_provider.py:135, wsgidav/fs_dav_provider.py:140",
+      "name": "flagged-strings",
+      "status": "warn"
+    }
+  ],
+  "clean_commit": "f894ed8656d7bdd7438ab8148c5a02546cb15183",
+  "event_id": "wsgidav-wxq4",
+  "files": {
+    "wsgidav/fs_dav_provider.py": {
+      "clean": {
+        "approx_tokens": 1834,
+        "bytes": 6417,
+        "dropped_references": [
+          "FolderResource"
+        ],
+        "kept": [
+          "BUFFER_SIZE",
+          "FileResource.__init__",
+          "FileResource.get_content",
+          "FilesystemProvider.__init__",
+          "FilesystemProvider._loc_to_file_path",
+          "FilesystemProvider._resolve_shadow_path",
+          "FilesystemProvider.get_resource_inst",
+          "_logger"
+        ],
+        "lines": 161,
+        "missing": [],
+        "original_lines": 488,
+        "syntax_error": null
+      },
+      "regressed": {
+        "approx_tokens": 1727,
+        "bytes": 6042,
+        "dropped_references": [
+          "FolderResource"
+        ],
+        "kept": [
+          "BUFFER_SIZE",
+          "FileResource.__init__",
+          "FileResource.get_content",
+          "FilesystemProvider.__init__",
+          "FilesystemProvider._loc_to_file_path",
+          "FilesystemProvider._resolve_shadow_path",
+          "FilesystemProvider.get_resource_inst",
+          "_logger"
+        ],
+        "lines": 156,
+        "missing": [],
+        "original_lines": 483,
+        "syntax_error": null
+      }
+    },
+    "wsgidav/request_server.py": {
+      "clean": {
+        "approx_tokens": 2379,
+        "bytes": 8324,
+        "dropped_references": [
+          "RequestServer._evaluate_if_headers"
+        ],
+        "kept": [
+          "DEFAULT_BLOCK_SIZE",
+          "RequestServer.__init__",
+          "RequestServer._fail",
+          "RequestServer._send_resource",
+          "RequestServer.do_GET",
+          "_logger"
+        ],
+        "lines": 227,
+        "missing": [],
+        "original_lines": 1622,
+        "syntax_error": null
+      },
+      "regressed": {
+        "approx_tokens": 2379,
+        "bytes": 8324,
+        "dropped_references": [
+          "RequestServer._evaluate_if_headers"
+        ],
+        "kept": [
+          "DEFAULT_BLOCK_SIZE",
+          "RequestServer.__init__",
+          "RequestServer._fail",
+          "RequestServer._send_resource",
+          "RequestServer.do_GET",
+          "_logger"
+        ],
+        "lines": 227,
+        "missing": [],
+        "original_lines": 1622,
+        "syntax_error": null
+      }
+    }
+  },
+  "flagged_strings": {
+    "clean": [
+      {
+        "kind": "string",
+        "line": 140,
+        "path": "wsgidav/fs_dav_provider.py",
+        "text": "f\"Security exception: tried to access file outside root {root_path}: {file_path}\""
+      }
+    ],
+    "regressed": [
+      {
+        "kind": "string",
+        "line": 135,
+        "path": "wsgidav/fs_dav_provider.py",
+        "text": "f\"Security exception: tried to access file outside root: {file_path}\""
+      }
+    ]
+  },
+  "flow": {
+    "entry": [
+      {
+        "kind": "http-request",
+        "note": "GET/HEAD handler (do_GET/do_HEAD delegate here); reads the request path environ['PATH_INFO'] and passes it unchanged to self._davProvider.get_resource_inst(path, environ). Upstream, WsgiDAVApp.__call__ (wsgidav_app.py, not in slice) only strips the share prefix, so a request /share/%2e%2e/share_evil/secret arrives here as PATH_INFO '/../share_evil/secret' with the '..' segment intact",
+        "symbol": "wsgidav/request_server.py::RequestServer._send_resource"
+      }
+    ],
+    "guards": [
+      {
+        "note": "builds file_path = os.path.abspath(os.path.join(root_path, *path.strip('/').split('/'))), so '..' segments are resolved. regressed: containment check is file_path.startswith(root_path), which accepts a sibling directory whose name merely starts with the root name (root /tmp/share, resolved /tmp/share_evil/secret passes); clean: compares root_path.rstrip(os.sep)+os.sep against file_path.rstrip(os.sep)+os.sep, so only the root itself and its descendants pass and the sibling raises RuntimeError",
+        "symbol": "wsgidav/fs_dav_provider.py::FilesystemProvider._loc_to_file_path"
+      }
+    ],
+    "sinks": [
+      {
+        "kind": "filesystem",
+        "note": "get_resource_inst returns FileResource(path, environ, fp) for the resolved path (os.stat in __init__), and _send_resource calls res.get_content(), which does open(self._file_path, 'rb', BUFFER_SIZE) and streams the bytes of the out-of-root file to the client",
+        "symbol": "wsgidav/fs_dav_provider.py::FileResource.get_content"
+      }
+    ]
+  },
+  "flow_files": [
+    "wsgidav/fs_dav_provider.py",
+    "wsgidav/request_server.py"
+  ],
+  "notes": "Reviewed at 2.3 (2026-09-30). Class path-traversal (CWE-22), verified in code at both commits. Fix f894ed8 changes only FilesystemProvider._loc_to_file_path (plus CHANGELOG, outside the slice). Regressed 593a3b3 flow: RequestServer.do_GET -> _send_resource reads environ['PATH_INFO'] -> FilesystemProvider.get_resource_inst -> _loc_to_file_path joins root with the path parts and os.path.abspath resolves '..', then accepts it because file_path.startswith(root_path) is a plain string-prefix test -> FileResource(path, environ, fp) -> FileResource.get_content open(fp, 'rb') streamed to the client. Checked with the extracted expressions: root /tmp/share, PATH_INFO /../share_evil/secret resolves to /tmp/share_evil/secret, which passes the regressed check and is rejected by the clean check; /a/b and / pass both; /../etc/passwd (/tmp/etc/passwd) is rejected by both. So the fix closes only the sibling-prefix escape: the attacker can reach directories next to the root whose names start with the root's basename, not arbitrary paths. Upstream of the entry, WsgiDAVApp.__call__ (wsgidav_app.py, not in slice) strips the share prefix and does not normalise '..'; the advisory says clients must send the dot segment encoded (%2e%2e), which the WSGI server decodes into PATH_INFO. The shadow_map branch (is_shadow) is configuration-controlled and bypasses the check at both commits by design. Parallel flows closed by the same change, not modelled: PUT (FileResource.begin_write / FolderResource.create_empty_resource), DELETE (os.unlink / shutil.rmtree), MKCOL, PROPFIND/PROPPATCH, and COPY/MOVE destinations (copy_move_single / move_recursive call _loc_to_file_path on the Destination path). A later commit 12380f3 (CVE-2026-55560, symlinked parents) rewrites the same check again; it is a separate bug. Accepted dropped references: FolderResource (returned by get_resource_inst when the resolved path is a directory; _send_resource then refuses collections, so it is not on the file-read flow, and the class is large); RequestServer._evaluate_if_headers (If/lock header evaluation, does not touch the path).",
+  "regressed_commit": "593a3b3dbe357480c26ae252282b327759044541",
+  "regression_files": [
+    "wsgidav/fs_dav_provider.py"
+  ],
+  "repo": "mar10/wsgidav",
+  "schema_version": 1,
+  "scope": "cross_file",
+  "scrubbed": {
+    "clean": [],
+    "regressed": []
+  },
+  "slice": {
+    "wsgidav/fs_dav_provider.py": [
+      "_logger",
+      "BUFFER_SIZE",
+      "FileResource.__init__",
+      "FileResource.get_content",
+      "FilesystemProvider.__init__",
+      "FilesystemProvider._resolve_shadow_path",
+      "FilesystemProvider._loc_to_file_path",
+      "FilesystemProvider.get_resource_inst"
+    ],
+    "wsgidav/request_server.py": [
+      "_logger",
+      "DEFAULT_BLOCK_SIZE",
+      "RequestServer.__init__",
+      "RequestServer._fail",
+      "RequestServer.do_GET",
+      "RequestServer._send_resource"
+    ]
+  },
+  "spec_sha256": "e037e04ce2c2fe5da296d746ffabc012011018bab030738afa7ea6b1d8498454",
+  "totals": {
+    "clean": {
+      "approx_tokens": 4213,
+      "bytes": 14741
+    },
+    "regressed": {
+      "approx_tokens": 4106,
+      "bytes": 14366
+    }
+  },
+  "vulnerability_class": "path-traversal"
+}

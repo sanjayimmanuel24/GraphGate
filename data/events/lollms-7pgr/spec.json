@@ -1,0 +1,45 @@
+{
+  "event_id": "lollms-7pgr",
+  "advisories": [
+    "GHSA-7pgr-32fx-c6x9"
+  ],
+  "repo": "parisneo/lollms_legacy",
+  "clean_commit": "aeace796d861e922133b769710019608a6363264",
+  "regressed_commit": "28ee567a9a120967215ff19b96ab7515ce469620",
+  "vulnerability_class": "path-traversal",
+  "flow": {
+    "entry": [
+      {
+        "symbol": "lollms/server/endpoints/lollms_file_system.py::vectorize_folder",
+        "kind": "http-request",
+        "note": "POST /vectorize_folder JSON body field FolderInfos.db_path, formatted '<db_name>::<folder_path>'; the nested process() closure splits it on '::' and takes parts[1] as folder_path"
+      }
+    ],
+    "guards": [
+      {
+        "symbol": "lollms/server/endpoints/lollms_file_system.py::vectorize_folder",
+        "note": "clean: folder_path = sanitize_path(parts[1], True), which raises HTTPException on any '..' run, '//' or $(...) and on shell punctuation, before any filesystem use (the exception kills the worker thread). Regressed: folder_path = parts[1] unchecked. allow_absolute_path=True, so absolute folders still pass in both versions"
+      }
+    ],
+    "sinks": [
+      {
+        "symbol": "lollms/server/endpoints/lollms_file_system.py::vectorize_folder",
+        "kind": "filesystem",
+        "note": "in process(): VectorDatabase(Path(folder_path)/f'{db_name}.sqlite', ..., reset=True) creates/resets a sqlite file there, and Path(folder_path).glob(...) + TextDocumentsLoader.read_file(fn) reads every supported file under it"
+      }
+    ]
+  },
+  "slice": {
+    "lollms/server/endpoints/lollms_file_system.py": [
+      "router",
+      "lollmsElfServer",
+      "FolderInfos",
+      "vectorize_folder"
+    ],
+    "lollms/security.py": [
+      "check_access",
+      "sanitize_path"
+    ]
+  },
+  "notes": "Reviewed at 2.3 (2026-09-29). Pair: aeace796 ('added sanitization to vectorize_folder paths', 2024-07-22) is the direct child of 28ee567a; the pair diff touches only lollms/server/endpoints/lollms_file_system.py (+2/-2): the unused import sanitize_path_from_endpoint becomes sanitize_path, and in vectorize_folder's nested process() folder_path = parts[1] becomes sanitize_path(parts[1], True). lollms/security.py is byte-identical at both commits, so the sliced sanitize_path/check_access produce no diff hunk; they are included so the guard's behaviour is readable. Class: path-traversal (advisory CWE-22); by the code, a request-body path selects the directory in which a sqlite file is created/reset (VectorDatabase(..., reset=True)) and whose supported files are all read and indexed. Flow: POST /vectorize_folder body {client_id, db_path:'<db_name>::<folder>'} -> vectorize_folder -> process() split on '::' -> folder_path -> Path(folder_path)/f'{db_name}.sqlite' -> VectorDatabase, and Path(folder_path).glob(...) -> TextDocumentsLoader.read_file. Entry, guard and sink are the same function (the nested closure), so scope is local; sanitize_path in security.py is an unchanged helper, not the guard. Verified concretely by executing the real sanitize_path source from aeace796 (stubbed HTTPException/ASCIIColors) with allow_absolute_path=True: '../../secret', 'docs/../../x' and '..\\..\\Users' are rejected (HTTPException), 'my_docs' passes unchanged. The exception is raised in the worker thread before any filesystem call, so the thread ends without touching the target. The regressed version passes all of these straight to Path/VectorDatabase/glob. KNOWN-INCOMPLETE FIX (per the 2.2 refute reviewer, confirmed): (1) allow_absolute_path=True, so absolute folders ('C:/Users/victim', '/etc') still pass in the clean version; this appears deliberate (the feature vectorizes a user-chosen local folder) and upstream never tightened it; (2) db_name (parts[0]) is not sanitized, so '../x' in the name still moves the created .sqlite file relative to folder_path; (3) the non-'::' branch still uses db_path unsanitized but requires a server-side Tk dialog answer. The modelled flow is the relative '..'-sequence traversal through folder_path, which the clean commit does close. Because an attacker can still name any absolute folder, the practical attacker capability is only partly reduced; the event is a real guard insertion on a real source->sink path, but reviewers of results should know the residual flows exist in the clean slice (a gate flagging the db_name or absolute-path flows on the clean version is not a false positive in the security sense). Parallel code named by the advisory but not changed: add_rag_database (folder from a server-side Tk dialog) and toggle_mount_rag_database (path from stored config by exact name) take no request path at the vulnerable commit and are not in the slice. Flagged string kept: sanitize_path's default exception_text ('Detected an attempt of path traversal or command injection...') in lollms/security.py is real behaviour. The regressed endpoint imports sanitize_path_from_endpoint (unused there), which is not in the sliced security.py."
+}

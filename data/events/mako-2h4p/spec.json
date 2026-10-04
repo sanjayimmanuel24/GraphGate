@@ -1,0 +1,40 @@
+{
+  "event_id": "mako-2h4p",
+  "advisories": ["GHSA-2h4p-vjrc-8xpq"],
+  "repo": "sqlalchemy/mako",
+  "clean_commit": "72e10c573ca0fbcbddd4455abca8ce92a61780d7",
+  "regressed_commit": "4ae11bd1289b2873153f3525a0dd6fffd6ee8ad8",
+  "vulnerability_class": "path-traversal",
+  "flow": {
+    "entry": [
+      {
+        "symbol": "mako/lookup.py::TemplateLookup.get_template",
+        "kind": "library-api",
+        "note": "the application passes a template name (uri) to the public lookup API; in a web application this is typically derived from the request. On a cache miss get_template strips leading '/' only, joins the uri onto each configured directory with posixpath, and probes the result with os.path.isfile; a hit goes to self._load(srcfile, uri)"
+      }
+    ],
+    "guards": [
+      {
+        "symbol": "mako/template.py::Template.__init__",
+        "note": "the effective guard: u_norm = os.path.normpath(uri with leading '/' stripped); if it starts with '..' TemplateLookupException is raised before any file is read. Clean converts backslashes to '/' first (self.uri.replace(BACKSLASH, '/').lstrip('/')), so a uri such as <bs>..<bs>..<bs>x becomes ../../x and is rejected. Regressed only does lstrip('/'); on Windows normpath collapses the leading-backslash form to <bs>x, which does not start with '..', so the check passes"
+      },
+      {
+        "symbol": "mako/lookup.py::TemplateLookup.get_template",
+        "note": "companion change in the same fix: clean converts backslashes to '/' before stripping leading slashes and joining (re.sub of leading slashes over uri.replace(BACKSLASH, '/')), so the posixpath resolution agrees with what os.path.isfile will open. It rejects nothing by itself - the rejection happens in Template.__init__"
+      }
+    ],
+    "sinks": [
+      {
+        "symbol": "mako/util.py::read_file",
+        "kind": "filesystem",
+        "note": "open(path, mode).read() on the filename resolved from the uri; called from Template._compile_from_file (both branches), which Template.__init__ reaches after the u_norm check. The content is then compiled as a template (_compile_text) and returned to the caller via render(). os.path.isfile(srcfile) in get_template is an earlier filesystem probe on the same tainted path"
+      }
+    ]
+  },
+  "slice": {
+    "mako/lookup.py": ["TemplateLookup.__init__", "TemplateLookup.get_template", "TemplateLookup._load", "TemplateLookup._check"],
+    "mako/template.py": ["Template.__init__", "Template._setup_cache_args", "Template._compile_from_file", "_compile", "_compile_text"],
+    "mako/util.py": ["read_file"]
+  },
+  "notes": "Written at 2.3 (2026-10-04); <bs> below stands for a backslash character. Class path-traversal (CWE-22), decided from the code: a caller-supplied template uri is joined onto a template directory and the resulting file is opened and read. Hop by hop at regressed 4ae11bd: TemplateLookup.get_template(uri) -> u = uri with leading '/' stripped -> srcfile = posixpath.normpath(posixpath.join(dir_, u)) (posixpath treats a backslash as an ordinary character, so the '..' segments survive) -> os.path.isfile(srcfile) (on Windows the backslashes are separators, so the path resolves outside the directory) -> TemplateLookup._load(srcfile, uri) -> Template(uri=uri, filename=posixpath.normpath(filename), ...) -> Template.__init__: u_norm = os.path.normpath(self.uri.lstrip('/')), startswith('..') check passes -> self._compile_from_file(path, filename) -> util.read_file(filename) -> open(). At clean 72e10c5 the same path reaches Template.__init__, where the backslash-normalised u_norm starts with '..' and TemplateLookupException is raised before _compile_from_file. Verified by running both commits' mako package on Windows (Python 3.12; templates dir <base>/app/templates, target <base>/secrets/creds.txt): uris '<bs>..<bs>..<bs>secrets<bs>creds.txt' and '/<bs>..<bs>..<bs>secrets<bs>creds.txt' render the target file's content at 4ae11bd and raise TemplateLookupException ('cannot be relative outside of the root path') at 72e10c5; '..<bs>..<bs>secrets<bs>creds.txt' (no leading backslash) and '/../../secrets/creds.txt' are rejected at both commits; 'index.html' loads at both. So the flow is live only in the leading-backslash form and only on Windows (on POSIX a backslash is a literal filename character and isfile fails); the code and the fix themselves are platform-independent Python. Of the two changed lines, the Template.__init__ one is what closes the flow (with only the lookup.py line changed, ntpath.normpath of the unconverted uri still yields '<bs>secrets<bs>creds.txt' and the check passes); the lookup.py line is recorded as a second guard because it is part of the fix and of the regression diff. Fix completeness: the clean commit closes the backslash flow; a sibling flow from the same posixpath/ntpath mismatch (drive-designator uri such as C:/../../x, upstream issue #441, fixed later in 000ed85) is still open at the clean commit and is not modelled here. The regression diff is exactly the two code lines of the fix (the fix's test and changelog file are outside the slice). Scope: entry in mako/lookup.py, effective guard in mako/template.py, sink in mako/util.py. Slice: TemplateLookup.__init__ (self.directories, template_args), get_template, _load, _check (called from get_template on a cache hit); Template.__init__, _setup_cache_args, _compile_from_file, and the module-level _compile/_compile_text that consume the read data; util.read_file. Accepted dropped references: TemplateCollection (abstract base class of TemplateLookup, mostly docstrings, not on the flow), ModuleInfo (bookkeeping record created after compilation), _compile_module_file (writes the generated module when module_directory is set; the modelled flow is the default in-memory branch, and util.read_file is called on the tainted filename in both branches). Scrubber: one docstring paragraph in mako/lookup.py (the modulename_callable parameter description, which uses the word 'inject' about module locations) is removed in both variants; it is unrelated to the flow."
+}

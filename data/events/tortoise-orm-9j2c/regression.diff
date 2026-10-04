@@ -1,0 +1,184 @@
+--- a/tortoise/backends/mysql/executor.py
++++ b/tortoise/backends/mysql/executor.py
+@@ -4,14 +4,10 @@
+ 
+ from tortoise import Model
+ from tortoise.backends.base.executor import BaseExecutor
+-from tortoise.fields import BigIntField, IntField, SmallIntField
++from tortoise.fields import BigIntField, Field, IntField, SmallIntField
+ from tortoise.filters import (
+-    Like,
+-    Term,
+-    ValueWrapper,
+     contains,
+     ends_with,
+-    format_quotes,
+     insensitive_contains,
+     insensitive_ends_with,
+     insensitive_exact,
+@@ -20,65 +16,32 @@
+ )
+ 
+ 
+-class StrWrapper(ValueWrapper):  # type: ignore
+-    """
+-    Naive str wrapper that doesn't use the monkey-patched pypika ValueWraper for MySQL
+-    """
+-
+-    def get_value_sql(self, **kwargs):
+-        quote_char = kwargs.get("secondary_quote_char") or ""
+-        value = self.value.replace(quote_char, quote_char * 2)
+-        return format_quotes(value, quote_char)
++def mysql_contains(field: Field, value: str) -> Criterion:
++    return functions.Cast(field, SqlTypes.CHAR).like(f"%{value}%")
+ 
+ 
+-def escape_like(val: str) -> str:
+-    return val.replace("\\", "\\\\\\\\").replace("%", "\\%").replace("_", "\\_")
++def mysql_starts_with(field: Field, value: str) -> Criterion:
++    return functions.Cast(field, SqlTypes.CHAR).like(f"{value}%")
+ 
+ 
+-def mysql_contains(field: Term, value: str) -> Criterion:
+-    return Like(
+-        functions.Cast(field, SqlTypes.CHAR), StrWrapper(f"%{escape_like(value)}%"), escape=""
+-    )
++def mysql_ends_with(field: Field, value: str) -> Criterion:
++    return functions.Cast(field, SqlTypes.CHAR).like(f"%{value}")
+ 
+ 
+-def mysql_starts_with(field: Term, value: str) -> Criterion:
+-    return Like(
+-        functions.Cast(field, SqlTypes.CHAR), StrWrapper(f"{escape_like(value)}%"), escape=""
+-    )
++def mysql_insensitive_exact(field: Field, value: str) -> Criterion:
++    return functions.Upper(functions.Cast(field, SqlTypes.CHAR)).eq(functions.Upper(f"{value}"))
+ 
+ 
+-def mysql_ends_with(field: Term, value: str) -> Criterion:
+-    return Like(
+-        functions.Cast(field, SqlTypes.CHAR), StrWrapper(f"%{escape_like(value)}"), escape=""
+-    )
++def mysql_insensitive_contains(field: Field, value: str) -> Criterion:
++    return functions.Upper(functions.Cast(field, SqlTypes.CHAR)).like(functions.Upper(f"%{value}%"))
+ 
+ 
+-def mysql_insensitive_exact(field: Term, value: str) -> Criterion:
+-    return functions.Upper(functions.Cast(field, SqlTypes.CHAR)).eq(functions.Upper(str(value)))
++def mysql_insensitive_starts_with(field: Field, value: str) -> Criterion:
++    return functions.Upper(functions.Cast(field, SqlTypes.CHAR)).like(functions.Upper(f"{value}%"))
+ 
+ 
+-def mysql_insensitive_contains(field: Term, value: str) -> Criterion:
+-    return Like(
+-        functions.Upper(functions.Cast(field, SqlTypes.CHAR)),
+-        functions.Upper(StrWrapper(f"%{escape_like(value)}%")),
+-        escape="",
+-    )
+-
+-
+-def mysql_insensitive_starts_with(field: Term, value: str) -> Criterion:
+-    return Like(
+-        functions.Upper(functions.Cast(field, SqlTypes.CHAR)),
+-        functions.Upper(StrWrapper(f"{escape_like(value)}%")),
+-        escape="",
+-    )
+-
+-
+-def mysql_insensitive_ends_with(field: Term, value: str) -> Criterion:
+-    return Like(
+-        functions.Upper(functions.Cast(field, SqlTypes.CHAR)),
+-        functions.Upper(StrWrapper(f"%{escape_like(value)}")),
+-        escape="",
+-    )
++def mysql_insensitive_ends_with(field: Field, value: str) -> Criterion:
++    return functions.Upper(functions.Cast(field, SqlTypes.CHAR)).like(functions.Upper(f"%{value}"))
+ 
+ 
+ class MySQLExecutor(BaseExecutor):
+--- a/tortoise/filters.py
++++ b/tortoise/filters.py
+@@ -4,17 +4,7 @@
+ 
+ from pypika import Table
+ from pypika.functions import Upper
+-from pypika.terms import (
+-    BasicCriterion,
+-    Criterion,
+-    Enum,
+-    Equality,
+-    Term,
+-    ValueWrapper,
+-    basestring,
+-    date,
+-    format_quotes,
+-)
++from pypika.terms import BasicCriterion, Criterion, Equality, Term, ValueWrapper
+ 
+ from tortoise.fields import Field
+ from tortoise.fields.relational import BackwardFKRelation, ManyToManyFieldInstance
+@@ -23,57 +13,33 @@
+     from tortoise.models import Model
+ 
+ 
+-class Like(BasicCriterion):  # type: ignore
+-    def __init__(self, left, right, alias=None, escape=" ESCAPE '\\'") -> None:
+-        """
+-        A Like that supports an ESCAPE clause
+-        """
+-        super().__init__(" LIKE ", left, right, alias=alias)
+-        self.escape = escape
+-
+-    def get_sql(self, quote_char='"', with_alias=False, **kwargs):
+-        sql = "{left}{comparator}{right}{escape}".format(
+-            comparator=self.comparator,
+-            left=self.left.get_sql(quote_char=quote_char, **kwargs),
+-            right=self.right.get_sql(quote_char=quote_char, **kwargs),
+-            escape=self.escape,
+-        )
+-        if with_alias and self.alias:  # pragma: nocoverage
+-            return '{sql} "{alias}"'.format(sql=sql, alias=self.alias)
+-        return sql
+-
+-
+-def escape_like(val: str) -> str:
+-    return val.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+-
+-
+ def string_encoder(value: Any, instance: "Model", field: Field) -> str:
+     return str(value)
+ 
+ 
+ def contains(field: Term, value: str) -> Criterion:
+-    return Like(field, field.wrap_constant(f"%{escape_like(value)}%"))
++    return field.like(f"%{value}%")
+ 
+ 
+ def starts_with(field: Term, value: str) -> Criterion:
+-    return Like(field, field.wrap_constant(f"{escape_like(value)}%"))
++    return field.like(f"{value}%")
+ 
+ 
+ def ends_with(field: Term, value: str) -> Criterion:
+-    return Like(field, field.wrap_constant(f"%{escape_like(value)}"))
++    return field.like(f"%{value}")
+ 
+ 
+ def insensitive_exact(field: Term, value: str) -> Criterion:
+-    return Upper(field).eq(Upper(str(value)))
++    return Upper(field).eq(Upper(f"{value}"))
+ 
+ 
+ def insensitive_contains(field: Term, value: str) -> Criterion:
+-    return Like(Upper(field), field.wrap_constant(Upper(f"%{escape_like(value)}%")))
++    return Upper(field).like(Upper(f"%{value}%"))
+ 
+ 
+ def insensitive_starts_with(field: Term, value: str) -> Criterion:
+-    return Like(Upper(field), field.wrap_constant(Upper(f"{escape_like(value)}%")))
++    return Upper(field).like(Upper(f"{value}%"))
+ 
+ 
+ def insensitive_ends_with(field: Term, value: str) -> Criterion:
+-    return Like(Upper(field), field.wrap_constant(Upper(f"%{escape_like(value)}")))
++    return Upper(field).like(Upper(f"%{value}"))

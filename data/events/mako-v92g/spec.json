@@ -1,0 +1,50 @@
+{
+  "event_id": "mako-v92g",
+  "advisories": [
+    "GHSA-v92g-xgxw-vvmm"
+  ],
+  "repo": "sqlalchemy/mako",
+  "clean_commit": "e05ac61989a7fb9dd7dcde6cfd72dc48328719a3",
+  "regressed_commit": "91232d80e4914fd82b42628bb2e2b061abb3dcfc",
+  "vulnerability_class": "path-traversal",
+  "flow": {
+    "entry": [
+      {
+        "symbol": "mako/lookup.py::TemplateLookup.get_template",
+        "kind": "library-api",
+        "note": "the application passes a template uri (typically derived from a request path) to get_template(uri). On a cache miss it strips ALL leading slashes (re.sub of ^/+), joins the rest onto each template directory with posixpath.normpath(posixpath.join(dir_, u)), tests os.path.isfile(srcfile) and calls self._load(srcfile, uri), which constructs Template(uri=uri, filename=srcfile, ...) with the ORIGINAL uri"
+      }
+    ],
+    "guards": [
+      {
+        "symbol": "mako/template.py::Template.__init__",
+        "note": "the uri check: u_norm = os.path.normpath(uri without leading slashes); if it starts with '..' a TemplateLookupException is raised before any file is read. Clean: u_norm = self.uri.lstrip('/'), the same stripping get_template applied. Regressed: only one leading '/' is removed, so '//../../x' becomes '/../../x', normpath collapses that to the root-anchored '/x', the '..' test passes, while get_template already resolved '../../x' against the template directory"
+      }
+    ],
+    "sinks": [
+      {
+        "symbol": "mako/util.py::read_file",
+        "kind": "filesystem",
+        "note": "open(path, mode).read() on the filename built in get_template; reached from Template.__init__ -> Template._compile_from_file(path, filename) -> util.read_file(filename) (all three branches). The content is compiled as a template and returned to the caller for rendering"
+      }
+    ]
+  },
+  "slice": {
+    "mako/lookup.py": [
+      "TemplateCollection",
+      "TemplateLookup.__init__",
+      "TemplateLookup.get_template",
+      "TemplateLookup._load",
+      "TemplateLookup._check"
+    ],
+    "mako/template.py": [
+      "Template.__init__",
+      "Template._setup_cache_args",
+      "Template._compile_from_file"
+    ],
+    "mako/util.py": [
+      "read_file"
+    ]
+  },
+  "notes": "Validated at 2.3. Fix e05ac619 (issue #434, released in 1.3.11) changes only the uri normalisation in Template.__init__ (plus a test and a changelog file); the regression diff is that single hunk. Class: path-traversal (CWE-22), arbitrary file read outside the template directories. Verified concretely with the two normalisations extracted from each commit: for uri '//../../secrets/creds.txt' and '///../x' the regressed check does not raise (posixpath and ntpath both), the clean check raises; a single-slash '/../../x' is rejected at both commits; get_template resolves '//../../secrets/creds.txt' under /base/app/templates to /base/secrets/creds.txt at both commits (lookup.py is unchanged by the fix). Scope is cross_file because entry and path construction are in mako/lookup.py, the guard in mako/template.py and the open() in mako/util.py. Not modelled: the same flow entered through template tags (include/inherit/namespace -> runtime._lookup_template -> lookup.get_template), which needs attacker-controlled template source. Residual behaviour not closed by the fix: get_template calls os.path.isfile(srcfile) before the Template check, so a file-existence difference (TopLevelLookupException vs TemplateLookupException) remains at the clean commit; the file read itself is closed. Secondary effect of the same line: with module_directory set, the regressed u_norm is root-anchored, so the generated module path os.path.join(module_directory, u_norm + '.py') also leaves module_directory. Later sibling advisories (backslash uri #435 fixed by 72e10c5, drive-letter uri #441 fixed by 000ed85) are separate Windows-only bypasses of the same check and are still open at the clean commit; the modelled double-slash flow is closed. Accepted dropped references: ModuleInfo, _compile_text, _compile_module_file (template compilation after the file has been read, downstream of the sink). The scrubber removed the modulename_callable docstring paragraph in lookup.py (wording false positive, no behaviour)."
+}

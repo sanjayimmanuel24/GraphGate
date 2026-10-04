@@ -1,0 +1,179 @@
+{
+  "advisories": [
+    "GHSA-hxp3-63hc-5366"
+  ],
+  "checks": [
+    {
+      "detail": "regressed commit is an ancestor of the clean commit",
+      "name": "commits",
+      "status": "ok"
+    },
+    {
+      "detail": "every requested symbol exists in at least one variant",
+      "name": "symbols-found",
+      "status": "ok"
+    },
+    {
+      "detail": "entry and sinks exist in both variants, guards in the clean one",
+      "name": "flow-present",
+      "status": "ok"
+    },
+    {
+      "detail": "files changed by the regression: nicegui/app/app.py",
+      "name": "regression-nonempty",
+      "status": "ok"
+    },
+    {
+      "detail": "every slice file parses",
+      "name": "parses",
+      "status": "ok"
+    },
+    {
+      "detail": "clean slice is 4035 bytes (soft limit 24576, hard limit 49152)",
+      "name": "size",
+      "status": "ok"
+    },
+    {
+      "detail": "nothing referenced was cut",
+      "name": "dropped-references",
+      "status": "ok"
+    },
+    {
+      "detail": "no string literal uses security wording",
+      "name": "flagged-strings",
+      "status": "ok"
+    }
+  ],
+  "clean_commit": "a1b89e2a24e1911a40389ace2153a37f4eea92a9",
+  "event_id": "nicegui-hxp3",
+  "files": {
+    "nicegui/app/app.py": {
+      "clean": {
+        "approx_tokens": 544,
+        "bytes": 1904,
+        "dropped_references": [],
+        "kept": [
+          "App.add_media_files"
+        ],
+        "lines": 45,
+        "missing": [],
+        "original_lines": 343,
+        "syntax_error": null
+      },
+      "regressed": {
+        "approx_tokens": 516,
+        "bytes": 1806,
+        "dropped_references": [],
+        "kept": [
+          "App.add_media_files"
+        ],
+        "lines": 44,
+        "missing": [],
+        "original_lines": 342,
+        "syntax_error": null
+      }
+    },
+    "nicegui/app/range_response.py": {
+      "clean": {
+        "approx_tokens": 609,
+        "bytes": 2131,
+        "dropped_references": [],
+        "kept": [
+          "get_range_response"
+        ],
+        "lines": 56,
+        "missing": [],
+        "original_lines": 58,
+        "syntax_error": null
+      },
+      "regressed": {
+        "approx_tokens": 609,
+        "bytes": 2131,
+        "dropped_references": [],
+        "kept": [
+          "get_range_response"
+        ],
+        "lines": 56,
+        "missing": [],
+        "original_lines": 58,
+        "syntax_error": null
+      }
+    }
+  },
+  "flagged_strings": {
+    "clean": [],
+    "regressed": []
+  },
+  "flow": {
+    "entry": [
+      {
+        "kind": "http-request",
+        "note": "the nested route handler read_item registered on '<url_path>/{filename:path}' receives the URL path parameter filename (e.g. /media/%2e%2e/.env; Starlette percent-decodes before routing, and the :path converter lets '/' and '..' segments through)",
+        "symbol": "nicegui/app/app.py::App.add_media_files"
+      }
+    ],
+    "guards": [
+      {
+        "note": "clean read_item resolves both local_directory and local_dir / filename and returns 404 unless filepath.is_relative_to(local_dir); regressed read_item only joins Path(local_directory) / filename and checks is_file(), so any existing file outside the directory passes",
+        "symbol": "nicegui/app/app.py::App.add_media_files"
+      }
+    ],
+    "sinks": [
+      {
+        "kind": "filesystem",
+        "note": "read_item passes the joined path as file; get_range_response calls file.stat() and its nested content_reader does open(file, 'rb') and streams the bytes back in a StreamingResponse",
+        "symbol": "nicegui/app/range_response.py::get_range_response"
+      }
+    ]
+  },
+  "flow_files": [
+    "nicegui/app/app.py",
+    "nicegui/app/range_response.py"
+  ],
+  "notes": "Reviewed at 2.3 (2026-09-29). Pair a8fd25b7 -> a1b89e2a is the fix's only parent and the GitHub fork-merge fix listed in the OSV references; the regression diff touches only read_item inside App.add_media_files (the test file is outside the slice). Class path-traversal (CWE-22): arbitrary file read. Flow: HTTP path parameter filename in the nested handler read_item (App.add_media_files, app.py) -> Path(local_directory) / filename -> is_file() only -> get_range_response(filepath, ...) in range_response.py -> file.stat() and open(file, 'rb') in nested content_reader. Entry and guard share the symbol App.add_media_files because read_item is a closure; the sink is in another file, so scope is cross_file (both 2.2 reviewers agree). The clean check (resolve + is_relative_to) also rejects symlinks escaping the directory. Parallel handler App.add_media_file serves a single fixed path (no user-controlled path), so it is not a flow and is not sliced. Unused module imports in the app.py slice (asyncio, signal, etc.) are an artefact of trimming the large App class.",
+  "regressed_commit": "a8fd25b7d5e23afb1952d0f60a1940e18b5f1ca8",
+  "regression_files": [
+    "nicegui/app/app.py"
+  ],
+  "repo": "zauberzeug/nicegui",
+  "schema_version": 1,
+  "scope": "cross_file",
+  "scrubbed": {
+    "clean": [
+      {
+        "kind": "docstring",
+        "line": 31,
+        "path": "nicegui/app/app.py",
+        "text": "`add_media_files()` allows a local files to be streamed from a specified endpoint, e.g. `'/media'`.\n        This should be used for media files to support proper streaming.\n        Otherwise the browser would not be able to access and load the the files incrementally or jump to different positions in the stream.\n        Do only put non-security-critical files in there, as they are accessible to everyone."
+      }
+    ],
+    "regressed": [
+      {
+        "kind": "docstring",
+        "line": 31,
+        "path": "nicegui/app/app.py",
+        "text": "`add_media_files()` allows a local files to be streamed from a specified endpoint, e.g. `'/media'`.\n        This should be used for media files to support proper streaming.\n        Otherwise the browser would not be able to access and load the the files incrementally or jump to different positions in the stream.\n        Do only put non-security-critical files in there, as they are accessible to everyone."
+      }
+    ]
+  },
+  "slice": {
+    "nicegui/app/app.py": [
+      "App.add_media_files"
+    ],
+    "nicegui/app/range_response.py": [
+      "get_range_response"
+    ]
+  },
+  "spec_sha256": "b6dba7c218b9881ae5ab62ccb74e4f63b92984540918e5533fdf86b9d440a3c2",
+  "totals": {
+    "clean": {
+      "approx_tokens": 1153,
+      "bytes": 4035
+    },
+    "regressed": {
+      "approx_tokens": 1125,
+      "bytes": 3937
+    }
+  },
+  "vulnerability_class": "path-traversal"
+}

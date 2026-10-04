@@ -1,0 +1,449 @@
+<title>Regression Event Sign-off</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root {
+  --bg: #f3f5f3;
+  --surface: #ffffff;
+  --sunken: #eaeeeb;
+  --ink: #18211e;
+  --muted: #5a6762;
+  --line: #d6ddd9;
+  --accent: #1d5b86;
+  --accent-soft: #e3edf5;
+  --ok: #2b7a4b;
+  --ok-soft: #e2f1e7;
+  --bad: #b0281f;
+  --bad-soft: #f9e5e3;
+  --warn: #9a6200;
+  --warn-soft: #f8eed9;
+  --add-bg: #e4f3e8;
+  --add-ink: #1d5a33;
+  --del-bg: #fbe7e4;
+  --del-ink: #8a2119;
+  --focus: #1d5b86;
+  --sans: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #111614; --surface: #19201d; --sunken: #141a18; --ink: #e2e8e5; --muted: #98a59f;
+    --line: #2b3431; --accent: #82b9df; --accent-soft: #1b2a35; --ok: #79c795; --ok-soft: #173024;
+    --bad: #f0928a; --bad-soft: #3a1c1a; --warn: #e3b25a; --warn-soft: #33280f;
+    --add-bg: #15291d; --add-ink: #9fd9b1; --del-bg: #331b19; --del-ink: #f2aaa3; --focus: #82b9df;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #111614; --surface: #19201d; --sunken: #141a18; --ink: #e2e8e5; --muted: #98a59f;
+  --line: #2b3431; --accent: #82b9df; --accent-soft: #1b2a35; --ok: #79c795; --ok-soft: #173024;
+  --bad: #f0928a; --bad-soft: #3a1c1a; --warn: #e3b25a; --warn-soft: #33280f;
+  --add-bg: #15291d; --add-ink: #9fd9b1; --del-bg: #331b19; --del-ink: #f2aaa3; --focus: #82b9df;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--sans); font-size: 14px; line-height: 1.5; padding-inline: 16px; padding-block: 16px 48px; }
+a { color: var(--accent); }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+code, .mono { font-family: var(--mono); font-size: 12.5px; }
+h1, h2, h3 { text-wrap: balance; margin: 0; }
+.wrap { max-width: 1320px; margin: 0 auto; display: grid; gap: 16px; }
+
+header.top { display: grid; gap: 12px; }
+.title-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 16px; }
+h1 { font-size: 22px; font-weight: 600; letter-spacing: -0.01em; }
+.sub { color: var(--muted); max-width: 72ch; }
+.tally { display: flex; flex-wrap: wrap; gap: 8px; }
+.stat { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 8px 12px; display: grid; min-width: 112px; }
+.stat b { font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.stat span { color: var(--muted); font-size: 12px; }
+.stat.target b { color: var(--accent); }
+.banner { border: 1px solid var(--warn); background: var(--warn-soft); color: var(--ink); border-radius: 6px; padding: 8px 12px; }
+
+.layout { display: grid; grid-template-columns: minmax(260px, 320px) minmax(0, 1fr); gap: 16px; align-items: start; }
+@media (max-width: 860px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+
+.rail { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px); max-height: calc(100vh - 24px); display: flex; flex-direction: column; }
+@media (max-width: 860px) { .rail { position: static; max-height: none; } }
+.filters { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px; border-bottom: 1px solid var(--line); }
+.filters button { font: inherit; font-size: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--muted); border-radius: 999px; padding: 2px 10px; cursor: pointer; }
+.filters button[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+.list { list-style: none; margin: 0; padding: 0; overflow-y: auto; }
+.list li button { all: unset; box-sizing: border-box; width: 100%; display: grid; grid-template-columns: 10px minmax(0, 1fr) auto; gap: 4px 10px; align-items: center; padding: 8px 12px; border-bottom: 1px solid var(--line); cursor: pointer; }
+.list li button:hover { background: var(--sunken); }
+.list li button[aria-current="true"] { background: var(--accent-soft); }
+.list li button:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
+.list .name { font-family: var(--mono); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.list .meta { grid-column: 2 / 4; display: flex; gap: 6px; flex-wrap: wrap; }
+.dot { width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--line); }
+.dot.accept { background: var(--ok); border-color: var(--ok); }
+.dot.reject { background: var(--bad); border-color: var(--bad); }
+.dot.revise { background: var(--warn); border-color: var(--warn); }
+.dot.stale { background: transparent; border-color: var(--warn); }
+
+.chip { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; letter-spacing: 0.02em; border-radius: 4px; padding: 1px 6px; border: 1px solid var(--line); color: var(--muted); background: var(--surface); white-space: nowrap; }
+.chip.cross { color: var(--accent); border-color: var(--accent); }
+.chip.ai-ok { color: var(--ok); border-color: var(--ok); }
+.chip.ai-bad { color: var(--bad); border-color: var(--bad); }
+.chip.ai-warn { color: var(--warn); border-color: var(--warn); }
+
+.detail { display: grid; gap: 16px; min-width: 0; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 16px; display: grid; gap: 12px; min-width: 0; }
+.card h2 { font-size: 18px; font-weight: 600; font-family: var(--mono); }
+.card h3 { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.kv { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px 16px; }
+.kv dt { color: var(--muted); }
+.kv dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.flow { display: grid; gap: 8px; }
+.flow .step { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 8px; align-items: start; }
+.flow .role { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); padding-top: 2px; }
+.flow .sym { font-family: var(--mono); font-size: 12.5px; overflow-wrap: anywhere; }
+.flow .note { color: var(--muted); }
+.prose { max-width: 80ch; }
+.prose p { margin: 0 0 6px; }
+ul.items { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
+.defect.blocking { color: var(--bad); }
+.verdicts { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.verdict { border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; display: grid; gap: 6px; background: var(--sunken); min-width: 0; }
+.verdict .head { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+
+.code { overflow-x: auto; border: 1px solid var(--line); border-radius: 6px; background: var(--sunken); }
+.code pre { margin: 0; padding: 10px 0; font-family: var(--mono); font-size: 12.5px; line-height: 1.55; min-width: max-content; }
+.code .ln { display: block; padding: 0 12px; white-space: pre; }
+.code .add { background: var(--add-bg); color: var(--add-ink); }
+.code .del { background: var(--del-bg); color: var(--del-ink); }
+.code .hunk { color: var(--accent); }
+.code .file { color: var(--muted); font-weight: 500; }
+details { border-top: 1px solid var(--line); padding-top: 8px; }
+details summary { cursor: pointer; color: var(--accent); }
+details[open] summary { margin-bottom: 8px; }
+
+.decide { position: sticky; bottom: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px 16px; display: grid; gap: 10px; box-shadow: 0 -6px 16px rgba(0,0,0,0.06); padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
+.choices { display: flex; flex-wrap: wrap; gap: 8px; }
+.choices button { font: inherit; font-weight: 500; border-radius: 6px; padding: 6px 14px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
+.choices button[data-choice="accept"][aria-pressed="true"] { background: var(--ok-soft); border-color: var(--ok); color: var(--ok); }
+.choices button[data-choice="reject"][aria-pressed="true"] { background: var(--bad-soft); border-color: var(--bad); color: var(--bad); }
+.choices button[data-choice="revise"][aria-pressed="true"] { background: var(--warn-soft); border-color: var(--warn); color: var(--warn); }
+.choices button:disabled, .decide textarea:disabled { opacity: 0.55; cursor: not-allowed; }
+.decide textarea { font: inherit; width: 100%; min-height: 56px; resize: vertical; border: 1px solid var(--line); border-radius: 6px; padding: 8px; background: var(--surface); color: var(--ink); }
+.decide-row { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between; }
+.save { font: inherit; font-weight: 600; border: 0; border-radius: 6px; padding: 7px 18px; background: var(--accent); color: var(--surface); cursor: pointer; }
+.save:disabled { opacity: 0.5; cursor: not-allowed; }
+.status { color: var(--muted); }
+.status.err { color: var(--bad); }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="title-row">
+      <h1>Regression Event Sign-off</h1>
+      <span class="sub" id="generated"></span>
+    </div>
+    <p class="sub">GraphGate BUILD_PLAN 2.3. Each candidate is a real injection fix, inverted. Review the dossier, then accept it as a validated event, reject it, or send it back for revision. Only your decisions count as validation; the AI analysis and adversarial check are evidence.</p>
+    <div class="tally" id="tally"></div>
+    <div class="banner" id="banner" hidden></div>
+  </header>
+
+  <div class="layout">
+    <nav class="rail" aria-label="Events">
+      <div class="filters" id="filters" role="group" aria-label="Filter events"></div>
+      <ul class="list" id="list"></ul>
+    </nav>
+    <main class="detail" id="detail"></main>
+  </div>
+</div>
+
+<script>
+const DATA = /*__DATA__*/{"generated_at": "", "events": []};
+
+const CLASS_LABEL = { "sql": "SQL · CWE-89", "os-command": "OS command · CWE-78", "command": "Command · CWE-77", "path-traversal": "Path traversal · CWE-22" };
+const DECISION_LABEL = { accept: "Accepted", reject: "Rejected", revise: "Needs revision" };
+const FILTERS = [["all", "All"], ["pending", "Pending"], ["accept", "Accepted"], ["reject", "Rejected"], ["revise", "Revise"], ["flagged", "AI flagged"]];
+
+let db = null;
+let decisions = {};
+let filter = "all";
+let current = null;
+let draft = { choice: null, note: "" };
+let saving = false;
+
+const $ = (sel) => document.querySelector(sel);
+function el(tag, attrs = {}, ...kids) {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (v === null || v === undefined || v === false) continue;
+    if (k === "class") n.className = v;
+    else if (k === "text") n.textContent = v;
+    else if (k.startsWith("on")) n.addEventListener(k.slice(2), v);
+    else n.setAttribute(k, v === true ? "" : v);
+  }
+  for (const kid of kids.flat()) if (kid !== null && kid !== undefined && kid !== false) n.append(kid.nodeType ? kid : document.createTextNode(String(kid)));
+  return n;
+}
+const byId = Object.fromEntries(DATA.events.map((e) => [e.event_id, e]));
+
+function decisionOf(e) {
+  const d = decisions[e.event_id];
+  if (!d) return null;
+  return { ...d, stale: (d.dossier || null) !== (e.dossier_version || null) };
+}
+function aiState(e) {
+  const s = e.ai?.status || "unchecked";
+  if (s === "sound" || s === "sound-after-fix") return ["ai-ok", s === "sound" ? "AI: sound" : "AI: sound after fix"];
+  if (s === "excluded" || s === "excluded-after-fix") return ["ai-bad", "AI: exclude"];
+  if (s === "exclusion-disputed") return ["ai-warn", "AI: exclusion disputed"];
+  if (s === "defects-remain") return ["ai-warn", "AI: defects remain"];
+  if (s === "rebuilt-recheck-pending") return ["ai-warn", "Rebuilt, re-check pending"];
+  return ["ai-warn", "AI: " + s];
+}
+function flagged(e) { const [c] = aiState(e); return c !== "ai-ok"; }
+
+function matches(e) {
+  const d = decisionOf(e);
+  if (filter === "all") return true;
+  if (filter === "pending") return !d || d.stale;
+  if (filter === "flagged") return flagged(e);
+  return d && !d.stale && d.decision === filter;
+}
+
+function renderTally() {
+  const all = DATA.events;
+  const done = all.map(decisionOf).filter((d) => d && !d.stale);
+  const accepted = all.filter((e) => { const d = decisionOf(e); return d && !d.stale && d.decision === "accept"; });
+  const cross = accepted.filter((e) => e.scope === "cross_file").length;
+  const byClass = {};
+  for (const e of accepted) byClass[e.vulnerability_class] = (byClass[e.vulnerability_class] || 0) + 1;
+  const tally = $("#tally");
+  tally.replaceChildren(
+    stat(`${done.length}/${all.length}`, "reviewed"),
+    stat(accepted.length, "accepted (M1 target 25–30)", accepted.length >= 25 ? "target" : ""),
+    stat(cross, "accepted cross-file"),
+    stat(accepted.length - cross, "accepted local"),
+    stat(Object.entries(byClass).map(([k, v]) => `${v} ${k}`).join(" · ") || "–", "accepted by class"),
+  );
+  function stat(value, label, cls = "") { return el("div", { class: "stat " + cls }, el("b", { text: String(value) }), el("span", { text: label })); }
+}
+
+function renderFilters() {
+  $("#filters").replaceChildren(...FILTERS.map(([key, label]) => el("button", {
+    type: "button", "aria-pressed": String(filter === key), text: label,
+    onclick: () => { filter = key; renderFilters(); renderList(); },
+  })));
+}
+
+function renderList() {
+  const list = $("#list");
+  const shown = DATA.events.filter(matches);
+  list.replaceChildren(...shown.map((e) => {
+    const d = decisionOf(e);
+    const [aiCls, aiText] = aiState(e);
+    const dotCls = d ? (d.stale ? "stale" : d.decision) : "";
+    return el("li", {}, el("button", {
+      type: "button", "aria-current": String(current === e.event_id),
+      onclick: () => select(e.event_id, true),
+    },
+      el("span", { class: "dot " + dotCls, title: d ? (d.stale ? "decided on an older dossier" : DECISION_LABEL[d.decision]) : "not reviewed" }),
+      el("span", { class: "name", text: e.event_id }),
+      el("span", { class: "chip " + (e.scope === "cross_file" ? "cross" : ""), text: e.scope === "cross_file" ? "cross-file" : (e.scope || "no scope") }),
+      el("span", { class: "meta" }, el("span", { class: "chip", text: e.vulnerability_class || "?" }), el("span", { class: "chip " + aiCls, text: aiText })),
+    ));
+  }));
+  if (!shown.length) list.append(el("li", { class: "sub", style: "padding:12px", text: "No events match this filter." }));
+}
+
+function select(id, scroll) {
+  current = id;
+  const d = decisions[id];
+  draft = { choice: d ? d.decision : null, note: d ? (d.note || "") : "" };
+  renderList();
+  renderDetail();
+  if (scroll && window.matchMedia("(max-width: 860px)").matches) $("#detail").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function diffView(text) {
+  if (!text) return el("p", { class: "sub", text: "No regression diff (no dossier was built)." });
+  const pre = el("pre");
+  for (const line of text.replace(/\n$/, "").split("\n")) {
+    let cls = "ln";
+    if (line.startsWith("+++") || line.startsWith("---")) cls += " file";
+    else if (line.startsWith("@@")) cls += " hunk";
+    else if (line.startsWith("+")) cls += " add";
+    else if (line.startsWith("-")) cls += " del";
+    pre.append(el("span", { class: cls, text: line || " " }));
+  }
+  return el("div", { class: "code" }, pre);
+}
+function fileView(text) {
+  const pre = el("pre");
+  for (const line of text.replace(/\n$/, "").split("\n")) pre.append(el("span", { class: "ln", text: line || " " }));
+  return el("div", { class: "code" }, pre);
+}
+function list(items, render) {
+  if (!items || !items.length) return el("p", { class: "sub", text: "None." });
+  return el("ul", { class: "items" }, items.map((it) => el("li", {}, render(it))));
+}
+function ghLinks(e) {
+  const repo = e.repo;
+  return {
+    advisories: e.advisories.map((a, i) => [el("a", { href: `https://github.com/advisories/${a}`, target: "_blank", rel: "noopener", text: a }), i < e.advisories.length - 1 ? ", " : ""]),
+    clean: el("a", { href: `https://github.com/${repo}/commit/${e.clean_commit}`, target: "_blank", rel: "noopener", class: "mono", text: e.clean_commit.slice(0, 10) }),
+    regressed: el("a", { href: `https://github.com/${repo}/commit/${e.regressed_commit}`, target: "_blank", rel: "noopener", class: "mono", text: e.regressed_commit.slice(0, 10) }),
+  };
+}
+
+function renderDetail() {
+  const box = $("#detail");
+  const e = byId[current];
+  if (!e) { box.replaceChildren(el("div", { class: "card" }, el("p", { class: "sub", text: "Select an event." }))); return; }
+  const a = e.ai?.fix || e.ai?.analyst || {};
+  const check = e.ai?.recheck || e.ai?.check;
+  const links = ghLinks(e);
+  const [aiCls, aiText] = aiState(e);
+
+  const summary = el("section", { class: "card" },
+    el("div", { class: "decide-row" }, el("h2", { text: e.event_id }), el("span", { class: "chip " + aiCls, text: aiText })),
+    el("dl", { class: "kv" },
+      el("dt", { text: "Advisories" }), el("dd", {}, links.advisories, e.cves?.filter(Boolean).length ? ` (${e.cves.filter(Boolean).join(", ")})` : ""),
+      el("dt", { text: "Repository" }), el("dd", {}, el("a", { href: `https://github.com/${e.repo}`, target: "_blank", rel: "noopener", text: e.repo })),
+      el("dt", { text: "Clean (fix)" }), el("dd", {}, links.clean),
+      el("dt", { text: "Regressed" }), el("dd", {}, links.regressed),
+      el("dt", { text: "Class" }), el("dd", {}, CLASS_LABEL[e.vulnerability_class] || "–", e.advisory_classes && e.vulnerability_class && !e.advisory_classes.includes(e.vulnerability_class) ? ` (advisory said ${e.advisory_classes.join(", ")})` : ""),
+      el("dt", { text: "Scope" }), el("dd", {}, e.scope === "cross_file" ? "Cross-file" : e.scope === "local" ? "Local" : "–", e.flow_files?.length ? ` · flow in ${e.flow_files.join(", ")}` : ""),
+      el("dt", { text: "Regression changes" }), el("dd", { class: "mono", text: (e.regression_files || []).join(", ") || "–" }),
+      el("dt", { text: "Slice size" }), el("dd", { text: e.totals ? `~${e.totals.clean.approx_tokens} tokens clean, ~${e.totals.regressed.approx_tokens} regressed` : "–" }),
+    ),
+  );
+
+  const flowCard = el("section", { class: "card" }, el("h3", { text: "Vulnerable flow" }),
+    a.flow_summary ? el("p", { class: "prose", text: a.flow_summary }) : null,
+    e.flow ? el("div", { class: "flow" }, ["entry", "guards", "sinks"].flatMap((role) => (e.flow[role] || []).map((loc) =>
+      el("div", { class: "step" }, el("span", { class: "role", text: role === "guards" ? "guard" : role === "sinks" ? "sink" : "entry" }),
+        el("div", {}, el("div", { class: "sym", text: loc.symbol + (loc.kind ? `  [${loc.kind}]` : "") }),
+          loc.true_symbol ? el("div", { class: "sym note", text: "really runs in " + loc.true_symbol }) : null,
+          el("div", { class: "note", text: loc.note || "" })))))) : el("p", { class: "sub", text: "No flow recorded." }),
+    a.fix_effect ? el("p", { class: "prose" }, el("b", { text: "Fix effect: " }), `${a.fix_effect}. ${a.fix_effect_note || ""}`) : null,
+    a.scope_evidence ? el("p", { class: "prose" }, el("b", { text: "Scope evidence: " }), a.scope_evidence) : null,
+    a.class_note ? el("p", { class: "prose" }, el("b", { text: "Class note: " }), a.class_note) : null,
+    a.verdict === "exclude" ? el("p", { class: "prose defect blocking" }, el("b", { text: "Analyst proposes exclusion: " }), a.exclusion_reason) : null,
+  );
+
+  const verdicts = el("section", { class: "card" }, el("h3", { text: "AI review" }),
+    e.ai?.followup ? el("p", { class: "prose" }, el("b", { text: `Follow-up (${e.ai.followup.date || "undated"}): ` }), e.ai.followup.note) : null,
+    el("div", { class: "verdicts" },
+      el("div", { class: "verdict" }, el("div", { class: "head" }, el("b", { text: e.ai?.fix ? "Analyst (after fix)" : "Analyst" }), el("span", { class: "chip", text: `${a.verdict || "–"} · ${a.confidence || "–"} confidence` })),
+        el("div", {}, el("b", { text: "Concerns" })), list(a.concerns, (c) => c),
+        el("div", {}, el("b", { text: "Accepted warnings" })), list(a.accepted_warnings, (w) => `${w.check}: ${w.item} — ${w.reason}`)),
+      check ? el("div", { class: "verdict" }, el("div", { class: "head" }, el("b", { text: e.ai?.recheck ? "Checker (re-check)" : "Checker" }), el("span", { class: "chip " + (check.verdict === "sound" ? "ai-ok" : "ai-bad"), text: check.verdict })),
+        el("div", {}, `Regressed flow traceable: ${check.regressed_flow_traceable ? "yes" : "no"}. ${check.regressed_flow_note}`),
+        el("div", {}, `Clean blocks it: ${check.clean_blocks_flow ? "yes" : "no"}. ${check.clean_blocks_note}`),
+        el("div", {}, `Own scope reading: ${check.scope_independent}${check.scope_agrees ? " (agrees)" : " (disagrees)"}. ${check.scope_note}`),
+        el("div", {}, `Diff minimal: ${check.diff_minimal ? "yes" : "no"}. ${check.diff_note}`),
+        el("div", {}, `Class: ${check.class_agrees ? "agrees" : "disagrees"}. ${check.class_note}`),
+        el("div", {}, el("b", { text: "Defects" })), list(check.defects, (d) => el("span", { class: "defect " + d.severity }, `[${d.severity}] ${d.issue} → ${d.fix_suggestion}`)),
+        el("div", {}, el("b", { text: "Revealing text left" })), list(check.revealing_text_left, (r) => `${r.path}${r.line ? ":" + r.line : ""} ${r.text}`)) : null,
+      e.ai?.check && e.ai?.recheck ? el("div", { class: "verdict" }, el("div", { class: "head" }, el("b", { text: "First check (before fix)" }), el("span", { class: "chip ai-bad", text: e.ai.check.verdict })),
+        list(e.ai.check.defects, (d) => `[${d.severity}] ${d.issue}`)) : null,
+      e.ai?.exclusion ? el("div", { class: "verdict" }, el("div", { class: "head" }, el("b", { text: "Exclusion review" }), el("span", { class: "chip " + (e.ai.exclusion.exclusion_justified ? "ai-bad" : "ai-warn"), text: e.ai.exclusion.exclusion_justified ? "exclusion justified" : "exclusion disputed" })),
+        el("p", { text: e.ai.exclusion.note }), e.ai.exclusion.salvage_suggestion ? el("p", {}, el("b", { text: "Salvage: " }), e.ai.exclusion.salvage_suggestion) : null) : null,
+    ),
+  );
+
+  const failing = (e.checks || []).filter((c) => c.status !== "ok");
+  const diffCard = el("section", { class: "card" }, el("h3", { text: "Regression diff (clean → regressed)" }),
+    diffView(e.diff),
+    el("div", {}, el("b", { text: "Build checks not OK" })), list(failing, (c) => `${c.status.toUpperCase()} ${c.name}: ${c.detail}`),
+    el("div", {}, el("b", { text: "Comments stripped as revealing" })), list([...(e.scrubbed?.clean || []), ...(e.scrubbed?.regressed || [])], (s) => `${s.path}:${s.line} (${s.kind}) ${s.text}`),
+    el("div", {}, el("b", { text: "String literals with security wording (kept)" })), list([...(e.flagged_strings?.clean || [])], (s) => `${s.path}:${s.line} ${s.text}`),
+    ...Object.keys(e.clean_files || {}).map((p) => el("details", {}, el("summary", { text: `Clean slice: ${p}` }), fileView(e.clean_files[p]))),
+    ...Object.keys(e.regressed_files || {}).map((p) => el("details", {}, el("summary", { text: `Regressed slice: ${p}` }), fileView(e.regressed_files[p]))),
+  );
+
+  box.replaceChildren(summary, flowCard, verdicts, diffCard, decisionPanel(e));
+}
+
+function decisionPanel(e) {
+  const d = decisionOf(e);
+  const writable = !!db;
+  const panel = el("section", { class: "decide", "aria-label": "Your decision" });
+  const statusText = !writable ? "Decisions can't be saved in this view."
+    : d ? `${DECISION_LABEL[d.decision]} on ${new Date(d.decided_at).toLocaleString()}${d.stale ? " — the dossier changed since; review again." : "."}`
+    : "Not reviewed yet.";
+  const choices = el("div", { class: "choices", role: "group", "aria-label": "Decision" },
+    ...[["accept", "Accept as validated"], ["reject", "Reject"], ["revise", "Needs revision"]].map(([key, label]) =>
+      el("button", { type: "button", "data-choice": key, "aria-pressed": String(draft.choice === key), disabled: !writable,
+        onclick: () => { draft.choice = key; renderDetail(); } , text: label })));
+  const note = el("textarea", { id: "note-" + e.event_id, placeholder: "Reason or note (required for Reject and Needs revision)", disabled: !writable });
+  note.value = draft.note;
+  note.addEventListener("input", () => { draft.note = note.value; save.disabled = !canSave(); });
+  const save = el("button", { class: "save", type: "button", text: saving ? "Saving…" : "Save decision", onclick: () => saveDecision(e) });
+  const canSave = () => writable && !saving && draft.choice && (draft.choice === "accept" || draft.note.trim().length > 0);
+  save.disabled = !canSave();
+  const status = el("span", { class: "status", id: "save-status", text: statusText });
+  panel.append(el("h3", { text: "Your decision" }), choices, note, el("div", { class: "decide-row" }, status, el("div", { class: "choices" },
+    el("button", { type: "button", text: "Next pending →", onclick: nextPending }), save)));
+  return panel;
+}
+
+async function saveDecision(e) {
+  if (!db || saving) return;
+  saving = true; renderDetail();
+  try {
+    await db.collection("decisions").doc(e.event_id).set({
+      decision: draft.choice, note: draft.note.trim(), decided_at: new Date().toISOString(),
+      dossier: e.dossier_version || null,
+    });
+    saving = false; renderDetail();
+    $("#save-status").textContent = "Saved.";
+  } catch (err) {
+    saving = false; renderDetail();
+    const s = $("#save-status");
+    s.classList.add("err");
+    s.textContent = err && err.code === "invalid_argument"
+      ? "This account can't save decisions here. Only the page's owner signs off."
+      : "Couldn't save. Check your connection and try again.";
+  }
+}
+
+function nextPending() {
+  const order = DATA.events;
+  const start = Math.max(0, order.findIndex((e) => e.event_id === current));
+  for (let i = 1; i <= order.length; i++) {
+    const e = order[(start + i) % order.length];
+    const d = decisionOf(e);
+    if (!d || d.stale) { select(e.event_id, true); return; }
+  }
+}
+
+function boot() {
+  $("#generated").textContent = DATA.generated_at ? `Dossiers built ${DATA.generated_at}` : "";
+  renderFilters();
+  renderTally();
+  select(DATA.events[0]?.event_id, false);
+  const use = window.claude && window.claude.use ? window.claude.use("db") : Promise.resolve(null);
+  use.then((handle) => {
+    db = handle;
+    if (!db) {
+      const b = $("#banner"); b.hidden = false;
+      b.textContent = "Saving is unavailable in this view. Open the page on claude.ai to record decisions.";
+      renderDetail();
+      return;
+    }
+    db.collection("decisions").onSnapshot((snap) => {
+      decisions = {};
+      for (const doc of snap.docs) decisions[doc.id] = doc.data();
+      renderTally(); renderList();
+      if (!saving) {
+        const d = decisions[current];
+        if (d) draft = { choice: d.decision, note: d.note || "" };
+        renderDetail();
+      }
+    }, () => {
+      const b = $("#banner"); b.hidden = false;
+      b.textContent = "Live updates stopped. Reload the page to keep reviewing.";
+    });
+  }, () => {});
+}
+boot();
+</script>

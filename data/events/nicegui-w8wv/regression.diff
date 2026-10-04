@@ -1,0 +1,25 @@
+--- a/nicegui/elements/upload_files.py
++++ b/nicegui/elements/upload_files.py
+@@ -3,7 +3,7 @@
+ from collections.abc import AsyncIterator
+ from dataclasses import dataclass
+ from io import BytesIO
+-from pathlib import Path
++from pathlib import Path, PurePosixPath
+ 
+ import aiofiles
+ import anyio
+@@ -149,12 +149,8 @@
+         if temp_file:
+             await temp_file.close()
+ 
+-    filename = _sanitize_filename(upload.filename)
++    filename = PurePosixPath(upload.filename or '').name  # strips all path components
+     if temp_file:
+         return LargeFileUpload(filename, upload.content_type or '', Path(str(temp_file.name)))
+     else:
+         return SmallFileUpload(filename, upload.content_type or '', buffer.getvalue())
+-
+-
+-def _sanitize_filename(name: str | None) -> str:
+-    return (name or '').rsplit('/')[-1].rsplit('\\')[-1]

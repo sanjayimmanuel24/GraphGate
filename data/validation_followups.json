@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "note": "Hand-recorded follow-ups to the AI preparation of BUILD_PLAN 2.3 events, merged into data/validation_ai_review.json by scripts/save_ai_review.py.",
+  "followups": {
+    "alerta-8prr": {
+      "status": "rebuilt-recheck-pending",
+      "date": "2026-10-04",
+      "note": "The checker's blocking defect was a slicer limit: module-level statements that wire the pyparsing grammar (clause << ..., query_expr << infixNotation(...), the setParseAction calls) and Query.__new__.__defaults__ were cut from both variants, so the hop from parseString to SearchTerm was not traceable. The slicer now has an opt-in '<wiring>' marker; it was added to queryparser.py and postgres/utils.py and the dossier was rebuilt. Those statements are now in both variants and the regression diff still touches only the two fix files. No independent checker has re-read the rebuilt slice yet."
+    },
+    "nicegui-9ffm": {
+      "date": "2026-10-04",
+      "note": "Excluded only because the slicer could not keep the module-level 'with' block that registers the upload handler. The '<wiring>' marker now covers that case, so this event can be re-analysed if more events are needed. Note that its sink is in an example application, not in the library itself."
+    }
+  }
+}

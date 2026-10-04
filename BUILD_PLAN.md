@@ -110,6 +110,37 @@ Strip security-revealing comments from the extracted code — fix commits routin
 like `# fix CVE-2023-…: sanitize input`, and the model sees every file verbatim (CLAUDE.md, "No
 research framing in model-visible code").
 
+*As built so far (2026-10-04; sign-off pending). Three decisions were taken with the owner on
+2026-09-28 and are recorded in CLAUDE.md: events are trimmed slices at real paths; AI agents
+prepare dossiers but only the owner's sign-off validates; local/cross-file follows a
+pre-registered rule.*
+- *Tooling: `graphgate.dataset.slicing` (tree-sitter trimming that reports every referenced name
+  it cut, with an opt-in `<wiring>` marker for module-level glue), `graphgate.dataset.scrub`
+  (strips and logs comments that reveal the fix), `graphgate.dataset.events` (spec, scope rule,
+  dossier builder with checks). `scripts/build_event.py` builds a dossier from `spec.json`.*
+- *AI preparation over the 34 events (`scripts/prepare_validation.py`, then a workflow of one
+  analyst and one adversarial checker per event, with one fix round on blocking defects;
+  `scripts/save_ai_review.py` writes `data/validation_ai_review.json`): 31 passed the check, with
+  the checker agreeing on class and scope in all 31 — 25 cross-file and 6 local; 19 path
+  traversal, 7 command, 5 SQL.*
+- *Excluded: xml2rfc-9mv7 (analyst and reviewer both found the published fix ineffective on the
+  CLI `--pdf` path) and nicegui-9ffm (the slicer could not keep the module-level block wiring its
+  sink; `<wiring>` now can, so it may be retried). alerta-8prr was rebuilt with `<wiring>` after
+  the same limitation and still needs an independent re-check
+  (`data/validation_followups.json`).*
+- *Sign-off: `scripts/build_signoff_page.py` builds the review page; decisions are stored per
+  event with the dossier version they were made on. 0 of 34 decided so far.*
+
+*Open for the sign-off and for 2.4:*
+- *Seven accepted-in-principle events rest on known-incomplete fixes; each dossier extracts a
+  flow the fix does close and says so.*
+- *In GitPython every command runs through `Git.execute` in `git/cmd.py`, so 10 of its 12 events
+  are cross-file by rule even when the visible change is in one method. Report per repository.*
+- *Library events take a caller's argument as their source (`library-api`); the graph's source
+  model in M2.1 must cover that or R2/R4 cannot fire on them.*
+- *The checkers listed real-code wording the scrubber leaves in place (for example GitPython's
+  "unsafe options"); the owner decides per event whether that is acceptable.*
+
 **2.4** Build the trace-synthesis tool: given a validated vulnerable/fixed pair, generate a 5–8
 turn refinement trace (using the ISTAS-2025-style prompts: "improve readability", "add feature
 X", "optimize") with the regression injected at a randomized turn.

@@ -1,0 +1,11 @@
+--- a/git/repo/base.py
++++ b/git/repo/base.py
+@@ -127,8 +127,6 @@
+         "-u",
+         "--config",
+         "-c",
+-        # Can install hooks that execute during clone:
+-        "--template",
+     ]
+ 
+     unsafe_git_archive_options = [

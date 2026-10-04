@@ -1,0 +1,271 @@
+{
+  "advisories": [
+    "GHSA-w8wv-vfpc-hw2w"
+  ],
+  "checks": [
+    {
+      "detail": "regressed commit is an ancestor of the clean commit",
+      "name": "commits",
+      "status": "ok"
+    },
+    {
+      "detail": "every requested symbol exists in at least one variant",
+      "name": "symbols-found",
+      "status": "ok"
+    },
+    {
+      "detail": "entry and sinks exist in both variants, guards in the clean one",
+      "name": "flow-present",
+      "status": "ok"
+    },
+    {
+      "detail": "files changed by the regression: nicegui/elements/upload_files.py",
+      "name": "regression-nonempty",
+      "status": "ok"
+    },
+    {
+      "detail": "every slice file parses",
+      "name": "parses",
+      "status": "ok"
+    },
+    {
+      "detail": "clean slice is 13345 bytes (soft limit 24576, hard limit 49152)",
+      "name": "size",
+      "status": "ok"
+    },
+    {
+      "detail": "nothing referenced was cut",
+      "name": "dropped-references",
+      "status": "ok"
+    },
+    {
+      "detail": "no string literal uses security wording",
+      "name": "flagged-strings",
+      "status": "ok"
+    }
+  ],
+  "clean_commit": "d38a702e3af2da5b0708f689be8d71413fc77056",
+  "event_id": "nicegui-w8wv",
+  "files": {
+    "examples/ffmpeg_extract_images/main.py": {
+      "clean": {
+        "approx_tokens": 248,
+        "bytes": 866,
+        "dropped_references": [],
+        "kept": [
+          "DATA_DIR",
+          "handle_upload"
+        ],
+        "lines": 31,
+        "missing": [],
+        "original_lines": 39,
+        "syntax_error": null
+      },
+      "regressed": {
+        "approx_tokens": 248,
+        "bytes": 866,
+        "dropped_references": [],
+        "kept": [
+          "DATA_DIR",
+          "handle_upload"
+        ],
+        "lines": 31,
+        "missing": [],
+        "original_lines": 39,
+        "syntax_error": null
+      }
+    },
+    "nicegui/elements/upload.py": {
+      "clean": {
+        "approx_tokens": 1496,
+        "bytes": 5234,
+        "dropped_references": [],
+        "kept": [
+          "Upload.__init__",
+          "Upload.handle_uploads",
+          "Upload.on_rejected"
+        ],
+        "lines": 102,
+        "missing": [],
+        "original_lines": 125,
+        "syntax_error": null
+      },
+      "regressed": {
+        "approx_tokens": 1496,
+        "bytes": 5234,
+        "dropped_references": [],
+        "kept": [
+          "Upload.__init__",
+          "Upload.handle_uploads",
+          "Upload.on_rejected"
+        ],
+        "lines": 102,
+        "missing": [],
+        "original_lines": 125,
+        "syntax_error": null
+      }
+    },
+    "nicegui/elements/upload_files.py": {
+      "clean": {
+        "approx_tokens": 1448,
+        "bytes": 5067,
+        "dropped_references": [],
+        "kept": [
+          "FileUpload",
+          "LargeFileUpload",
+          "SmallFileUpload",
+          "_cleanup_path",
+          "_sanitize_filename",
+          "create_file_upload"
+        ],
+        "lines": 160,
+        "missing": [],
+        "original_lines": 161,
+        "syntax_error": null
+      },
+      "regressed": {
+        "approx_tokens": 1432,
+        "bytes": 5010,
+        "dropped_references": [],
+        "kept": [
+          "FileUpload",
+          "LargeFileUpload",
+          "SmallFileUpload",
+          "_cleanup_path",
+          "create_file_upload"
+        ],
+        "lines": 156,
+        "missing": [
+          "_sanitize_filename"
+        ],
+        "original_lines": 156,
+        "syntax_error": null
+      }
+    },
+    "nicegui/events.py": {
+      "clean": {
+        "approx_tokens": 623,
+        "bytes": 2178,
+        "dropped_references": [],
+        "kept": [
+          "EventArguments",
+          "EventT",
+          "Handler",
+          "UiEventArguments",
+          "UploadEventArguments",
+          "handle_event"
+        ],
+        "lines": 66,
+        "missing": [],
+        "original_lines": 461,
+        "syntax_error": null
+      },
+      "regressed": {
+        "approx_tokens": 623,
+        "bytes": 2178,
+        "dropped_references": [],
+        "kept": [
+          "EventArguments",
+          "EventT",
+          "Handler",
+          "UiEventArguments",
+          "UploadEventArguments",
+          "handle_event"
+        ],
+        "lines": 66,
+        "missing": [],
+        "original_lines": 461,
+        "syntax_error": null
+      }
+    }
+  },
+  "flagged_strings": {
+    "clean": [],
+    "regressed": []
+  },
+  "flow": {
+    "entry": [
+      {
+        "kind": "http-request",
+        "note": "the nested route handler upload_route (POST /_nicegui/client/{client}/upload/{element}, registered with @app.post inside Upload.__init__) reads the multipart form and passes each part (Starlette UploadFile, whose .filename is the client-supplied filename) to create_file_upload, then hands the resulting FileUpload objects to Upload.handle_uploads",
+        "symbol": "nicegui/elements/upload.py::Upload.__init__"
+      }
+    ],
+    "guards": [
+      {
+        "note": "the clean version computes the FileUpload name with _sanitize_filename(upload.filename), which keeps only the text after the last '/' and the last backslash; the regressed version uses PurePosixPath(upload.filename or '').name, which splits on '/' only, so a name like ..\\..\\secret\\evil.txt survives intact. The guard proper is the new helper upload_files.py::_sanitize_filename, which exists only at the clean commit",
+        "symbol": "nicegui/elements/upload_files.py::create_file_upload"
+      }
+    ],
+    "sinks": [
+      {
+        "kind": "filesystem",
+        "note": "the on_upload handler (reached via Upload.handle_uploads -> events.handle_event with UploadEventArguments(file=...)) builds video_path = DATA_DIR / args.file.name and calls video_path.write_bytes(...). On Windows, pathlib treats the surviving backslashes as separators, so the write lands outside DATA_DIR (e.g. data\\..\\..\\secret\\evil.txt)",
+        "symbol": "examples/ffmpeg_extract_images/main.py::handle_upload"
+      }
+    ]
+  },
+  "flow_files": [
+    "examples/ffmpeg_extract_images/main.py",
+    "nicegui/elements/upload.py",
+    "nicegui/elements/upload_files.py"
+  ],
+  "notes": "Class: path-traversal (CWE-22). Pair 2580928a -> d38a702e ('Merge commit from fork', single parent); the fix touches only nicegui/elements/upload_files.py (import of PurePosixPath removed, create_file_upload's filename line replaced, new _sanitize_filename helper) plus a unit test. Verified concretely on Windows (Python 3.12): PurePosixPath('..\\\\..\\\\secret\\\\evil.txt').name returns the input unchanged and Path('data') / it normalises to ..\\secret\\evil.txt; the clean helper returns 'evil.txt'. The traversal is Windows-only: on POSIX a backslash is an ordinary filename character, so the regressed code is not exploitable there. The library itself contains no path join on FileUpload.name; the only in-repo sink is the bundled example examples/ffmpeg_extract_images/main.py (the pattern the advisory cites), which is unchanged between the two commits. The example registers handle_upload via a module-level `with ui.column(): upload = ui.upload(..., on_upload=handle_upload)` block; the slicer cannot keep that block, so the registration and the module-level names `upload` and `results` used inside handle_upload are cut (the dropped-references check does not report them, as they are bound inside a with block, not by a top-level assignment; they are UI plumbing after the write, not on the flow). The clean slice's _sanitize_filename docstring is scrubbed; the identifier _sanitize_filename itself is real code and stays (the only remaining security-flavoured word in the slice). Dispatch from Upload.handle_uploads to handle_upload is a registered callback (handle_event calls the handler stored in _upload_handlers), which call-graph resolution will record as an unknown edge. Known-incomplete fix (not modelled): _sanitize_filename leaves a Windows drive-relative name such as 'C:evil.txt' intact, and Path('data') / 'C:evil.txt' is C:evil.txt (outside DATA_DIR); a bare '..' also survives. The modelled flow (backslash-separated ../ components, the advisory's PoC) is closed by the clean commit. Parallel sinks: FileUpload.save (SmallFileUpload/LargeFileUpload) writes wherever the application points it, typically Path(dir) / file.name; no in-repo caller does that, so it is kept in the slice for reading but not modelled.",
+  "regressed_commit": "2580928afff6e34d31b77ff22769d773feb817a8",
+  "regression_files": [
+    "nicegui/elements/upload_files.py"
+  ],
+  "repo": "zauberzeug/nicegui",
+  "schema_version": 1,
+  "scope": "cross_file",
+  "scrubbed": {
+    "clean": [
+      {
+        "kind": "docstring",
+        "line": 160,
+        "path": "nicegui/elements/upload_files.py",
+        "text": "Strip all path components from a filename to prevent path traversal."
+      }
+    ],
+    "regressed": []
+  },
+  "slice": {
+    "examples/ffmpeg_extract_images/main.py": [
+      "DATA_DIR",
+      "handle_upload"
+    ],
+    "nicegui/elements/upload.py": [
+      "Upload.__init__",
+      "Upload.handle_uploads",
+      "Upload.on_rejected"
+    ],
+    "nicegui/elements/upload_files.py": [
+      "FileUpload",
+      "SmallFileUpload",
+      "LargeFileUpload",
+      "_cleanup_path",
+      "create_file_upload",
+      "_sanitize_filename"
+    ],
+    "nicegui/events.py": [
+      "EventArguments",
+      "UiEventArguments",
+      "UploadEventArguments",
+      "EventT",
+      "Handler",
+      "handle_event"
+    ]
+  },
+  "spec_sha256": "0899eaf80b00899ed146a4b3b3d7fb918ffdc9e81ba5da1c7c46b59437d133f7",
+  "totals": {
+    "clean": {
+      "approx_tokens": 3815,
+      "bytes": 13345
+    },
+    "regressed": {
+      "approx_tokens": 3799,
+      "bytes": 13288
+    }
+  },
+  "vulnerability_class": "path-traversal"
+}

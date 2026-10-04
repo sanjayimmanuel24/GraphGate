@@ -1,0 +1,207 @@
+{
+  "advisories": [
+    "GHSA-xq59-7jf3-rjc6"
+  ],
+  "checks": [
+    {
+      "detail": "regressed commit is an ancestor of the clean commit",
+      "name": "commits",
+      "status": "ok"
+    },
+    {
+      "detail": "every requested symbol exists in at least one variant",
+      "name": "symbols-found",
+      "status": "ok"
+    },
+    {
+      "detail": "entry and sinks exist in both variants, guards in the clean one",
+      "name": "flow-present",
+      "status": "ok"
+    },
+    {
+      "detail": "files changed by the regression: piccolo/engine/base.py, piccolo/engine/postgres.py",
+      "name": "regression-nonempty",
+      "status": "ok"
+    },
+    {
+      "detail": "every slice file parses",
+      "name": "parses",
+      "status": "ok"
+    },
+    {
+      "detail": "clean slice is 13263 bytes (soft limit 24576, hard limit 49152)",
+      "name": "size",
+      "status": "ok"
+    },
+    {
+      "detail": "nothing referenced was cut",
+      "name": "dropped-references",
+      "status": "ok"
+    },
+    {
+      "detail": "no string literal uses security wording",
+      "name": "flagged-strings",
+      "status": "ok"
+    }
+  ],
+  "clean_commit": "82679eb8cd1449cf31d87c9914a072e70168b6eb",
+  "event_id": "piccolo-xq59",
+  "files": {
+    "piccolo/engine/base.py": {
+      "clean": {
+        "approx_tokens": 1394,
+        "bytes": 4879,
+        "dropped_references": [],
+        "kept": [
+          "Batch",
+          "Engine",
+          "TransactionClass",
+          "VALID_SAVEPOINT_CHARACTERS",
+          "logger",
+          "validate_savepoint_name"
+        ],
+        "lines": 171,
+        "missing": [],
+        "original_lines": 173,
+        "syntax_error": null
+      },
+      "regressed": {
+        "approx_tokens": 1230,
+        "bytes": 4305,
+        "dropped_references": [],
+        "kept": [
+          "Batch",
+          "Engine",
+          "TransactionClass",
+          "logger"
+        ],
+        "lines": 156,
+        "missing": [
+          "VALID_SAVEPOINT_CHARACTERS",
+          "validate_savepoint_name"
+        ],
+        "original_lines": 158,
+        "syntax_error": null
+      }
+    },
+    "piccolo/engine/postgres.py": {
+      "clean": {
+        "approx_tokens": 2396,
+        "bytes": 8384,
+        "dropped_references": [],
+        "kept": [
+          "PostgresEngine.__init__",
+          "PostgresEngine.get_new_connection",
+          "PostgresEngine.transaction",
+          "PostgresTransaction",
+          "Savepoint",
+          "asyncpg"
+        ],
+        "lines": 269,
+        "missing": [],
+        "original_lines": 571,
+        "syntax_error": null
+      },
+      "regressed": {
+        "approx_tokens": 2353,
+        "bytes": 8235,
+        "dropped_references": [],
+        "kept": [
+          "PostgresEngine.__init__",
+          "PostgresEngine.get_new_connection",
+          "PostgresEngine.transaction",
+          "PostgresTransaction",
+          "Savepoint",
+          "asyncpg"
+        ],
+        "lines": 266,
+        "missing": [],
+        "original_lines": 568,
+        "syntax_error": null
+      }
+    }
+  },
+  "flagged_strings": {
+    "clean": [],
+    "regressed": []
+  },
+  "flow": {
+    "entry": [
+      {
+        "kind": "library-api",
+        "note": "public transaction API: the application passes the savepoint name (async with engine.transaction() as t: await t.savepoint(name)); the advisory's example forwards an HTTP query parameter. name is optional and defaults to savepoint_<n>",
+        "symbol": "piccolo/engine/postgres.py::PostgresTransaction.savepoint"
+      },
+      {
+        "kind": "library-api",
+        "note": "second public entry on the same value: rollback_to(savepoint_name) builds Savepoint(name=savepoint_name, transaction=self) and calls its rollback_to()",
+        "symbol": "piccolo/engine/postgres.py::PostgresTransaction.rollback_to"
+      }
+    ],
+    "guards": [
+      {
+        "note": "added by the fix: raises ValueError unless every character of the name is in VALID_SAVEPOINT_CHARACTERS (ASCII letters, digits, '-', '_'). Called in the clean commit immediately before each execute in PostgresTransaction.savepoint, Savepoint.rollback_to and Savepoint.release; the regressed commit has neither the function nor the calls",
+        "symbol": "piccolo/engine/base.py::validate_savepoint_name"
+      }
+    ],
+    "sinks": [
+      {
+        "kind": "sql",
+        "note": "await self.connection.execute(f\"SAVEPOINT {name}\") on the asyncpg connection acquired in __aenter__/get_connection; execute() without arguments uses the simple query protocol, so text after ';' runs as further statements",
+        "symbol": "piccolo/engine/postgres.py::PostgresTransaction.savepoint"
+      },
+      {
+        "kind": "sql",
+        "note": "await self.transaction.connection.execute(f\"ROLLBACK TO SAVEPOINT {self.name}\"); self.name is the constructor argument, set by PostgresTransaction.rollback_to or by PostgresTransaction.savepoint's return value",
+        "symbol": "piccolo/engine/postgres.py::Savepoint.rollback_to"
+      }
+    ]
+  },
+  "flow_files": [
+    "piccolo/engine/base.py",
+    "piccolo/engine/postgres.py"
+  ],
+  "notes": "Written at 2.3 (2026-10-04); no pilot spec existed. Class sql (CWE-89), verified in code at both commits. Regressed e4946d85: PostgresTransaction.savepoint(name) -> self.connection.execute(f\"SAVEPOINT {name}\") with no check; PostgresTransaction.rollback_to(savepoint_name) -> Savepoint(name=...).rollback_to() -> self.transaction.connection.execute(f\"ROLLBACK TO SAVEPOINT {self.name}\"); Savepoint.release likewise. Clean 82679eb8 adds validate_savepoint_name (piccolo/engine/base.py, allowlist of ASCII letters, digits, '-', '_', raises ValueError) and calls it directly before each of those three execute calls; the validator logic re-run standalone rejects 'my_savepoint; SELECT * FROM Manager' (the upstream test input) and accepts 'savepoint_1'. No other savepoint execute exists in postgres.py, so the modelled flows are closed. The connection is an asyncpg connection (PostgresTransaction.get_connection -> pool.acquire() or PostgresEngine.get_new_connection -> asyncpg.connect); asyncpg itself is outside the repo, so the sink is the execute call with interpolated SQL text. Not executed against a live PostgreSQL server. Scope: the entry and the sink are the same function in postgres.py and the guard's call site is there too, but the guard's definition (the code that actually neutralises the value) is in base.py, which the regression also changes (it deletes the function); the pre-registered rule therefore gives cross_file. The 2.2 reviewers' scope_hint was local, reasoning about the entry->sink path only. In the regression diff the removed validate_savepoint_name(...) calls are visible inside postgres.py, so a diff-only gate does see the guard call disappear without needing base.py. Parallel flows closed by the same commit and not modelled: the identical code in piccolo/engine/sqlite.py (SQLiteTransaction.savepoint / rollback_to, Savepoint.rollback_to / release, aiosqlite connection.execute); the SQLite files are left out of the slice, so regression.diff covers only the Postgres half of the fix plus base.py. CockroachEngine subclasses PostgresEngine and has no savepoint code of its own. The advisory also mentions CREATE EXTENSION in PostgresEngine.prep_database (config-driven, not changed by the fix, not in the slice). The fix's test (tests/engine/test_transaction.py) is not in the slice. Slice keeps Savepoint and PostgresTransaction whole, PostgresEngine.__init__/get_new_connection/transaction (how a transaction and its connection are obtained), and in base.py the validator, its constant, and Batch/TransactionClass/Engine so the names postgres.py imports from base.py exist in the slice. An empty name passes the validator but never reaches the sink (name or savepoint_<n> default in savepoint; in rollback_to an empty name is only a syntax error).",
+  "regressed_commit": "e4946d858e1aae1a9a4cf7714957d07983d94cde",
+  "regression_files": [
+    "piccolo/engine/base.py",
+    "piccolo/engine/postgres.py"
+  ],
+  "repo": "piccolo-orm/piccolo",
+  "schema_version": 1,
+  "scope": "cross_file",
+  "scrubbed": {
+    "clean": [],
+    "regressed": []
+  },
+  "slice": {
+    "piccolo/engine/base.py": [
+      "logger",
+      "VALID_SAVEPOINT_CHARACTERS",
+      "validate_savepoint_name",
+      "Batch",
+      "TransactionClass",
+      "Engine"
+    ],
+    "piccolo/engine/postgres.py": [
+      "asyncpg",
+      "Savepoint",
+      "PostgresTransaction",
+      "PostgresEngine.__init__",
+      "PostgresEngine.get_new_connection",
+      "PostgresEngine.transaction"
+    ]
+  },
+  "spec_sha256": "064ddad73edd94d53a0277538c75648ae4df06186ee1a663aa047c079f3d1759",
+  "totals": {
+    "clean": {
+      "approx_tokens": 3790,
+      "bytes": 13263
+    },
+    "regressed": {
+      "approx_tokens": 3583,
+      "bytes": 12540
+    }
+  },
+  "vulnerability_class": "sql"
+}

@@ -1,0 +1,257 @@
+{
+  "advisories": [
+    "GHSA-cwvm-v4w8-q58c"
+  ],
+  "checks": [
+    {
+      "detail": "regressed commit is an ancestor of the clean commit",
+      "name": "commits",
+      "status": "ok"
+    },
+    {
+      "detail": "every requested symbol exists in at least one variant",
+      "name": "symbols-found",
+      "status": "ok"
+    },
+    {
+      "detail": "entry and sinks exist in both variants, guards in the clean one",
+      "name": "flow-present",
+      "status": "ok"
+    },
+    {
+      "detail": "files changed by the regression: git/refs/symbolic.py",
+      "name": "regression-nonempty",
+      "status": "ok"
+    },
+    {
+      "detail": "every slice file parses",
+      "name": "parses",
+      "status": "ok"
+    },
+    {
+      "detail": "clean slice is 24576 bytes (soft limit 24576, hard limit 49152)",
+      "name": "size",
+      "status": "ok"
+    },
+    {
+      "detail": "nothing referenced was cut",
+      "name": "dropped-references",
+      "status": "ok"
+    },
+    {
+      "detail": "no string literal uses security wording",
+      "name": "flagged-strings",
+      "status": "ok"
+    }
+  ],
+  "clean_commit": "e98f57b81f792f0f5e18d33ee658ae395f9aa3c4",
+  "event_id": "gitpython-cwvm",
+  "files": {
+    "git/refs/symbolic.py": {
+      "clean": {
+        "approx_tokens": 2741,
+        "bytes": 9591,
+        "dropped_references": [],
+        "kept": [
+          "SymbolicReference.__init__",
+          "SymbolicReference._check_ref_name_valid",
+          "SymbolicReference._get_packed_refs_path",
+          "SymbolicReference._get_ref_info",
+          "SymbolicReference._get_ref_info_helper",
+          "SymbolicReference._iter_packed_refs",
+          "SymbolicReference.dereference_recursive",
+          "_git_dir"
+        ],
+        "lines": 226,
+        "missing": [],
+        "original_lines": 813,
+        "syntax_error": null
+      },
+      "regressed": {
+        "approx_tokens": 2040,
+        "bytes": 7139,
+        "dropped_references": [],
+        "kept": [
+          "SymbolicReference.__init__",
+          "SymbolicReference._get_packed_refs_path",
+          "SymbolicReference._get_ref_info",
+          "SymbolicReference._get_ref_info_helper",
+          "SymbolicReference._iter_packed_refs",
+          "SymbolicReference.dereference_recursive",
+          "_git_dir"
+        ],
+        "lines": 180,
+        "missing": [
+          "SymbolicReference._check_ref_name_valid"
+        ],
+        "original_lines": 767,
+        "syntax_error": null
+      }
+    },
+    "git/repo/base.py": {
+      "clean": {
+        "approx_tokens": 1389,
+        "bytes": 4861,
+        "dropped_references": [],
+        "kept": [
+          "Repo.commit",
+          "Repo.head"
+        ],
+        "lines": 178,
+        "missing": [],
+        "original_lines": 1405,
+        "syntax_error": null
+      },
+      "regressed": {
+        "approx_tokens": 1389,
+        "bytes": 4861,
+        "dropped_references": [],
+        "kept": [
+          "Repo.commit",
+          "Repo.head"
+        ],
+        "lines": 178,
+        "missing": [],
+        "original_lines": 1405,
+        "syntax_error": null
+      }
+    },
+    "git/repo/fun.py": {
+      "clean": {
+        "approx_tokens": 2893,
+        "bytes": 10124,
+        "dropped_references": [],
+        "kept": [
+          "deref_tag",
+          "name_to_object",
+          "rev_parse",
+          "short_to_long",
+          "to_commit"
+        ],
+        "lines": 297,
+        "missing": [],
+        "original_lines": 388,
+        "syntax_error": null
+      },
+      "regressed": {
+        "approx_tokens": 2893,
+        "bytes": 10124,
+        "dropped_references": [],
+        "kept": [
+          "deref_tag",
+          "name_to_object",
+          "rev_parse",
+          "short_to_long",
+          "to_commit"
+        ],
+        "lines": 297,
+        "missing": [],
+        "original_lines": 388,
+        "syntax_error": null
+      }
+    }
+  },
+  "flagged_strings": {
+    "clean": [],
+    "regressed": []
+  },
+  "flow": {
+    "entry": [
+      {
+        "kind": "library-api",
+        "note": "caller-supplied revision string; rev_parse(str(rev) + '^0') hands the name before '^' to name_to_object, which tries it as a ref path with the bare '%s' template first",
+        "symbol": "git/repo/base.py::Repo.commit"
+      }
+    ],
+    "guards": [
+      {
+        "note": "applied at the top of _get_ref_info_helper; rejects ref names starting with '/', containing '..' or '//', backslashes, colons, control characters etc., so an absolute name raises ValueError before any join/open",
+        "symbol": "git/refs/symbolic.py::SymbolicReference._check_ref_name_valid"
+      }
+    ],
+    "sinks": [
+      {
+        "kind": "filesystem",
+        "note": "open(os.path.join(repodir, str(ref_path))); an absolute ref_path makes os.path.join discard repodir, so any file outside the git dir is opened and read (the regressed side only rejects '..')",
+        "symbol": "git/refs/symbolic.py::SymbolicReference._get_ref_info_helper"
+      }
+    ]
+  },
+  "flow_files": [
+    "git/refs/symbolic.py",
+    "git/repo/base.py"
+  ],
+  "notes": "Pilot spec, re-reviewed at 2.3 on 2026-09-29 (flow kept; Repo.head added to the slice, notes rewritten). Second half of a two-part fix. 74e55ee4 (PR #1644, 3.1.35) added an inline '..' check in _get_ref_info_helper; it is already present at the regressed commit 1774f1e3 (first parent of the merge e98f57b8, PR #1672, 3.1.37), so the advisory's '../' PoC is blocked on BOTH sides of this pair and does not distinguish them. The flow this pair closes is the absolute-path variant: Repo.commit('/etc/passwd') -> self.rev_parse('/etc/passwd^0') (class alias of git/repo/fun.py::rev_parse, imported from .fun) -> the name before the first '^' goes to name_to_object('/etc/passwd') -> the bare '%s' template -> SymbolicReference.dereference_recursive -> _get_ref_info -> _get_ref_info_helper -> open(os.path.join(repodir, '/etc/passwd')), where os.path.join discards repodir (repo.common_dir via _git_dir) for an absolute ref_path and the file is opened and read in full. The regressed side only rejects names containing '..'. The clean side calls _check_ref_name_valid (git-check-ref-format rules) first; it rejects a leading '/', and '//' for the 'refs/%s'-style templates, so every template raises ValueError, name_to_object ends in BadName, and nothing outside the git dir is opened. Verified 2026-09-29 by running the complete git/ package extracted from each commit (only the external gitdb/smmap stubbed) against a real temporary repository, calling Repo.commit with an audit hook logging every open(): at 1774f1e3 an absolute rev opened the marker file outside .git (and a nonexistent absolute path was probed the same way); at e98f57b8 the same revs opened nothing; '../x' was rejected with no open at both; 'master' produced the same in-.git opens at both. Platform detail: rev_parse splits the rev at any of '^~:@', so a Windows drive-letter path ('C:\\...') or a path containing '~' (8.3 short names) is truncated before name_to_object; a POSIX absolute path, or a drive-relative '/Users/...' path on Windows (the case verified above), reaches open() intact. Impact is a blind read (existence probe, DoS on /dev/random or a huge file); contents are not returned, except that a file beginning 'ref: X' is followed as a ref and one beginning with a 40-hex token is treated as a sha. Parallel entry points not modelled: Repo.tree (rev + '^{tree}') and IndexFile.diff reach the same rev_parse path; they are left out for size (the clean slice is 24,576 bytes, exactly the soft limit). Repo.common_dir (the source of repodir) is not in the slice; it does not matter for this variant because os.path.join discards repodir for an absolute ref_path. Repo.head was added (a 3-line property) so Repo.commit's rev-is-None branch and rev_parse's leading-token branch resolve in the slice; neither reaches the sink. Slice artefact: class-level assignments kept by the builder reference cut methods (Repo.description/refs/branches/daemon_export/alternates, SymbolicReference.commit/object/reference), so the slice files are not importable as-is; unrelated to the flow. Repo keeps its class-level unsafe_git_clone_options list (real identifier and values; the builder keeps all class-level assignments); it belongs to clone option checking, not to this flow.",
+  "regressed_commit": "1774f1e32307deb755f80dc51b220566c7aef755",
+  "regression_files": [
+    "git/refs/symbolic.py"
+  ],
+  "repo": "gitpython-developers/gitpython",
+  "schema_version": 1,
+  "scope": "cross_file",
+  "scrubbed": {
+    "clean": [
+      {
+        "kind": "comment",
+        "line": 126,
+        "path": "git/repo/base.py",
+        "text": "# This option allows users to execute arbitrary commands."
+      },
+      {
+        "kind": "comment",
+        "line": 131,
+        "path": "git/repo/base.py",
+        "text": "# like `protocol.allow` or `core.gitProxy` to execute arbitrary commands."
+      }
+    ],
+    "regressed": [
+      {
+        "kind": "comment",
+        "line": 126,
+        "path": "git/repo/base.py",
+        "text": "# This option allows users to execute arbitrary commands."
+      },
+      {
+        "kind": "comment",
+        "line": 131,
+        "path": "git/repo/base.py",
+        "text": "# like `protocol.allow` or `core.gitProxy` to execute arbitrary commands."
+      }
+    ]
+  },
+  "slice": {
+    "git/refs/symbolic.py": [
+      "_git_dir",
+      "SymbolicReference.__init__",
+      "SymbolicReference._get_packed_refs_path",
+      "SymbolicReference._iter_packed_refs",
+      "SymbolicReference.dereference_recursive",
+      "SymbolicReference._check_ref_name_valid",
+      "SymbolicReference._get_ref_info_helper",
+      "SymbolicReference._get_ref_info"
+    ],
+    "git/repo/base.py": [
+      "Repo.head",
+      "Repo.commit"
+    ],
+    "git/repo/fun.py": [
+      "short_to_long",
+      "name_to_object",
+      "deref_tag",
+      "to_commit",
+      "rev_parse"
+    ]
+  },
+  "spec_sha256": "12925502497fc24ddf01a615a637329f0081139843adcc3d59cda4ed07724d36",
+  "totals": {
+    "clean": {
+      "approx_tokens": 7023,
+      "bytes": 24576
+    },
+    "regressed": {
+      "approx_tokens": 6322,
+      "bytes": 22124
+    }
+  },
+  "vulnerability_class": "path-traversal"
+}

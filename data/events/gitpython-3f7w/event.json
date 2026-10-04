@@ -1,0 +1,235 @@
+{
+  "advisories": [
+    "GHSA-3f7w-8rr8-f37f"
+  ],
+  "checks": [
+    {
+      "detail": "regressed commit is an ancestor of the clean commit",
+      "name": "commits",
+      "status": "ok"
+    },
+    {
+      "detail": "every requested symbol exists in at least one variant",
+      "name": "symbols-found",
+      "status": "ok"
+    },
+    {
+      "detail": "entry and sinks exist in both variants, guards in the clean one",
+      "name": "flow-present",
+      "status": "ok"
+    },
+    {
+      "detail": "files changed by the regression: git/index/base.py",
+      "name": "regression-nonempty",
+      "status": "ok"
+    },
+    {
+      "detail": "every slice file parses",
+      "name": "parses",
+      "status": "ok"
+    },
+    {
+      "detail": "clean slice is 24533 bytes (soft limit 24576, hard limit 49152)",
+      "name": "size",
+      "status": "ok"
+    },
+    {
+      "detail": "referenced but cut: git/cmd.py::Git._unpack_args, git/cmd.py::Git.execute, git/cmd.py::_AutoInterrupt, git/cmd.py::_CatFileContentStream, git/cmd.py::_GitMeta, git/cmd.py::execute_kwargs, git/index/base.py::IndexFile._flush_stdin_and_wait, git/index/base.py::IndexFile._to_relative_path, git/index/base.py::IndexFile._write_path_to_stdin",
+      "name": "dropped-references",
+      "status": "warn"
+    },
+    {
+      "detail": "no string literal uses security wording",
+      "name": "flagged-strings",
+      "status": "ok"
+    }
+  ],
+  "clean_commit": "3af0c2516c5e18c829da30338614688f6b69b49c",
+  "event_id": "gitpython-3f7w",
+  "files": {
+    "git/cmd.py": {
+      "clean": {
+        "approx_tokens": 3785,
+        "bytes": 13246,
+        "dropped_references": [
+          "Git._unpack_args",
+          "Git.execute",
+          "_AutoInterrupt",
+          "_CatFileContentStream",
+          "_GitMeta",
+          "execute_kwargs"
+        ],
+        "kept": [
+          "Git.__getattr__",
+          "Git._call_process",
+          "Git._canonicalize_option_name",
+          "Git._option_candidates",
+          "Git.check_unsafe_options",
+          "Git.transform_kwarg",
+          "Git.transform_kwargs",
+          "dashify"
+        ],
+        "lines": 357,
+        "missing": [],
+        "original_lines": 1881,
+        "syntax_error": null
+      },
+      "regressed": {
+        "approx_tokens": 3785,
+        "bytes": 13246,
+        "dropped_references": [
+          "Git._unpack_args",
+          "Git.execute",
+          "_AutoInterrupt",
+          "_CatFileContentStream",
+          "_GitMeta",
+          "execute_kwargs"
+        ],
+        "kept": [
+          "Git.__getattr__",
+          "Git._call_process",
+          "Git._canonicalize_option_name",
+          "Git._option_candidates",
+          "Git.check_unsafe_options",
+          "Git.transform_kwarg",
+          "Git.transform_kwargs",
+          "dashify"
+        ],
+        "lines": 357,
+        "missing": [],
+        "original_lines": 1881,
+        "syntax_error": null
+      }
+    },
+    "git/index/base.py": {
+      "clean": {
+        "approx_tokens": 3225,
+        "bytes": 11287,
+        "dropped_references": [
+          "IndexFile._flush_stdin_and_wait",
+          "IndexFile._to_relative_path",
+          "IndexFile._write_path_to_stdin"
+        ],
+        "kept": [
+          "IndexFile.checkout"
+        ],
+        "lines": 301,
+        "missing": [],
+        "original_lines": 1597,
+        "syntax_error": null
+      },
+      "regressed": {
+        "approx_tokens": 3107,
+        "bytes": 10874,
+        "dropped_references": [
+          "IndexFile._flush_stdin_and_wait",
+          "IndexFile._to_relative_path",
+          "IndexFile._write_path_to_stdin"
+        ],
+        "kept": [
+          "IndexFile.checkout"
+        ],
+        "lines": 289,
+        "missing": [],
+        "original_lines": 1585,
+        "syntax_error": null
+      }
+    }
+  },
+  "flagged_strings": {
+    "clean": [],
+    "regressed": []
+  },
+  "flow": {
+    "entry": [
+      {
+        "kind": "library-api",
+        "note": "the caller's **kwargs are forwarded unchanged to git checkout-index, e.g. index.checkout(prefix='/abs/dir/', force=True); the kwarg key names the option and its value is the output path",
+        "symbol": "git/index/base.py::IndexFile.checkout"
+      }
+    ],
+    "guards": [
+      {
+        "note": "unless allow_unsafe_options=True, Git.check_unsafe_options(Git._option_candidates([], kwargs), unsafe_git_checkout_index_options=['--prefix']) raises UnsafeOptionError before git runs, for prefix=..., abbreviations such as pre=/prefi=, list values, a key like 'prefix=<dir>', and a split single-char value such as u='--prefix=<dir>'",
+        "symbol": "git/index/base.py::IndexFile.checkout"
+      }
+    ],
+    "sinks": [
+      {
+        "kind": "subprocess",
+        "note": "self.repo.git.checkout_index(*args, **kwargs) -> Git.__getattr__ -> _call_process -> transform_kwargs/transform_kwarg emit --prefix=<caller path>; self.execute(call) Popens 'git checkout-index --prefix=<path> --index [--force] --all', which writes every index blob under the caller-chosen absolute path (with --force, overwriting existing files)",
+        "symbol": "git/cmd.py::Git._call_process",
+        "true_symbol": "git/cmd.py::Git.execute"
+      }
+    ]
+  },
+  "flow_files": [
+    "git/cmd.py",
+    "git/index/base.py"
+  ],
+  "notes": "Pilot spec, reviewed at 2.3 and kept; re-reviewed 2026-09-28 (flow, slice and class unchanged, notes extended). Class: path-traversal by impact (caller-chosen output directory for git checkout-index, CWE-22/CWE-73 per the advisory); the mechanism is option injection into git's argv (CWE-88 style), as in the other GitPython events. Flow chosen: Instance 1 of the advisory (IndexFile.checkout -> git checkout-index --prefix, arbitrary file write). The fix commit also guards TagReference.create (git tag -F/--file, arbitrary read), but that half is known-incomplete at the clean commit (positional path/reference bypass, e.g. reference='--file=<path>', and joined short options with split_single_char_options=False; closed later by GHSA-3wxw-xv34-2frg / 1b0d2d9b and GHSA-wvpp-8hx9-p66j / 96a888f4), so git/refs/tag.py is left out of the slice and regression.diff carries only the checkout hunks. The checkout-index kwargs path is closed by this commit. Verified concretely: GitPython's own helpers (dashify, _option_candidates, _canonicalize_option_name, check_unsafe_options, transform_kwarg(s), _unpack_args, execute_kwargs) were extracted from git/cmd.py (byte-identical at both commits), and the argv that IndexFile.checkout(paths=None, force=True, **kw) builds was run with real git 2.55 in a scratch repo. At 07e80555, prefix=<dir>/, pre=, prefi= and u='--prefix=<dir>/' all reach git and overwrite a pre-existing f.txt outside the repo with the indexed blob (rc 0), and **{'prefix=<dir>/': True} also writes outside the repo (to the dashified path); at 3af0c251 the added guard raises UnsafeOptionError for every one of them. The two spellings the guard lets through do not reach the option: u='--prefix=...' with split_single_char_options=False becomes '-u--prefix=...' and p=<dir> becomes '-p <dir>', both rejected by git (rc 129). --prefix has no short form, and explicit paths go to git over stdin, never argv. Re-checked 2026-09-28 with git 2.55.0.windows.3 (same helper extraction, scratch repo): prefix=, pre=, prefi=, u='--prefix=...' (split), prefix=[<dir>/] and the key form 'prefix=<dir>/' all reach git and write outside the repo with the guard absent, and the clean guard raises UnsafeOptionError for each; a benign q=True passes the guard. git also accepts '--prefix <string>' as two tokens, but kwargs always become one '--name=value' token and checkout's positional args are fixed, so that form is unreachable here. The GHSA-wvpp joined-short-option bypass (split_single_char_options=False) does not reach --prefix for checkout-index because no short option of checkout-index takes a path. Scope follows the true sink: entry and guard are in git/index/base.py, the Popen is in git/cmd.py::Git.execute (about 350 lines, recorded as true_symbol; its nearest in-slice call site is Git._call_process). Accepted dropped references: Git.execute (true sink, too large); _AutoInterrupt/_CatFileContentStream (type aliases for the process wrapper, not on the option path); _GitMeta (metaclass); execute_kwargs and Git._unpack_args (trimmed to stay under 24 KB, the slice is at 24.0 KB: execute_kwargs only diverts as_process/istream/env and the like to execute, and _unpack_args flattens GitPython's own fixed positional args, not the caller's kwargs); IndexFile._to_relative_path/_write_path_to_stdin/_flush_stdin_and_wait (feed explicit paths over stdin in the paths branch; the options reach git identically in both branches and the paths=None branch shows the whole flow). The hop self.repo.git.checkout_index -> Git.__getattr__ is dynamic dispatch through Repo.git (git/repo/base.py, not in the slice; IndexFile.__init__, which types self.repo as Repo, is also cut for size). The @default_index decorator (git/index/util.py, imported, not sliced) only asserts the index is the repository's default index and does not touch kwargs. Not modelled, and not closed by this commit or named in the advisory: env={'GIT_WORK_TREE': <dir>} passed to IndexFile.checkout is an execute kwarg (diverted by _call_process, merged into the Popen environment by Git.execute), and with it git checkout-index --all --force writes outside the repo (checked with git 2.55); it is an environment channel, not option injection. Reviewers disagreed on scope (confirm: local, refute: cross-file); the pre-registered rule gives cross_file because the subprocess call is in git/cmd.py.",
+  "regressed_commit": "07e8055585491aa3d0b42f79c5bc2bdd027fa6c0",
+  "regression_files": [
+    "git/index/base.py"
+  ],
+  "repo": "gitpython-developers/gitpython",
+  "schema_version": 1,
+  "scope": "cross_file",
+  "scrubbed": {
+    "clean": [
+      {
+        "kind": "comment",
+        "line": 107,
+        "path": "git/cmd.py",
+        "text": "# This option allows arbitrary command execution in git-ls-remote."
+      },
+      {
+        "kind": "docstring",
+        "line": 141,
+        "path": "git/cmd.py",
+        "text": "Some options passed to ``git <command>`` can execute arbitrary commands and\n        are therefore blocked by default unless the caller explicitly allows them."
+      }
+    ],
+    "regressed": [
+      {
+        "kind": "comment",
+        "line": 107,
+        "path": "git/cmd.py",
+        "text": "# This option allows arbitrary command execution in git-ls-remote."
+      },
+      {
+        "kind": "docstring",
+        "line": 141,
+        "path": "git/cmd.py",
+        "text": "Some options passed to ``git <command>`` can execute arbitrary commands and\n        are therefore blocked by default unless the caller explicitly allows them."
+      }
+    ]
+  },
+  "slice": {
+    "git/cmd.py": [
+      "dashify",
+      "Git.__getattr__",
+      "Git._call_process",
+      "Git.transform_kwargs",
+      "Git.transform_kwarg",
+      "Git._option_candidates",
+      "Git._canonicalize_option_name",
+      "Git.check_unsafe_options"
+    ],
+    "git/index/base.py": [
+      "IndexFile.checkout"
+    ]
+  },
+  "spec_sha256": "84ee38b4e709b431a5c6e3bea9b70798fb731a6fbee45d6501ae18ad5d4030ef",
+  "totals": {
+    "clean": {
+      "approx_tokens": 7010,
+      "bytes": 24533
+    },
+    "regressed": {
+      "approx_tokens": 6892,
+      "bytes": 24120
+    }
+  },
+  "vulnerability_class": "path-traversal"
+}

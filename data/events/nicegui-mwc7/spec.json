@@ -1,0 +1,46 @@
+{
+  "event_id": "nicegui-mwc7",
+  "advisories": [
+    "GHSA-mwc7-64wg-pgvj"
+  ],
+  "repo": "zauberzeug/nicegui",
+  "clean_commit": "ed12eb14f2a6c48b388a05c04b3c5a107ea9d330",
+  "regressed_commit": "7c3e01af16dc5166814410c4a609db3ddc1a4cc5",
+  "vulnerability_class": "path-traversal",
+  "flow": {
+    "entry": [
+      {
+        "symbol": "nicegui/nicegui.py::_get_resource",
+        "kind": "http-request",
+        "note": "FastAPI route GET /_nicegui/{version}/resources/{key}/{path:path}; the path parameter is request-controlled and may contain '..' segments"
+      }
+    ],
+    "guards": [
+      {
+        "symbol": "nicegui/nicegui.py::_get_resource",
+        "note": "filepath.resolve().relative_to(resources[key].path.resolve()) with HTTPException(403) on ValueError keeps the joined path inside the registered resource directory"
+      }
+    ],
+    "sinks": [
+      {
+        "symbol": "nicegui/nicegui.py::_get_resource",
+        "kind": "filesystem",
+        "note": "FileResponse(filepath) on filepath = resources[key].path / path after only an exists() check"
+      }
+    ]
+  },
+  "slice": {
+    "nicegui/nicegui.py": [
+      "_lifespan",
+      "_startup",
+      "_shutdown",
+      "app",
+      "sio",
+      "Client",
+      "_get_library",
+      "_get_component",
+      "_get_resource"
+    ]
+  },
+  "notes": "Single-function flow (entry, guard and sink all in nicegui/nicegui.py::_get_resource). The resource base directory comes from dependencies.register_resource (called by Element.add_resource, e.g. the leaflet element) and is trusted; only the {path:path} URL segment is request-controlled. _get_library and _get_component are sibling route handlers unchanged by the fix; app, sio, Client (auto_index_client assignment), _lifespan, _startup and _shutdown are kept so every name the slice references is defined. Fix is complete for this route (both sides resolved before relative_to)."
+}

@@ -1,0 +1,22 @@
+{
+  "event_id": "lollms-8mrm",
+  "advisories": ["GHSA-8mrm-r7h3-c3hj"],
+  "repo": "parisneo/lollms_legacy",
+  "clean_commit": "26a3ff35acf152b49e1087d5698ad4864c7b6092",
+  "regressed_commit": "473ae0a0e883c9b4c0ff16bd22eff63a4afaac20",
+  "vulnerability_class": "path-traversal",
+  "flow": {
+    "entry": [{"symbol": "lollms/server/endpoints/lollms_configuration_infos.py::apply_settings", "kind": "http-request",
+               "note": "POST /apply_settings: the JSON body's config['discussion_db_name'] is read via await request.json() and copied into lollmsElfServer.config.config[key] (and saved when auto_save is on)"}],
+    "guards": [{"symbol": "lollms/server/endpoints/lollms_configuration_infos.py::apply_settings",
+                "note": "the path_traversal_prone_settings list: in the regressed version a missing comma makes Python concatenate \"discussion_db_name\" \"user_avatar\" into the single entry 'discussion_db_nameuser_avatar', so `key in path_traversal_prone_settings` is False for discussion_db_name and sanitize_path is never applied; the clean version adds the comma, so sanitize_path runs and raises on '..', leading '/', absolute paths and special characters before the value is stored"}],
+    "sinks": [{"symbol": "lollms/server/endpoints/lollms_discussion.py::delete_discussion", "kind": "filesystem",
+               "note": "POST /delete_discussion builds personal_discussions_path/lollmsElfServer.config.discussion_db_name/f'{id}' from the stored config value and calls shutil.rmtree on it; with discussion_db_name='../../x' the recursive delete escapes the discussions directory. Second-order flow through the shared lollmsElfServer.config object, not a call chain"}]
+  },
+  "slice": {
+    "lollms/server/endpoints/lollms_configuration_infos.py": ["router", "lollmsElfServer", "apply_settings"],
+    "lollms/server/endpoints/lollms_discussion.py": ["router", "lollmsElfServer", "DiscussionDelete", "delete_discussion"],
+    "lollms/security.py": ["sanitize_path"]
+  },
+  "notes": "Fix 26a3ff35 is a one-character change (a missing comma in the path_traversal_prone_settings list of apply_settings); regressed 473ae0a0 is its only parent and the regression diff is exactly that line. Class path-traversal (CWE-22) by what the code does: an HTTP-supplied config value becomes a directory component of paths passed to shutil.rmtree / Path.mkdir. user_avatar (also named in the commit subject) was already in the list earlier, so discussion_db_name is the only setting the fix newly guards. The guard is effective: sanitize_path raises HTTPException inside apply_settings' try block before `lollmsElfServer.config.config[key] = ...` executes for that key, so the tainted value is never stored. Sink choice: delete_discussion (lollms_discussion.py) is an HTTP endpoint in the same package that reads config.discussion_db_name and rmtree's under it. Other consumers of the same config value, not modelled: lollms/app.py::LollmsApplication.build_long_term_skills_memory (Path.mkdir(parents=True) + skills_memory.json; it has no caller inside this repo, it is called by the lollms-webui host application) and the discussion-path join in client_session.py (uses DiscussionsDB.discussion_db_name, set via select_database, which already sanitized at both commits). Caveats: the flow is second-order (stored in the shared config object by one request, used by another); lollms_discussion.py imports LOLLMSWebUI from the external lollms_webui package, i.e. this router is mounted by the web UI rather than by lollms' own elf server (which mounts lollms_configuration_infos). apply_settings is gated by forbid_remote_access (localhost unless force_accept_remote_access) and check_access (valid client_id), and optionally an interactive confirmation dialog; these limit exposure but do not neutralise the traversal. sanitize_path (lollms/security.py, unchanged by the fix) is included so the guard's behaviour is readable."
+}

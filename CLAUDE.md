@@ -86,6 +86,23 @@ that reintroduces the hallucination surface the design specifically avoids.
   each is auditable: `data/recovered_fix_commits.json` (fixes for advisories linking none) and
   `data/fix_pair_corrections.json` (hand-curated, only where both independent reviewers agreed).
   Never edit a pair in `data/fix_pairs.json` directly — it is regenerated.
+- **Regression events** (2.3, decided 2026-09-28): each event is a *trimmed slice* in
+  `data/events/<event_id>/` — the files on the vulnerable flow at their real repository paths, cut
+  to the functions between entry, guard and sink, as `clean/` (fix commit) and `regressed/`
+  (vulnerable commit). The refinement model edits whole files, and 16 of 35 candidates had a flow
+  file too large for one response, which is why whole files were rejected. Deviation from the
+  proposal to keep in view: §6.3 implies the graph retrieves over the whole repository; slices
+  keep real paths so the repository can still be overlaid for Condition C.
+  - **Scope label, pre-registered:** *local* iff entry, guard and sink lie in one file, else
+    *cross-file*. Computed by `graphgate.dataset.events.classify_scope` from recorded facts; an
+    entry or sink too large for the slice is recorded at its call site with the real location in
+    `true_symbol`, and the label follows the real location. Do not change this rule after seeing
+    results.
+  - **Validation:** AI agents prepare each dossier (analyst, then an adversarial checker); only
+    the owner's accept on the sign-off page makes an event validated. Never describe AI-prepared
+    events as validated or expert-confirmed.
+  - Build with `scripts/build_event.py`; never edit `clean/`, `regressed/` or `event.json` by
+    hand — change `spec.json` and rebuild.
 - **Bounded retrieval**: default 2-hop neighborhood around changed symbols. Hop depth is an
   ablation variable (1/2/3), not something to "improve" beyond the plan.
 - **Deployment targets**: CI pre-merge gate and agent-framework middleware (e.g., a LangGraph
@@ -193,5 +210,9 @@ whose first seed stopped early. The code-generation model is decided (`claude-op
 `docs/MODEL_CHOICE.md`). **M1.2 in progress:** step 2.1 done provisionally — 12 seed repos plus 4
 reserves in `data/seed_repos.json`. Step 2.2 done — 35 candidate vulnerable/fixed pairs in the
 selected repos (`data/fix_pairs.json`), each reviewed by two independent reviewers
-(`data/fix_review.json`). **Next: 2.3, manual validation of those 35** — open issues are listed in
-BUILD_PLAN 2.2's as-built note.
+(`data/fix_review.json`). **Step 2.3 in progress:** the 35 pairs form 34 events; AI preparation
+is finished (31 passed the adversarial check, 2 excluded, 1 rebuilt and awaiting a re-check —
+`data/validation_ai_review.json`). **Next: the owner's sign-off** on the sign-off page (0 of 34
+decided as of 2026-10-04), then record the decisions in `data/validation_signoff.json` and close
+2.3. A progress paper (`paper/`) and a dashboard (`scripts/build_dashboard.py`) exist for the
+guide's review; both read their numbers from the data files.

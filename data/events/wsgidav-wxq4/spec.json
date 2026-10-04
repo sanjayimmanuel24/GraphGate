@@ -1,0 +1,53 @@
+{
+  "event_id": "wsgidav-wxq4",
+  "advisories": [
+    "GHSA-wxq4-cc2q-338q"
+  ],
+  "repo": "mar10/wsgidav",
+  "clean_commit": "f894ed8656d7bdd7438ab8148c5a02546cb15183",
+  "regressed_commit": "593a3b3dbe357480c26ae252282b327759044541",
+  "vulnerability_class": "path-traversal",
+  "flow": {
+    "entry": [
+      {
+        "symbol": "wsgidav/request_server.py::RequestServer._send_resource",
+        "kind": "http-request",
+        "note": "GET/HEAD handler (do_GET/do_HEAD delegate here); reads the request path environ['PATH_INFO'] and passes it unchanged to self._davProvider.get_resource_inst(path, environ). Upstream, WsgiDAVApp.__call__ (wsgidav_app.py, not in slice) only strips the share prefix, so a request /share/%2e%2e/share_evil/secret arrives here as PATH_INFO '/../share_evil/secret' with the '..' segment intact"
+      }
+    ],
+    "guards": [
+      {
+        "symbol": "wsgidav/fs_dav_provider.py::FilesystemProvider._loc_to_file_path",
+        "note": "builds file_path = os.path.abspath(os.path.join(root_path, *path.strip('/').split('/'))), so '..' segments are resolved. regressed: containment check is file_path.startswith(root_path), which accepts a sibling directory whose name merely starts with the root name (root /tmp/share, resolved /tmp/share_evil/secret passes); clean: compares root_path.rstrip(os.sep)+os.sep against file_path.rstrip(os.sep)+os.sep, so only the root itself and its descendants pass and the sibling raises RuntimeError"
+      }
+    ],
+    "sinks": [
+      {
+        "symbol": "wsgidav/fs_dav_provider.py::FileResource.get_content",
+        "kind": "filesystem",
+        "note": "get_resource_inst returns FileResource(path, environ, fp) for the resolved path (os.stat in __init__), and _send_resource calls res.get_content(), which does open(self._file_path, 'rb', BUFFER_SIZE) and streams the bytes of the out-of-root file to the client"
+      }
+    ]
+  },
+  "slice": {
+    "wsgidav/request_server.py": [
+      "_logger",
+      "DEFAULT_BLOCK_SIZE",
+      "RequestServer.__init__",
+      "RequestServer._fail",
+      "RequestServer.do_GET",
+      "RequestServer._send_resource"
+    ],
+    "wsgidav/fs_dav_provider.py": [
+      "_logger",
+      "BUFFER_SIZE",
+      "FileResource.__init__",
+      "FileResource.get_content",
+      "FilesystemProvider.__init__",
+      "FilesystemProvider._resolve_shadow_path",
+      "FilesystemProvider._loc_to_file_path",
+      "FilesystemProvider.get_resource_inst"
+    ]
+  },
+  "notes": "Reviewed at 2.3 (2026-09-30). Class path-traversal (CWE-22), verified in code at both commits. Fix f894ed8 changes only FilesystemProvider._loc_to_file_path (plus CHANGELOG, outside the slice). Regressed 593a3b3 flow: RequestServer.do_GET -> _send_resource reads environ['PATH_INFO'] -> FilesystemProvider.get_resource_inst -> _loc_to_file_path joins root with the path parts and os.path.abspath resolves '..', then accepts it because file_path.startswith(root_path) is a plain string-prefix test -> FileResource(path, environ, fp) -> FileResource.get_content open(fp, 'rb') streamed to the client. Checked with the extracted expressions: root /tmp/share, PATH_INFO /../share_evil/secret resolves to /tmp/share_evil/secret, which passes the regressed check and is rejected by the clean check; /a/b and / pass both; /../etc/passwd (/tmp/etc/passwd) is rejected by both. So the fix closes only the sibling-prefix escape: the attacker can reach directories next to the root whose names start with the root's basename, not arbitrary paths. Upstream of the entry, WsgiDAVApp.__call__ (wsgidav_app.py, not in slice) strips the share prefix and does not normalise '..'; the advisory says clients must send the dot segment encoded (%2e%2e), which the WSGI server decodes into PATH_INFO. The shadow_map branch (is_shadow) is configuration-controlled and bypasses the check at both commits by design. Parallel flows closed by the same change, not modelled: PUT (FileResource.begin_write / FolderResource.create_empty_resource), DELETE (os.unlink / shutil.rmtree), MKCOL, PROPFIND/PROPPATCH, and COPY/MOVE destinations (copy_move_single / move_recursive call _loc_to_file_path on the Destination path). A later commit 12380f3 (CVE-2026-55560, symlinked parents) rewrites the same check again; it is a separate bug. Accepted dropped references: FolderResource (returned by get_resource_inst when the resolved path is a directory; _send_resource then refuses collections, so it is not on the file-read flow, and the class is large); RequestServer._evaluate_if_headers (If/lock header evaluation, does not touch the path)."
+}

@@ -1,0 +1,29 @@
+--- a/lollms/server/endpoints/lollms_binding_infos.py
++++ b/lollms/server/endpoints/lollms_binding_infos.py
+@@ -14,7 +14,7 @@
+ from lollms.binding import BindingBuilder, InstallOption
+ from ascii_colors import ASCIIColors
+ from lollms.utilities import load_config, trace_exception, gc
+-from lollms.security import sanitize_path_from_endpoint, sanitize_path
++from lollms.security import sanitize_path_from_endpoint
+ from pathlib import Path
+ from typing import List, Any
+ import json
+@@ -49,7 +49,7 @@
+         gc.collect()
+         ASCIIColors.info("Reinstalling binding")
+         old_bn = lollmsElfServer.config.binding_name
+-        lollmsElfServer.config.binding_name = sanitize_path(data.name)
++        lollmsElfServer.config.binding_name = data.name
+         lollmsElfServer.binding =  BindingBuilder().build_binding(lollmsElfServer.config, lollmsElfServer.lollms_paths, InstallOption.FORCE_INSTALL, lollmsCom=lollmsElfServer)
+         lollmsElfServer.success("Binding reinstalled successfully")
+         lollmsElfServer.config.binding_name = old_bn
+@@ -86,7 +86,7 @@
+             gc.collect()
+         ASCIIColors.info("Uninstalling binding")
+         old_bn = lollmsElfServer.config.binding_name
+-        lollmsElfServer.config.binding_name = sanitize_path(data.name)
++        lollmsElfServer.config.binding_name = data.name
+         lollmsElfServer.binding =  BindingBuilder().build_binding(lollmsElfServer.config, lollmsElfServer.lollms_paths, InstallOption.NEVER_INSTALL, lollmsCom=lollmsElfServer)
+         lollmsElfServer.binding.uninstall()
+         ASCIIColors.green("Uninstalled successful")

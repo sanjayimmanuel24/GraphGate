@@ -1,0 +1,49 @@
+{
+  "event_id": "lollms-pwc9",
+  "advisories": [
+    "GHSA-pwc9-q4hj-pg8g"
+  ],
+  "repo": "parisneo/lollms_legacy",
+  "clean_commit": "7ebe08da7e0026b155af4f7be1d6417bc64cf02f",
+  "regressed_commit": "b0da52f5fd2c01352b4c8d3e43c1c8fc7667d28e",
+  "vulnerability_class": "path-traversal",
+  "flow": {
+    "entry": [
+      {
+        "symbol": "lollms/server/endpoints/lollms_binding_infos.py::unInstall_binding",
+        "kind": "http-request",
+        "note": "POST /unInstall_binding; JSON body field name (BindingInstallParams.name, pydantic str, 1-50 chars, no content check) is assigned to lollmsElfServer.config.binding_name, which BindingBuilder().build_binding(lollmsElfServer.config, ...) then reads"
+      }
+    ],
+    "guards": [
+      {
+        "symbol": "lollms/server/endpoints/lollms_binding_infos.py::unInstall_binding",
+        "note": "clean: config.binding_name = sanitize_path(data.name); sanitize_path (lollms/security.py, unchanged) raises on any name containing '..' or an absolute path, inside the endpoint's try block and before build_binding runs, so the request returns status False. regressed: data.name is assigned unchecked. Same one-line change in reinstall_binding (parallel flow, also in the slice)"
+      }
+    ],
+    "sinks": [
+      {
+        "symbol": "lollms/binding.py::BindingBuilder.getBinding",
+        "kind": "code-load",
+        "note": "binding_path = Path(config.binding_name) when the name contains '/', else bindings_zoo_path / config['binding_name']; resolve() then importlib.machinery.SourceFileLoader(module_name, <path>/__init__.py).load_module() executes the __init__.py found at the traversed location (e.g. name '../../../../tmp/x'). Reached via BindingBuilder.build_binding"
+      }
+    ]
+  },
+  "slice": {
+    "lollms/server/endpoints/lollms_binding_infos.py": [
+      "BindingInstallParams",
+      "router",
+      "lollmsElfServer",
+      "unInstall_binding",
+      "reinstall_binding"
+    ],
+    "lollms/binding.py": [
+      "BindingBuilder.build_binding",
+      "BindingBuilder.getBinding"
+    ],
+    "lollms/security.py": [
+      "sanitize_path"
+    ]
+  },
+  "notes": "Class: path-traversal (CWE-22), not the advisory's command/CWE-77. No shell or OS command is involved: the request's name is used as a directory path, traversal ('..') or an absolute path escapes bindings_zoo_path, and SourceFileLoader loads and executes <path>/__init__.py (CWE-22 leading to code execution, CWE-94). The fix is a path sanitizer, which confirms the reading. Both 2.2 reviewers agree. Verified at both commits: binding.py and security.py are byte-identical between b0da52f5 and 7ebe08da (git diff --stat lists only lollms_binding_infos.py and lollms_extensions_infos.py). At 7ebe08da, sanitize_path does 'raise exception_text', which raises a str; in Python 3 that raises TypeError, which still aborts before build_binding and is caught by the endpoint's except, so the flow is closed (upstream 85ed53a later changed this to raise Exception, a cosmetic follow-up). Modelled flow: POST /unInstall_binding (the advisory's endpoint) -> config.binding_name -> BindingBuilder.build_binding -> getBinding -> SourceFileLoader(...).load_module(). reinstall_binding carries the same one-line change and the same flow (FORCE_INSTALL), so it is included in the slice as a parallel flow but not listed as a separate entry. Fix hunks not in the slice: install_binding (already guarded by sanitize_path_from_endpoint at the vulnerable commit; the fix adds a second sanitize_path), reload_binding (os.path.basename already stripped traversal; hardening only), and lollms_extensions_infos.py::reinstall_extension (config-derived value, not request input; hardening). regression.diff therefore contains only the import line and the two modelled assignments. Known residual (not described by the advisory): getBinding treats a name containing '/' but no '..' and not absolute (e.g. 'tmp/x') as a path relative to the process working directory, which sanitize_path allows. The modelled '..'/absolute traversal is closed. Exploitation also requires a planted __init__.py at the target location (via some other write primitive); the flow itself is the path from request field to module load. Accepted dropped reference: lollms/binding.py::LLMBinding (only a return/variable type annotation in build_binding/getBinding; the ~800-line binding base class is not on the flow). Flagged string kept: lollms/security.py:8 sanitize_path default arguments 'Absolute database path detected' / 'Detected an attempt of path traversal. ...' are real program behaviour (the guard's error text)."
+}

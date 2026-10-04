@@ -1,0 +1,28 @@
+--- a/lollms/server/endpoints/lollms_personalities_infos.py
++++ b/lollms/server/endpoints/lollms_personalities_infos.py
+@@ -16,7 +16,7 @@
+ from lollms.personality import AIPersonality, InstallOption
+ from ascii_colors import ASCIIColors
+ from lollms.utilities import load_config, trace_exception, gc, show_yes_no_dialog
+-from lollms.security import check_access, forbid_remote_access
++from lollms.security import check_access
+ from pathlib import Path
+ from typing import List, Optional
+ import psutil
+@@ -37,15 +37,12 @@
+ 
+ @router.post("/set_personality_config")
+ def set_personality_config(data:PersonalityConfig):
+-    forbid_remote_access(lollmsElfServer)
+     check_access(lollmsElfServer, data.client_id)
+     print("- Recovering personality config")
+     category = sanitize_path(data.category)
+     name = sanitize_path(data.name)
+     config = data.config
+-    if category=="":
+-        return {"status":False, "error":"category must not be empty."}
+-    
++
+     package_path = f"{category}/{name}"
+     if category=="custom_personalities":
+         package_full_path = lollmsElfServer.lollms_paths.custom_personalities_path/f"{name}"

@@ -1,0 +1,101 @@
+--- a/git/cmd.py
++++ b/git/cmd.py
+@@ -118,10 +118,6 @@
+     )
+ 
+     re_unsafe_protocol = re.compile(r"(.+)::.+")
+-
+-    unsafe_git_ls_remote_options = [
+-        "--upload-pack",
+-    ]
+ 
+     git_exec_name = "git"
+ 
+@@ -227,20 +223,6 @@
+                         f"{unsafe_option} is not allowed, use `allow_unsafe_options=True` to allow it."
+                     )
+ 
+-    @classmethod
+-    def _option_candidates(cls, args: Sequence[Any] = (), kwargs: Optional[Mapping[str, Any]] = None) -> List[str]:
+-        """Collect possible option spellings before command-line transformation."""
+-        options = [
+-            option for option in cls._unpack_args([arg for arg in args if arg is not None]) if option.startswith("-")
+-        ]
+-        if kwargs:
+-            for key, value in kwargs.items():
+-                values = value if isinstance(value, (list, tuple)) else (value,)
+-                if any(value is True or (value is not False and value is not None) for value in values):
+-                    key = str(key)
+-                    options.append(f"-{key}" if len(key) == 1 else f"--{dashify(key)}")
+-        return options
+-
+     AutoInterrupt: TypeAlias = _AutoInterrupt
+ 
+     CatFileContentStream: TypeAlias = _CatFileContentStream
+@@ -284,7 +266,7 @@
+         return args
+ 
+     @classmethod
+-    def _unpack_args(cls, arg_list: Sequence[Any]) -> List[str]:
++    def _unpack_args(cls, arg_list: Sequence[str]) -> List[str]:
+         outlist = []
+         if isinstance(arg_list, (list, tuple)):
+             for arg in arg_list:
+--- a/git/repo/base.py
++++ b/git/repo/base.py
+@@ -127,18 +127,6 @@
+         "-c",
+     ]
+ 
+-    unsafe_git_archive_options = [
+-        "--exec",
+-        # Writes output to a caller-controlled filesystem path.
+-        "--output",
+-        "-o",
+-    ]
+-
+-    unsafe_git_revision_options = [
+-        "--output",
+-        "-o",
+-    ]
+-
+     # Invariants
+     config_level: ConfigLevels_Tup = ("system", "user", "global", "repository")
+ 
+@@ -158,8 +146,6 @@
+         ostream: Union[TextIO, BinaryIO],
+         treeish: Optional[str] = None,
+         prefix: Optional[str] = None,
+-        allow_unsafe_options: bool = False,
+-        allow_unsafe_protocols: bool = False,
+         **kwargs: Any,
+     ) -> Repo:
+         """Archive the tree at the given revision.
+@@ -182,12 +168,6 @@
+               repository-relative path to a directory or file to place into the archive,
+               or a list or tuple of multiple paths.
+ 
+-        :param allow_unsafe_options:
+-            Allow unsafe options, like ``--exec`` or ``--output``.
+-
+-        :param allow_unsafe_protocols:
+-            Allow unsafe protocols to be used in ``remote``, like ``ext``.
+-
+         :raise git.exc.GitCommandError:
+             If something went wrong.
+ 
+@@ -198,14 +178,6 @@
+             treeish = self.head.commit
+         if prefix and "prefix" not in kwargs:
+             kwargs["prefix"] = prefix
+-        remote = kwargs.get("remote")
+-        if not allow_unsafe_protocols and remote is not None:
+-            Git.check_unsafe_protocols(str(remote))
+-        if not allow_unsafe_options:
+-            Git.check_unsafe_options(
+-                options=Git._option_candidates([], kwargs),
+-                unsafe_options=self.unsafe_git_archive_options,
+-            )
+         kwargs["output_stream"] = ostream
+         path = kwargs.pop("path", [])
+         path = cast(Union[PathLike, List[PathLike], Tuple[PathLike, ...]], path)

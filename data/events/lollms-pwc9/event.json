@@ -1,0 +1,227 @@
+{
+  "advisories": [
+    "GHSA-pwc9-q4hj-pg8g"
+  ],
+  "checks": [
+    {
+      "detail": "regressed commit is an ancestor of the clean commit",
+      "name": "commits",
+      "status": "ok"
+    },
+    {
+      "detail": "every requested symbol exists in at least one variant",
+      "name": "symbols-found",
+      "status": "ok"
+    },
+    {
+      "detail": "entry and sinks exist in both variants, guards in the clean one",
+      "name": "flow-present",
+      "status": "ok"
+    },
+    {
+      "detail": "files changed by the regression: lollms/server/endpoints/lollms_binding_infos.py",
+      "name": "regression-nonempty",
+      "status": "ok"
+    },
+    {
+      "detail": "every slice file parses",
+      "name": "parses",
+      "status": "ok"
+    },
+    {
+      "detail": "clean slice is 7787 bytes (soft limit 24576, hard limit 49152)",
+      "name": "size",
+      "status": "ok"
+    },
+    {
+      "detail": "referenced but cut: lollms/binding.py::LLMBinding",
+      "name": "dropped-references",
+      "status": "warn"
+    },
+    {
+      "detail": "string literals with security wording (kept, review them): lollms/security.py:8",
+      "name": "flagged-strings",
+      "status": "warn"
+    }
+  ],
+  "clean_commit": "7ebe08da7e0026b155af4f7be1d6417bc64cf02f",
+  "event_id": "lollms-pwc9",
+  "files": {
+    "lollms/binding.py": {
+      "clean": {
+        "approx_tokens": 726,
+        "bytes": 2540,
+        "dropped_references": [
+          "LLMBinding"
+        ],
+        "kept": [
+          "BindingBuilder.build_binding",
+          "BindingBuilder.getBinding"
+        ],
+        "lines": 77,
+        "missing": [],
+        "original_lines": 903,
+        "syntax_error": null
+      },
+      "regressed": {
+        "approx_tokens": 726,
+        "bytes": 2540,
+        "dropped_references": [
+          "LLMBinding"
+        ],
+        "kept": [
+          "BindingBuilder.build_binding",
+          "BindingBuilder.getBinding"
+        ],
+        "lines": 77,
+        "missing": [],
+        "original_lines": 903,
+        "syntax_error": null
+      }
+    },
+    "lollms/security.py": {
+      "clean": {
+        "approx_tokens": 171,
+        "bytes": 596,
+        "dropped_references": [],
+        "kept": [
+          "sanitize_path"
+        ],
+        "lines": 17,
+        "missing": [],
+        "original_lines": 45,
+        "syntax_error": null
+      },
+      "regressed": {
+        "approx_tokens": 171,
+        "bytes": 596,
+        "dropped_references": [],
+        "kept": [
+          "sanitize_path"
+        ],
+        "lines": 17,
+        "missing": [],
+        "original_lines": 45,
+        "syntax_error": null
+      }
+    },
+    "lollms/server/endpoints/lollms_binding_infos.py": {
+      "clean": {
+        "approx_tokens": 1329,
+        "bytes": 4651,
+        "dropped_references": [],
+        "kept": [
+          "BindingInstallParams",
+          "lollmsElfServer",
+          "reinstall_binding",
+          "router",
+          "unInstall_binding"
+        ],
+        "lines": 110,
+        "missing": [],
+        "original_lines": 288,
+        "syntax_error": null
+      },
+      "regressed": {
+        "approx_tokens": 1316,
+        "bytes": 4606,
+        "dropped_references": [],
+        "kept": [
+          "BindingInstallParams",
+          "lollmsElfServer",
+          "reinstall_binding",
+          "router",
+          "unInstall_binding"
+        ],
+        "lines": 110,
+        "missing": [],
+        "original_lines": 288,
+        "syntax_error": null
+      }
+    }
+  },
+  "flagged_strings": {
+    "clean": [
+      {
+        "kind": "string",
+        "line": 8,
+        "path": "lollms/security.py",
+        "text": "\"Detected an attempt of path traversal. Are you kidding me?\""
+      }
+    ],
+    "regressed": [
+      {
+        "kind": "string",
+        "line": 8,
+        "path": "lollms/security.py",
+        "text": "\"Detected an attempt of path traversal. Are you kidding me?\""
+      }
+    ]
+  },
+  "flow": {
+    "entry": [
+      {
+        "kind": "http-request",
+        "note": "POST /unInstall_binding; JSON body field name (BindingInstallParams.name, pydantic str, 1-50 chars, no content check) is assigned to lollmsElfServer.config.binding_name, which BindingBuilder().build_binding(lollmsElfServer.config, ...) then reads",
+        "symbol": "lollms/server/endpoints/lollms_binding_infos.py::unInstall_binding"
+      }
+    ],
+    "guards": [
+      {
+        "note": "clean: config.binding_name = sanitize_path(data.name); sanitize_path (lollms/security.py, unchanged) raises on any name containing '..' or an absolute path, inside the endpoint's try block and before build_binding runs, so the request returns status False. regressed: data.name is assigned unchecked. Same one-line change in reinstall_binding (parallel flow, also in the slice)",
+        "symbol": "lollms/server/endpoints/lollms_binding_infos.py::unInstall_binding"
+      }
+    ],
+    "sinks": [
+      {
+        "kind": "code-load",
+        "note": "binding_path = Path(config.binding_name) when the name contains '/', else bindings_zoo_path / config['binding_name']; resolve() then importlib.machinery.SourceFileLoader(module_name, <path>/__init__.py).load_module() executes the __init__.py found at the traversed location (e.g. name '../../../../tmp/x'). Reached via BindingBuilder.build_binding",
+        "symbol": "lollms/binding.py::BindingBuilder.getBinding"
+      }
+    ]
+  },
+  "flow_files": [
+    "lollms/binding.py",
+    "lollms/server/endpoints/lollms_binding_infos.py"
+  ],
+  "notes": "Class: path-traversal (CWE-22), not the advisory's command/CWE-77. No shell or OS command is involved: the request's name is used as a directory path, traversal ('..') or an absolute path escapes bindings_zoo_path, and SourceFileLoader loads and executes <path>/__init__.py (CWE-22 leading to code execution, CWE-94). The fix is a path sanitizer, which confirms the reading. Both 2.2 reviewers agree. Verified at both commits: binding.py and security.py are byte-identical between b0da52f5 and 7ebe08da (git diff --stat lists only lollms_binding_infos.py and lollms_extensions_infos.py). At 7ebe08da, sanitize_path does 'raise exception_text', which raises a str; in Python 3 that raises TypeError, which still aborts before build_binding and is caught by the endpoint's except, so the flow is closed (upstream 85ed53a later changed this to raise Exception, a cosmetic follow-up). Modelled flow: POST /unInstall_binding (the advisory's endpoint) -> config.binding_name -> BindingBuilder.build_binding -> getBinding -> SourceFileLoader(...).load_module(). reinstall_binding carries the same one-line change and the same flow (FORCE_INSTALL), so it is included in the slice as a parallel flow but not listed as a separate entry. Fix hunks not in the slice: install_binding (already guarded by sanitize_path_from_endpoint at the vulnerable commit; the fix adds a second sanitize_path), reload_binding (os.path.basename already stripped traversal; hardening only), and lollms_extensions_infos.py::reinstall_extension (config-derived value, not request input; hardening). regression.diff therefore contains only the import line and the two modelled assignments. Known residual (not described by the advisory): getBinding treats a name containing '/' but no '..' and not absolute (e.g. 'tmp/x') as a path relative to the process working directory, which sanitize_path allows. The modelled '..'/absolute traversal is closed. Exploitation also requires a planted __init__.py at the target location (via some other write primitive); the flow itself is the path from request field to module load. Accepted dropped reference: lollms/binding.py::LLMBinding (only a return/variable type annotation in build_binding/getBinding; the ~800-line binding base class is not on the flow). Flagged string kept: lollms/security.py:8 sanitize_path default arguments 'Absolute database path detected' / 'Detected an attempt of path traversal. ...' are real program behaviour (the guard's error text).",
+  "regressed_commit": "b0da52f5fd2c01352b4c8d3e43c1c8fc7667d28e",
+  "regression_files": [
+    "lollms/server/endpoints/lollms_binding_infos.py"
+  ],
+  "repo": "parisneo/lollms_legacy",
+  "schema_version": 1,
+  "scope": "cross_file",
+  "scrubbed": {
+    "clean": [],
+    "regressed": []
+  },
+  "slice": {
+    "lollms/binding.py": [
+      "BindingBuilder.build_binding",
+      "BindingBuilder.getBinding"
+    ],
+    "lollms/security.py": [
+      "sanitize_path"
+    ],
+    "lollms/server/endpoints/lollms_binding_infos.py": [
+      "BindingInstallParams",
+      "router",
+      "lollmsElfServer",
+      "unInstall_binding",
+      "reinstall_binding"
+    ]
+  },
+  "spec_sha256": "e90a4d895f47b0cd2a5a79b6685a747a41e12894c130153c2e73f0e4d4671cd3",
+  "totals": {
+    "clean": {
+      "approx_tokens": 2226,
+      "bytes": 7787
+    },
+    "regressed": {
+      "approx_tokens": 2213,
+      "bytes": 7742
+    }
+  },
+  "vulnerability_class": "path-traversal"
+}

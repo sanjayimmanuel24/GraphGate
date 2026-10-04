@@ -1,0 +1,52 @@
+{
+  "event_id": "gitpython-v396",
+  "advisories": [
+    "GHSA-v396-v7q4-x2qj"
+  ],
+  "repo": "gitpython-developers/gitpython",
+  "clean_commit": "56806080c1348749b07daa4a2024ce47b3cad285",
+  "regressed_commit": "181e8ede7543dbbdcee92756cea260f675316c63",
+  "vulnerability_class": "os-command",
+  "flow": {
+    "entry": [
+      {
+        "symbol": "git/repo/base.py::Repo.clone_from",
+        "kind": "library-api",
+        "note": "the caller's multi_options list is forwarded unchanged to Repo._clone, which shlex-splits it (multi = shlex.split(' '.join(multi_options))) into argv tokens such as '-u<program>' (git clone's short form of --upload-pack=<program>) or '-c<key>=<value>'"
+      }
+    ],
+    "guards": [
+      {
+        "symbol": "git/cmd.py::Git.check_unsafe_options",
+        "note": "Repo._clone passes the split tokens as options=multi with Repo.unsafe_git_clone_options (--upload-pack, -u, --config, -c). The clean version walks the characters of every single-dash token, skipping the value-less clusterable flags 46flnqsv, and rejects -u/-c even when the value is joined to the same token (-u<program>, -fu<program>, -c<key>=<value>, -vc...). The regressed version only exact-matches _canonicalize_option_name('-u<program>') = 'u<program>' and skips prefix matching for single-dash tokens, so the token passes"
+      }
+    ],
+    "sinks": [
+      {
+        "symbol": "git/cmd.py::Git._call_process",
+        "true_symbol": "git/cmd.py::Git.execute",
+        "kind": "subprocess",
+        "note": "git.clone(multi, '--', url, path, ...) in Repo._clone dispatches via Git.__getattr__ to _call_process, where _unpack_args flattens multi into the argv unchanged and self.execute(call) starts git clone (safer_popen/Popen inside Git.execute, ~16 KB with its overloads, too large for the slice); git reads -u<program> as --upload-pack=<program> and runs <program>"
+      }
+    ]
+  },
+  "slice": {
+    "git/repo/base.py": [
+      "_logger",
+      "Repo._clone",
+      "Repo.clone_from"
+    ],
+    "git/cmd.py": [
+      "execute_kwargs",
+      "dashify",
+      "Git._canonicalize_option_name",
+      "Git.check_unsafe_options",
+      "Git.__getattr__",
+      "Git.transform_kwarg",
+      "Git.transform_kwargs",
+      "Git._unpack_args",
+      "Git._call_process"
+    ]
+  },
+  "notes": "Reviewed at 2.3 (2026-09-29); pilot structure kept. Pair 181e8ede -> 56806080 is the third commit of PR #2168 (merge 65a72839, released in 3.1.51); the advisory links only the unmerged PR #2162, so the fix commit was recovered at 2.2 (both reviewers agree, high confidence). The preceding two commits of the same PR are event gitpython-2f96 (long-option abbreviation bypass); this event covers only joined short options (-u<program>, -fu<program>, -c<key>=<value>, -vc...). The regression diff touches only Git.check_unsafe_options (short-option scan plus the fix's own docstring text). Class: os-command (advisory CWE-78); mechanism is argument injection into git clone's argv, but the injected -u value is run by git as a program, so the impact is OS command execution. Verified concretely: the guard extracted from each commit (with unsafe_options = Repo.unsafe_git_clone_options) passes -u/tmp/x, the shlex-split ['-utouch', '/tmp/pwn;', 'false'], -cprotocol.ext.allow=always and -fu/tmp/x at 181e8ede and blocks all of them at 56806080; separate '-u', '/tmp/x' is blocked at both; -oupstream passes at both. With git 2.55, git clone \"-utouch MARKER; false\" <local bare repo> <dst> created MARKER, so git accepts the joined value and runs it. Flow: Repo.clone_from(url, path, multi_options=[...]) -> Repo._clone (shlex.split, then Git.check_unsafe_options(options=multi, ...)) -> git.clone(multi, '--', url, path, ...) -> Git.__getattr__ -> Git._call_process (_unpack_args flattens multi into argv unchanged) -> Git.execute (Popen). Parallel flow not modelled separately: Repo.clone (instance method) reaches the same _clone. The -c path (e.g. -cprotocol.ext.allow=always) needs a second step (an ext:: URL, itself subject to check_unsafe_protocols) to execute a command; the modelled flow is the -u path. Accepted dropped references: Git.execute (the true sink, recorded as true_symbol; ~16 KB with overloads), _AutoInterrupt and _CatFileContentStream (targets of class-level TypeAlias assignments, not on the flow), _GitMeta (Git's metaclass, not on the flow). base.py's calls to Git.check_unsafe_protocols, Git.polish_url, Git.is_cygwin, add_progress, handle_process_output are cut (URL/platform/progress handling, not on the multi_options flow). Taint note: the tainted datum is an argv element that git interprets as an option; no shell is involved (USE_SHELL False), so engines that only model shell=True sinks will not see it."
+}

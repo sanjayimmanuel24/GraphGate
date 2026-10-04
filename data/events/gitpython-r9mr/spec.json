@@ -1,0 +1,53 @@
+{
+  "event_id": "gitpython-r9mr",
+  "advisories": [
+    "GHSA-r9mr-m37c-5fr3"
+  ],
+  "repo": "gitpython-developers/gitpython",
+  "clean_commit": "e8d0fbf774d1f6baa3b481adfe48bd262e43b453",
+  "regressed_commit": "faf3c09038b03bc2bdd8545ef34bbf6d7f1cd11f",
+  "vulnerability_class": "os-command",
+  "flow": {
+    "entry": [
+      {
+        "symbol": "git/repo/base.py::Repo.clone_from",
+        "kind": "library-api",
+        "note": "caller-supplied keyword arguments become git-clone options; the value of a one-letter kwarg such as n=\"--upload-pack=<cmd>\" is forwarded untouched through Repo._clone"
+      }
+    ],
+    "guards": [
+      {
+        "symbol": "git/cmd.py::Git._option_candidates",
+        "note": "when single-letter options are split, also emits each dash-prefixed value of a one-letter kwarg as a candidate, so check_unsafe_options sees --upload-pack=<cmd>; the regressed version emits only -n and the check passes"
+      }
+    ],
+    "sinks": [
+      {
+        "symbol": "git/cmd.py::Git._call_process",
+        "true_symbol": "git/cmd.py::Git.execute",
+        "kind": "subprocess",
+        "note": "git.clone(...) reaches _call_process via Git.__getattr__; transform_kwargs/transform_kwarg turn n=VALUE into two argv tokens ['-n', VALUE] and execute() runs git clone -n --upload-pack=<cmd>, which runs <cmd>"
+      }
+    ]
+  },
+  "slice": {
+    "git/repo/base.py": [
+      "_logger",
+      "Repo._clone",
+      "Repo.clone_from"
+    ],
+    "git/cmd.py": [
+      "execute_kwargs",
+      "dashify",
+      "Git.__getattr__",
+      "Git._canonicalize_option_name",
+      "Git.check_unsafe_options",
+      "Git._option_candidates",
+      "Git.transform_kwarg",
+      "Git.transform_kwargs",
+      "Git._unpack_args",
+      "Git._call_process"
+    ]
+  },
+  "notes": "Pilot spec, re-reviewed 2026-09-29 (structure kept; checks re-run). Pair faf3c090 -> e8d0fbf7: the regression diff touches only Git._option_candidates in git/cmd.py (the fix's other change is its own test in test/test_git.py, outside the slice). Class os-command (advisory CWE-78/CWE-88): the mechanism is argument injection into git's argv, but the injected --upload-pack makes git run the caller's string as a shell command. Advisory PoC flow: Repo.clone_from(url, path, n='--upload-pack=touch X;git-upload-pack'). Regressed: Repo._clone -> Git._option_candidates([], kwargs) returns ['-n'] (key only) -> Git.check_unsafe_options finds nothing on unsafe_git_clone_options (-n is a clusterable value-less flag) -> git.clone(...) -> Git.__getattr__ -> Git._call_process -> Git.transform_kwargs -> Git.transform_kwarg('n', value, True) = ['-n', '--upload-pack=...'] -> Git.execute (Popen of git clone -v -n --upload-pack=<cmd> -- url path; -n takes no value, so git parses the next token as --upload-pack and runs <cmd>). Clean: _option_candidates also returns '--upload-pack=...', whose canonical name matches the clone denylist, so UnsafeOptionError is raised before git runs. Verified by running the real _option_candidates/check_unsafe_options/transform_kwargs (extracted from both commits) with the real Repo.unsafe_git_clone_options: regressed passes the guard with argv ['-n', '--upload-pack=...']; clean raises UnsafeOptionError on the '--upload-pack=...' candidate; benign n=True, depth=1 and b='main' still pass in clean; list values (n=['--upload-pack=x']) pass in regressed and are rejected in clean. End to end with git 2.55.0.windows.3 (re-run 2026-09-29): git clone -v -n '--upload-pack=touch <marker>;git-upload-pack' -- <local bare repo> <dst> (the argv _call_process builds) created the marker, so the smuggled token is executed. Only a value-less short flag (n, or the other clusterable ones) makes git parse the next token as an option; after a value-taking flag such as b the smuggled token is just consumed as its value (re-run: git clone -b '--upload-pack=...' fails with 'Remote branch ... not found' and runs nothing). The clean check is broader (any dash-prefixed value of a one-letter kwarg is a candidate). Sink stand-in is Git._call_process (the direct caller of Git.execute; the execute implementation alone is ~16 KB / 348 lines at the clean commit, plus overloads, and would push the clean slice to ~39 KB, so it is left out; a trial build with Git.execute added gave a 39,844-byte clean slice), the same stand-in/true_symbol pair as gitpython-2f96. Scope follows the true sink either way (both in git/cmd.py; entry in git/repo/base.py, so cross_file). Hop not in the slice: Repo._clone passes kwargs to git.clone as **add_progress(kwargs, git, progress) (git/remote.py), which only sets progress=True when a progress object is given and returns the same dict; left out because adding it (git/remote.py imports plus the helper) takes the clean slice to 24,677 bytes, over the soft limit, and gitpython-2f96 leaves it out too. Also cut, not on the kwarg flow: Git.polish_url, Git.is_cygwin, Git.check_unsafe_protocols (URL and platform handling called from Repo._clone). The same key-only candidate builder feeds parallel guarded flows (Remote.fetch/pull/push, Repo.iter_commits/blame/blame_incremental/archive, Commit.iter_items, and Git.ls_remote, which lies entirely in git/cmd.py); only the clone flow is modelled. Known neighbour not closed by this fix: the joined -nVALUE token when split_single_char_options=False (GHSA-wvpp, fixed later in 96a888f4); the modelled flow uses the default split path, which this fix does close. Dropped references accepted: Git.execute (true sink, too large), _AutoInterrupt and _CatFileContentStream (targets of class-level TypeAlias assignments kept automatically), _GitMeta (metaclass); none is on the flow."
+}

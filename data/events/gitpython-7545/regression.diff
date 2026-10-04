@@ -1,0 +1,58 @@
+--- a/git/refs/symbolic.py
++++ b/git/refs/symbolic.py
+@@ -74,26 +74,6 @@
+     @property
+     def abspath(self) -> PathLike:
+         return join_path_native(_git_dir(self.repo, self.path), self.path)
+-
+-    @staticmethod
+-    def _get_validated_path(base: PathLike, path: PathLike) -> str:
+-        path = os.fspath(path)
+-        base_path = os.path.realpath(os.fspath(base))
+-        abs_path = os.path.realpath(os.path.join(base_path, path))
+-        try:
+-            common_path = os.path.commonpath([base_path, abs_path])
+-        except ValueError as e:
+-            raise ValueError("Reference path %r escapes the repository" % path) from e
+-        if os.path.normcase(common_path) != os.path.normcase(base_path):
+-            raise ValueError("Reference path %r escapes the repository" % path)
+-        return abs_path
+-
+-    @classmethod
+-    def _get_validated_ref_path(cls, repo: "Repo", path: PathLike) -> str:
+-        """Return the absolute filesystem path for a ref after validating it."""
+-        cls._check_ref_name_valid(path)
+-        ref_path = os.fspath(path)
+-        return cls._get_validated_path(_git_dir(repo, ref_path), ref_path)
+ 
+     @classmethod
+     def _get_packed_refs_path(cls, repo: "Repo") -> str:
+@@ -325,7 +305,7 @@
+             # END handle non-existing
+         # END retrieve old hexsha
+ 
+-        fpath = self._get_validated_ref_path(self.repo, self.path)
++        fpath = self.abspath
+         assure_directory_exists(fpath, is_file=True)
+ 
+         lfd = LockedFD(fpath)
+@@ -383,7 +363,7 @@
+             Alternatively the symbolic reference to be deleted.
+         """
+         full_ref_path = cls.to_full_path(path)
+-        abs_path = cls._get_validated_ref_path(repo, full_ref_path)
++        abs_path = os.path.join(repo.common_dir, full_ref_path)
+         if os.path.exists(abs_path):
+             os.remove(abs_path)
+         else:
+@@ -446,8 +426,9 @@
+         symbolic reference. Otherwise it will be resolved to the corresponding object
+         and a detached symbolic reference will be created instead.
+         """
++        git_dir = _git_dir(repo, path)
+         full_ref_path = cls.to_full_path(path)
+-        abs_ref_path = cls._get_validated_ref_path(repo, full_ref_path)
++        abs_ref_path = os.path.join(git_dir, full_ref_path)
+ 
+         # Figure out target data.
+         target = reference

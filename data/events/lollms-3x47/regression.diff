@@ -1,0 +1,11 @@
+--- a/lollms/security.py
++++ b/lollms/security.py
+@@ -10,8 +10,6 @@
+ 
+ 
+ def sanitize_path_from_endpoint(path: str, error_text="A suspected LFI attack detected. The path sent to the server has suspicious elements in it!", exception_text="Invalid path!"):
+-    if path.strip().startswith("/"):
+-        raise HTTPException(status_code=400, detail=exception_text)
+     # Fix the case of "/" at the beginning on the path
+     if path is None:
+         return path

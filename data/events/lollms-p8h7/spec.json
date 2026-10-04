@@ -1,0 +1,55 @@
+{
+  "event_id": "lollms-p8h7",
+  "advisories": [
+    "GHSA-p8h7-c8gw-6x8c",
+    "GHSA-vqwr-q6cc-c242"
+  ],
+  "repo": "parisneo/lollms_legacy",
+  "clean_commit": "95ad36eeffc6a6be3e3f35ed35a384d768f0ecf6",
+  "regressed_commit": "41577f470d46743616f2379fa114c40baf1b605e",
+  "vulnerability_class": "path-traversal",
+  "flow": {
+    "entry": [
+      {
+        "symbol": "lollms/server/endpoints/lollms_binding_files_server.py::serve_user_infos",
+        "kind": "http-request",
+        "note": "GET /user_infos/{path:path}; the URL path segment `path` (e.g. \\windows\\win.ini, URL-encoded %5Cwindows%5Cwin.ini) goes through sanitize_path_from_endpoint and its return value is used (GHSA-p8h7 / CVE-2024-4881)"
+      },
+      {
+        "symbol": "lollms/server/endpoints/lollms_binding_files_server.py::serve_personalities",
+        "kind": "http-request",
+        "note": "GET /personalities/{path:path}; same pattern, the route named by GHSA-vqwr / CVE-2024-4315"
+      }
+    ],
+    "guards": [
+      {
+        "symbol": "lollms/security.py::sanitize_path_from_endpoint",
+        "note": "the clean version runs path.replace('\\\\', '/') before the startswith('/') check, so the root-relative Windows path \\windows\\win.ini becomes /windows/win.ini and is rejected with HTTP 400. The regressed version never normalises backslashes: \\windows\\win.ini has no leading '/', no '..', no blocklisted character, and on Windows Path(...).is_absolute() is False (no drive), so it is returned unchanged"
+      }
+    ],
+    "sinks": [
+      {
+        "symbol": "lollms/server/endpoints/lollms_binding_files_server.py::serve_user_infos",
+        "kind": "filesystem",
+        "note": "file_path = personal_user_infos_path / path; on Windows pathlib resets a root-relative component to the drive root (C:\\windows\\win.ini), then file_path.exists() and FileResponse(str(file_path)) serve the arbitrary file"
+      },
+      {
+        "symbol": "lollms/server/endpoints/lollms_binding_files_server.py::serve_personalities",
+        "kind": "filesystem",
+        "note": "file_path = personalities_zoo_path / path (the non-custom branch), then FileResponse(str(file_path)); same drive-root reset on Windows"
+      }
+    ]
+  },
+  "slice": {
+    "lollms/security.py": [
+      "sanitize_path_from_endpoint"
+    ],
+    "lollms/server/endpoints/lollms_binding_files_server.py": [
+      "router",
+      "lollmsElfServer",
+      "serve_user_infos",
+      "serve_personalities"
+    ]
+  },
+  "notes": "Reviewed at 2.3 (2026-09-29). One event for two advisories: GHSA-p8h7 (CVE-2024-4881, /user_infos) and GHSA-vqwr (CVE-2024-4315, /personalities, plus /del_preset which lives in the separate lollms-webui repo and is out of scope) report the same root cause, sanitize_path_from_endpoint not normalising Windows backslashes, reached through different routes of lollms_binding_files_server.py. That is one flaw in one shared sanitizer, with parallel entry/sink routes; both named in-repo routes are modelled as entries/sinks, closed by the single guard hunk. Verified concretely by importing the built security.py slices (fastapi/ascii_colors stubbed) on Windows: regressed returns \\windows\\win.ini unchanged and Path('C:/Users/u/personal/user_infos') / it == C:\\windows\\win.ini; clean rejects it (Invalid path!). UNC input (\\\\host\\share) is already rejected at the regressed commit (is_absolute True), so the fix's effect is specifically the drive-root-relative form. Platform caveat: the flow is exploitable only on Windows; on POSIX a backslash is an ordinary filename character and no traversal results. Static gates see the same code either way. Class path-traversal (CWE-22/CWE-36). Scope cross_file: entry and sink in lollms_binding_files_server.py, guard in lollms/security.py (the only file the fix changes). Regression diff also contains two real fix-commit hunks that are not the guard: the error branch's ASCIIColors.error(error_text) + detail=exception_text (regressed) vs detail=error_text (clean), and docstring text: the fix rewrote the summary paragraph (clean summary scrubbed for 'directory traversal attacks') and deleted the 'Note' paragraph, so the regressed docstring keeps two paragraphs the clean one lacks. The fix's second hunk, in sanitize_path (normalisation added after that function's startswith('/') check, ineffective until bbabf14), is outside the slice and does not appear in regression.diff. Flagged string kept (real behaviour): the default error_text 'A suspected LFI attack detected...' in sanitize_path_from_endpoint's signature, present at both commits. Other serve_* routes (bindings, extensions, etc.) share the same pattern and are cut to keep the slice small."
+}

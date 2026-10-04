@@ -1,0 +1,22 @@
+--- a/mako/lookup.py
++++ b/mako/lookup.py
+@@ -159,7 +159,7 @@
+             else:
+                 return self._collection[uri]
+         except KeyError as e:
+-            u = re.sub(r"^\/+", "", uri.replace("\\", "/"))
++            u = re.sub(r"^\/+", "", uri)
+             for dir_ in self.directories:
+                 # make sure the path seperators are posix - os.altsep is empty
+                 # on POSIX and cannot be used.
+--- a/mako/template.py
++++ b/mako/template.py
+@@ -253,7 +253,7 @@
+             self.module_id = "memory:" + hex(id(self))
+             self.uri = self.module_id
+ 
+-        u_norm = self.uri.replace("\\", "/").lstrip("/")
++        u_norm = self.uri.lstrip("/")
+         u_norm = os.path.normpath(u_norm)
+         if u_norm.startswith(".."):
+             raise exceptions.TemplateLookupException(

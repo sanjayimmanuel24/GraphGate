@@ -1,0 +1,285 @@
+{
+  "advisories": [
+    "GHSA-6p8h-3wgx-97gf"
+  ],
+  "checks": [
+    {
+      "detail": "regressed commit is an ancestor of the clean commit",
+      "name": "commits",
+      "status": "ok"
+    },
+    {
+      "detail": "every requested symbol exists in at least one variant",
+      "name": "symbols-found",
+      "status": "ok"
+    },
+    {
+      "detail": "entry and sinks exist in both variants, guards in the clean one",
+      "name": "flow-present",
+      "status": "ok"
+    },
+    {
+      "detail": "files changed by the regression: git/repo/base.py",
+      "name": "regression-nonempty",
+      "status": "ok"
+    },
+    {
+      "detail": "every slice file parses",
+      "name": "parses",
+      "status": "ok"
+    },
+    {
+      "detail": "clean slice is 23186 bytes (soft limit 24576, hard limit 49152)",
+      "name": "size",
+      "status": "ok"
+    },
+    {
+      "detail": "referenced but cut: git/cmd.py::Git.execute, git/cmd.py::_AutoInterrupt, git/cmd.py::_CatFileContentStream, git/cmd.py::_GitMeta",
+      "name": "dropped-references",
+      "status": "warn"
+    },
+    {
+      "detail": "no string literal uses security wording",
+      "name": "flagged-strings",
+      "status": "ok"
+    }
+  ],
+  "clean_commit": "ffcb5359e87619f4fe4a70a4aff5f08c5580ba97",
+  "event_id": "gitpython-6p8h",
+  "files": {
+    "git/cmd.py": {
+      "clean": {
+        "approx_tokens": 3962,
+        "bytes": 13864,
+        "dropped_references": [
+          "Git.execute",
+          "_AutoInterrupt",
+          "_CatFileContentStream",
+          "_GitMeta"
+        ],
+        "kept": [
+          "Git.__getattr__",
+          "Git._call_process",
+          "Git._canonicalize_option_name",
+          "Git._option_candidates",
+          "Git._unpack_args",
+          "Git.check_unsafe_options",
+          "Git.transform_kwarg",
+          "Git.transform_kwargs",
+          "dashify",
+          "execute_kwargs"
+        ],
+        "lines": 384,
+        "missing": [],
+        "original_lines": 1881,
+        "syntax_error": null
+      },
+      "regressed": {
+        "approx_tokens": 3962,
+        "bytes": 13864,
+        "dropped_references": [
+          "Git.execute",
+          "_AutoInterrupt",
+          "_CatFileContentStream",
+          "_GitMeta"
+        ],
+        "kept": [
+          "Git.__getattr__",
+          "Git._call_process",
+          "Git._canonicalize_option_name",
+          "Git._option_candidates",
+          "Git._unpack_args",
+          "Git.check_unsafe_options",
+          "Git.transform_kwarg",
+          "Git.transform_kwargs",
+          "dashify",
+          "execute_kwargs"
+        ],
+        "lines": 384,
+        "missing": [],
+        "original_lines": 1881,
+        "syntax_error": null
+      }
+    },
+    "git/repo/base.py": {
+      "clean": {
+        "approx_tokens": 2664,
+        "bytes": 9322,
+        "dropped_references": [],
+        "kept": [
+          "Repo._clone",
+          "Repo.clone_from",
+          "Repo.unsafe_git_clone_options",
+          "_logger"
+        ],
+        "lines": 304,
+        "missing": [],
+        "original_lines": 1736,
+        "syntax_error": null
+      },
+      "regressed": {
+        "approx_tokens": 2642,
+        "bytes": 9245,
+        "dropped_references": [],
+        "kept": [
+          "Repo._clone",
+          "Repo.clone_from",
+          "Repo.unsafe_git_clone_options",
+          "_logger"
+        ],
+        "lines": 302,
+        "missing": [],
+        "original_lines": 1731,
+        "syntax_error": null
+      }
+    }
+  },
+  "flagged_strings": {
+    "clean": [],
+    "regressed": []
+  },
+  "flow": {
+    "entry": [
+      {
+        "kind": "library-api",
+        "note": "the caller's template=<dir> keyword (or a multi_options item '--template=<dir>') is forwarded unchanged through **kwargs to Repo._clone, where it becomes a git-clone option",
+        "symbol": "git/repo/base.py::Repo.clone_from"
+      }
+    ],
+    "guards": [
+      {
+        "note": "the clone option list Repo._clone hands to Git.check_unsafe_options, for Git._option_candidates([], kwargs) and for the shlex-split multi_options. The fix adds '--template', so template=, abbreviations such as templ=/--templ= and '--template <dir>' raise UnsafeOptionError before git.clone runs, unless allow_unsafe_options=True",
+        "symbol": "git/repo/base.py::Repo.unsafe_git_clone_options"
+      }
+    ],
+    "sinks": [
+      {
+        "kind": "subprocess",
+        "note": "git.clone(multi, '--', clone_url, clone_path, ..., **add_progress(kwargs, ...)) in Repo._clone reaches _call_process via Git.__getattr__. There transform_kwargs/transform_kwarg render template=<dir> as '--template=<dir>' and self.execute(call) starts 'git clone ... --template=<dir> -v -- <url> <path>' (safer_popen/Popen inside Git.execute, ~17 KB with overloads, too large for the slice). git copies <dir>/hooks into the new repository and runs its post-checkout hook during the clone",
+        "symbol": "git/cmd.py::Git._call_process",
+        "true_symbol": "git/cmd.py::Git.execute"
+      }
+    ]
+  },
+  "flow_files": [
+    "git/cmd.py",
+    "git/repo/base.py"
+  ],
+  "notes": "Reviewed at 2.3 (second pass; re-verified in a third pass on 2026-09-28: guard behaviour re-run on the real functions from both blobs, git/cmd.py blob identical at both commits (5cba11f9), and git 2.55 ran a template post-checkout hook during a local clone). The clean slice keeps the fix's own comment above the new entry ('Can install hooks that execute during clone:'). The scrubber does not match it, it states git behaviour, and it appears in regression.diff as part of the inverted fix. It is the only per-entry comment left in unsafe_git_clone_options, because the older entries' comments were scrubbed. Option injection with OS command execution as the effect. Changed from the earlier draft: the sink stand-in moves from Repo._clone to Git._call_process, the in-slice direct caller of Git.execute, and Git.__getattr__/_call_process/execute_kwargs are added, so the git.clone dispatch is visible and transform_kwarg(s) are no longer orphaned. This matches the sibling clone events gitpython-2f96, gitpython-r9mr and gitpython-pr76. The scope label is unchanged because the true sink is Git.execute either way. To stay under the soft size limit, git/remote.py::add_progress is left out, as in those siblings. It is an identity passthrough: it returns the same kwargs dict, adding only progress=True when a progress object is given. Keeping it would put the clean slice at 24754 bytes, 178 over the soft limit. Regressed flow (e8d0fbf7): Repo.clone_from(url, to_path, template=<dir>) -> Repo._clone(**kwargs) -> Git._option_candidates([], kwargs) = ['--template'] -> Git.check_unsafe_options passes, because Repo.unsafe_git_clone_options is ['--upload-pack', '-u', '--config', '-c'] and neither the exact nor the prefix rule matches 'template'. The shlex-split multi_options token '--template=<dir>' likewise passes. -> git.clone(..., **add_progress(kwargs, git, progress)) -> Git.__getattr__ -> Git._call_process -> opts_kwargs (template is not in execute_kwargs) -> Git.transform_kwargs -> Git.transform_kwarg = ['--template=<dir>'] -> Git.execute (Popen). git then copies <dir>/hooks into the new .git and runs hooks/post-checkout at checkout. Clean (ffcb5359): the list gains '--template', so the canonical candidate 'template' matches exactly and UnsafeOptionError is raised before git.clone. Abbreviations are caught by the existing prefix rule in Git.check_unsafe_options. Verified concretely: I extracted the real Repo.unsafe_git_clone_options, Git._option_candidates, check_unsafe_options, _canonicalize_option_name, dashify and transform_kwarg(s) from both blobs and mirrored Repo._clone's two checks. Kwargs template=, templ= and templat=, and multi_options '--template=<dir>', '--template <dir>' and '--templ=<dir>', all pass at e8d0fbf7 and all raise at ffcb5359. Benign depth=1 and branch='main' with multi_options '--single-branch' pass at both. transform_kwargs(template=<dir>) returns ['--template=<dir>']. End to end with git 2.55: 'git clone -v --template=<dir> -- <local repo> <dst>', with an executable <dir>/hooks/post-checkout, ran the hook (marker file created). The fix touches only git/repo/base.py (the list entry, a comment and an attribute docstring the slicer drops) plus tests. git/cmd.py is byte-identical at both commits. Exploitation also needs a directory the attacker can stage, holding an executable hooks/post-checkout (advisory AC:H). The last hop, git running template hooks, is git behaviour outside the repo, as with --upload-pack in gitpython-2f96. Pair context: e8d0fbf7 (split single-char option values) is itself the clean commit of event gitpython-r9mr. Both commits came in through PR #2180. The regressed commit therefore already has the r9mr hardening, and the only difference between the pair is the '--template' entry. Parallel entries closed by the same list entry, not modelled: Repo.clone (instance method) and submodule cloning (Submodule._clone_repo -> Repo.clone_from). Not closed, and out of scope for this pair: Repo.init still forwards template= to git init unchecked at the clean commit. That is a separate advisory, GHSA-9rj7-rf2p-w77r, fixed later in d9ddb55b, and it is not in the slice. Dropped references accepted: Git.execute (true sink, too large); _AutoInterrupt and _CatFileContentStream (targets of the class-level TypeAlias assignments that are kept automatically); _GitMeta (Git's metaclass). None of these is on the modelled path except the true sink. Cross-file cuts the dropped-references check does not see: add_progress (above); Git.polish_url, Git.is_cygwin and Git.check_unsafe_protocols (URL/path handling, off the option flow); and handle_process_output, finalize_process, to_progress_instance and remove_password_if_present (after git has started). The tainted datum is a kwarg KEY (the option name) together with its value; taint engines that only propagate values may see <dir> reach argv but not the option name that makes it dangerous.",
+  "regressed_commit": "e8d0fbf774d1f6baa3b481adfe48bd262e43b453",
+  "regression_files": [
+    "git/repo/base.py"
+  ],
+  "repo": "gitpython-developers/gitpython",
+  "schema_version": 1,
+  "scope": "cross_file",
+  "scrubbed": {
+    "clean": [
+      {
+        "kind": "comment",
+        "line": 123,
+        "path": "git/cmd.py",
+        "text": "# This option allows arbitrary command execution in git-ls-remote."
+      },
+      {
+        "kind": "docstring",
+        "line": 157,
+        "path": "git/cmd.py",
+        "text": "Some options passed to ``git <command>`` can execute arbitrary commands and\n        are therefore blocked by default unless the caller explicitly allows them."
+      },
+      {
+        "kind": "comment",
+        "line": 126,
+        "path": "git/repo/base.py",
+        "text": "# Executes arbitrary commands:"
+      },
+      {
+        "kind": "comment",
+        "line": 129,
+        "path": "git/repo/base.py",
+        "text": "# Can override configuration variables that execute arbitrary commands:"
+      },
+      {
+        "kind": "comment",
+        "line": 137,
+        "path": "git/repo/base.py",
+        "text": "# Allows arbitrary command execution through the remote git-upload-archive command."
+      },
+      {
+        "kind": "comment",
+        "line": 145,
+        "path": "git/repo/base.py",
+        "text": "# This option allows output to be written to arbitrary files before revision parsing."
+      }
+    ],
+    "regressed": [
+      {
+        "kind": "comment",
+        "line": 123,
+        "path": "git/cmd.py",
+        "text": "# This option allows arbitrary command execution in git-ls-remote."
+      },
+      {
+        "kind": "docstring",
+        "line": 157,
+        "path": "git/cmd.py",
+        "text": "Some options passed to ``git <command>`` can execute arbitrary commands and\n        are therefore blocked by default unless the caller explicitly allows them."
+      },
+      {
+        "kind": "comment",
+        "line": 126,
+        "path": "git/repo/base.py",
+        "text": "# Executes arbitrary commands:"
+      },
+      {
+        "kind": "comment",
+        "line": 129,
+        "path": "git/repo/base.py",
+        "text": "# Can override configuration variables that execute arbitrary commands:"
+      },
+      {
+        "kind": "comment",
+        "line": 135,
+        "path": "git/repo/base.py",
+        "text": "# Allows arbitrary command execution through the remote git-upload-archive command."
+      },
+      {
+        "kind": "comment",
+        "line": 143,
+        "path": "git/repo/base.py",
+        "text": "# This option allows output to be written to arbitrary files before revision parsing."
+      }
+    ]
+  },
+  "slice": {
+    "git/cmd.py": [
+      "execute_kwargs",
+      "dashify",
+      "Git._canonicalize_option_name",
+      "Git.check_unsafe_options",
+      "Git._option_candidates",
+      "Git.__getattr__",
+      "Git.transform_kwarg",
+      "Git.transform_kwargs",
+      "Git._unpack_args",
+      "Git._call_process"
+    ],
+    "git/repo/base.py": [
+      "_logger",
+      "Repo._clone",
+      "Repo.clone_from"
+    ]
+  },
+  "spec_sha256": "086a9695831dec9762a5a1091fb6f6dec03b713e375d35af4e9d30aff86656b4",
+  "totals": {
+    "clean": {
+      "approx_tokens": 6626,
+      "bytes": 23186
+    },
+    "regressed": {
+      "approx_tokens": 6604,
+      "bytes": 23109
+    }
+  },
+  "vulnerability_class": "os-command"
+}

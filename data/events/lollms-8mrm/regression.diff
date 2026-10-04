@@ -1,0 +1,11 @@
+--- a/lollms/server/endpoints/lollms_configuration_infos.py
++++ b/lollms/server/endpoints/lollms_configuration_infos.py
+@@ -43,7 +43,7 @@
+                                     "debug_log_file_path", 
+                                     "petals_model_path",
+                                     "skills_lib_database_name",
+-                                    "discussion_db_name",
++                                    "discussion_db_name"
+                                     "user_avatar",
+                                     
+                                     ]

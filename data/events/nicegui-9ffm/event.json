@@ -1,0 +1,266 @@
+{
+  "advisories": [
+    "GHSA-9ffm-fxg3-xrhh"
+  ],
+  "checks": [
+    {
+      "detail": "regressed commit is an ancestor of the clean commit",
+      "name": "commits",
+      "status": "ok"
+    },
+    {
+      "detail": "every requested symbol exists in at least one variant",
+      "name": "symbols-found",
+      "status": "ok"
+    },
+    {
+      "detail": "entry and sinks exist in both variants, guards in the clean one",
+      "name": "flow-present",
+      "status": "ok"
+    },
+    {
+      "detail": "files changed by the regression: nicegui/elements/upload_files.py",
+      "name": "regression-nonempty",
+      "status": "ok"
+    },
+    {
+      "detail": "every slice file parses",
+      "name": "parses",
+      "status": "ok"
+    },
+    {
+      "detail": "clean slice is 14207 bytes (soft limit 24576, hard limit 49152)",
+      "name": "size",
+      "status": "ok"
+    },
+    {
+      "detail": "nothing referenced was cut",
+      "name": "dropped-references",
+      "status": "ok"
+    },
+    {
+      "detail": "no string literal uses security wording",
+      "name": "flagged-strings",
+      "status": "ok"
+    }
+  ],
+  "clean_commit": "f88924c6ed830f05ba25f32b046ba470543eeb36",
+  "event_id": "nicegui-9ffm",
+  "files": {
+    "examples/ffmpeg_extract_images/main.py": {
+      "clean": {
+        "approx_tokens": 248,
+        "bytes": 866,
+        "dropped_references": [],
+        "kept": [
+          "DATA_DIR",
+          "handle_upload"
+        ],
+        "lines": 31,
+        "missing": [],
+        "original_lines": 39,
+        "syntax_error": null
+      },
+      "regressed": {
+        "approx_tokens": 248,
+        "bytes": 866,
+        "dropped_references": [],
+        "kept": [
+          "DATA_DIR",
+          "handle_upload"
+        ],
+        "lines": 31,
+        "missing": [],
+        "original_lines": 39,
+        "syntax_error": null
+      }
+    },
+    "nicegui/elements/upload.py": {
+      "clean": {
+        "approx_tokens": 1556,
+        "bytes": 5444,
+        "dropped_references": [],
+        "kept": [
+          "Upload.__init__",
+          "Upload.handle_uploads",
+          "Upload.on_rejected",
+          "Upload.on_upload"
+        ],
+        "lines": 107,
+        "missing": [],
+        "original_lines": 125,
+        "syntax_error": null
+      },
+      "regressed": {
+        "approx_tokens": 1556,
+        "bytes": 5444,
+        "dropped_references": [],
+        "kept": [
+          "Upload.__init__",
+          "Upload.handle_uploads",
+          "Upload.on_rejected",
+          "Upload.on_upload"
+        ],
+        "lines": 107,
+        "missing": [],
+        "original_lines": 125,
+        "syntax_error": null
+      }
+    },
+    "nicegui/elements/upload_files.py": {
+      "clean": {
+        "approx_tokens": 1432,
+        "bytes": 5010,
+        "dropped_references": [],
+        "kept": [
+          "FileUpload",
+          "LargeFileUpload",
+          "SmallFileUpload",
+          "_cleanup_path",
+          "create_file_upload"
+        ],
+        "lines": 156,
+        "missing": [],
+        "original_lines": 156,
+        "syntax_error": null
+      },
+      "regressed": {
+        "approx_tokens": 1410,
+        "bytes": 4934,
+        "dropped_references": [],
+        "kept": [
+          "FileUpload",
+          "LargeFileUpload",
+          "SmallFileUpload",
+          "_cleanup_path",
+          "create_file_upload"
+        ],
+        "lines": 155,
+        "missing": [],
+        "original_lines": 155,
+        "syntax_error": null
+      }
+    },
+    "nicegui/events.py": {
+      "clean": {
+        "approx_tokens": 825,
+        "bytes": 2887,
+        "dropped_references": [],
+        "kept": [
+          "EventArguments",
+          "EventT",
+          "Handler",
+          "MultiUploadEventArguments",
+          "UiEventArguments",
+          "UploadEventArguments",
+          "handle_event"
+        ],
+        "lines": 84,
+        "missing": [],
+        "original_lines": 462,
+        "syntax_error": null
+      },
+      "regressed": {
+        "approx_tokens": 825,
+        "bytes": 2887,
+        "dropped_references": [],
+        "kept": [
+          "EventArguments",
+          "EventT",
+          "Handler",
+          "MultiUploadEventArguments",
+          "UiEventArguments",
+          "UploadEventArguments",
+          "handle_event"
+        ],
+        "lines": 84,
+        "missing": [],
+        "original_lines": 462,
+        "syntax_error": null
+      }
+    }
+  },
+  "flagged_strings": {
+    "clean": [],
+    "regressed": []
+  },
+  "flow": {
+    "entry": [
+      {
+        "kind": "http-request",
+        "note": "the nested route upload_route (registered with @app.post on /_nicegui/client/{client_id}/upload/{element_id}) reads the multipart form via request.form() and passes each Starlette UploadFile, whose .filename is the client-supplied multipart filename, to create_file_upload; the resulting FileUpload list goes to Upload.handle_uploads, which wraps each file in UploadEventArguments(file=...) and dispatches it to every on_upload handler through events.handle_event",
+        "symbol": "nicegui/elements/upload.py::Upload.__init__"
+      }
+    ],
+    "guards": [
+      {
+        "note": "clean: filename = PurePosixPath(upload.filename or '').name, which drops every '/'-separated directory component (so '../x' -> 'x', '/abs/x' -> 'x') before it becomes FileUpload.name of SmallFileUpload/LargeFileUpload. Regressed: upload.filename is stored unchanged as FileUpload.name",
+        "symbol": "nicegui/elements/upload_files.py::create_file_upload"
+      }
+    ],
+    "sinks": [
+      {
+        "kind": "filesystem",
+        "note": "the repo's own example app registers handle_upload as the ui.upload on_upload handler (top-level code, not in the slice); it builds video_path = DATA_DIR / args.file.name and calls video_path.write_bytes(...), so a filename such as '../main.py' or an absolute path writes outside DATA_DIR",
+        "symbol": "examples/ffmpeg_extract_images/main.py::handle_upload"
+      }
+    ]
+  },
+  "flow_files": [
+    "examples/ffmpeg_extract_images/main.py",
+    "nicegui/elements/upload.py",
+    "nicegui/elements/upload_files.py"
+  ],
+  "notes": "Recovered fix commit (the advisory links none): f88924c6 is a single-parent 'Merge commit from fork' whose parent f1f75335 is the regressed commit; the regression diff touches only create_file_upload in nicegui/elements/upload_files.py (plus the PurePosixPath import). Class: path-traversal (CWE-22), confirmed by the code: the client-controlled multipart filename flows unchanged into FileUpload.name. The advisory's sink is application code (UPLOAD_DIR / e.file.name); nicegui's own FileUpload.save accepts any path by design and receives no tainted value inside the library. The in-repo demonstration of the flow is examples/ffmpeg_extract_images/main.py::handle_upload (DATA_DIR / args.file.name, then write_bytes), which is the only place in the repository at the regressed commit that joins an uploaded file's name into a filesystem path; examples/ is part of the repo but outside the library package and outside the 2.1 LOC measure. Hops: Upload.__init__ (upload_route closure, request.form) -> create_file_upload (guard) -> Upload.handle_uploads -> events.handle_event -> handler(args) -> handle_upload -> Path.write_bytes. The handler binding (ui.upload(..., on_upload=handle_upload)) is a top-level statement inside a 'with' block in the example and cannot be kept by the slicer; the callback edge is therefore implicit in the slice, and the example globals results and upload (assigned in that block) and the DATA_DIR.mkdir call appear as free names / are absent in the sliced example (the dropped-references check does not see names bound inside a with block). Known-incomplete fix: PurePosixPath(...).name does not split on backslashes, so on Windows '..\\..\\x' still escapes; that was fixed separately by d38a702e (GHSA-w8wv-vfpc-hw2w / CVE-2026-39844, 3.10.0) and is not part of this event. The modelled flow ('/'-separated traversal and absolute POSIX paths) is closed by the clean commit. The example also runs ffmpeg via subprocess with video_path as a list argument (no shell); that is not an injection flow and is not modelled.",
+  "regressed_commit": "f1f7533577875af7d23f161ed3627f73584cb561",
+  "regression_files": [
+    "nicegui/elements/upload_files.py"
+  ],
+  "repo": "zauberzeug/nicegui",
+  "schema_version": 1,
+  "scope": "cross_file",
+  "scrubbed": {
+    "clean": [],
+    "regressed": []
+  },
+  "slice": {
+    "examples/ffmpeg_extract_images/main.py": [
+      "DATA_DIR",
+      "handle_upload"
+    ],
+    "nicegui/elements/upload.py": [
+      "Upload.__init__",
+      "Upload.handle_uploads",
+      "Upload.on_upload",
+      "Upload.on_rejected"
+    ],
+    "nicegui/elements/upload_files.py": [
+      "FileUpload",
+      "SmallFileUpload",
+      "LargeFileUpload",
+      "_cleanup_path",
+      "create_file_upload"
+    ],
+    "nicegui/events.py": [
+      "EventArguments",
+      "UiEventArguments",
+      "UploadEventArguments",
+      "MultiUploadEventArguments",
+      "EventT",
+      "Handler",
+      "handle_event"
+    ]
+  },
+  "spec_sha256": "168514ad39ff62a17eda70dfdebcbf1ca2441a9649b31906d0acb7b58e4ff327",
+  "totals": {
+    "clean": {
+      "approx_tokens": 4061,
+      "bytes": 14207
+    },
+    "regressed": {
+      "approx_tokens": 4039,
+      "bytes": 14131
+    }
+  },
+  "vulnerability_class": "path-traversal"
+}

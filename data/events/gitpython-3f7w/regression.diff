@@ -1,0 +1,42 @@
+--- a/git/index/base.py
++++ b/git/index/base.py
+@@ -93,8 +93,6 @@
+     index directly before operating on it using the git command.
+     """
+ 
+-    unsafe_git_checkout_index_options = ["--prefix"]
+-
+     __slots__ = ("repo", "version", "entries", "_extension_data", "_file_path")
+ 
+     _VERSION = 2
+@@ -107,7 +105,6 @@
+         paths: Union[None, Iterable[PathLike]] = None,
+         force: bool = False,
+         fprogress: Callable = lambda *args: None,
+-        allow_unsafe_options: bool = False,
+         **kwargs: Any,
+     ) -> Union[None, Iterator[PathLike], Sequence[PathLike]]:
+         """Check out the given paths or all files from the version known to the index
+@@ -133,9 +130,6 @@
+             The provided progress information will contain ``None`` as path and item if
+             no explicit paths are given. Otherwise progress information will be send
+             prior and after a file has been checked out.
+-
+-        :param allow_unsafe_options:
+-            Allow unsafe options, such as ``--prefix``.
+ 
+         :param kwargs:
+             Additional arguments to be passed to :manpage:`git-checkout-index(1)`.
+@@ -160,12 +154,6 @@
+             i.e. if you want :manpage:`git-checkout(1)`-like behaviour, use
+             ``head.checkout`` instead of ``index.checkout``.
+         """
+-        if not allow_unsafe_options:
+-            Git.check_unsafe_options(
+-                options=Git._option_candidates([], kwargs),
+-                unsafe_options=self.unsafe_git_checkout_index_options,
+-            )
+-
+         args = ["--index"]
+         if force:
+             args.append("--force")

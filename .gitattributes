@@ -3,3 +3,6 @@
 # endings and silently change every byte-level comparison. Never convert them.
 *.jsonl -text
 docs/evidence/** -text
+
+# Regression-event slices are model input: their bytes feed prompt hashes.
+data/events/** -text

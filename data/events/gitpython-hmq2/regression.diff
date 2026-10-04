@@ -1,0 +1,41 @@
+--- a/git/objects/submodule/base.py
++++ b/git/objects/submodule/base.py
+@@ -1,7 +1,6 @@
+ import gc
+ from io import BytesIO
+ import logging
+-import ntpath
+ import os
+ import os.path as osp
+ import stat
+@@ -98,20 +97,9 @@
+         return git.version_info[:3] >= (1, 7, 5)
+ 
+     @classmethod
+-    def _validated_name(cls, name: str) -> str:
+-        if (
+-            not name
+-            or name.startswith(("/", "\\"))
+-            or ntpath.splitdrive(name)[0]
+-            or ".." in name.replace("\\", "/").split("/")
+-        ):
+-            raise ValueError("Invalid submodule name %r" % name)
+-        return name
+-
+-    @classmethod
+     def _module_abspath(cls, parent_repo: "Repo", path: PathLike, name: str) -> PathLike:
+         if cls._need_gitfile_submodules(parent_repo.git):
+-            return osp.join(parent_repo.git_dir, "modules", cls._validated_name(name))
++            return osp.join(parent_repo.git_dir, "modules", name)
+         if parent_repo.working_tree_dir:
+             return osp.join(parent_repo.working_tree_dir, path)
+         raise NotADirectoryError()
+@@ -311,8 +299,6 @@
+             # END fetch new data
+ 
+         try:
+-            self._validated_name(self.name)
+-
+             # ENSURE REPO IS PRESENT AND UP-TO-DATE
+             #######################################
+             try:

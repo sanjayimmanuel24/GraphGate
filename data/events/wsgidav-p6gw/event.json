@@ -1,0 +1,163 @@
+{
+  "advisories": [
+    "GHSA-p6gw-4frg-j7jw"
+  ],
+  "checks": [
+    {
+      "detail": "regressed commit is an ancestor of the clean commit",
+      "name": "commits",
+      "status": "ok"
+    },
+    {
+      "detail": "every requested symbol exists in at least one variant",
+      "name": "symbols-found",
+      "status": "ok"
+    },
+    {
+      "detail": "entry and sinks exist in both variants, guards in the clean one",
+      "name": "flow-present",
+      "status": "ok"
+    },
+    {
+      "detail": "files changed by the regression: wsgidav/samples/mysql_dav_provider.py",
+      "name": "regression-nonempty",
+      "status": "ok"
+    },
+    {
+      "detail": "every slice file parses",
+      "name": "parses",
+      "status": "ok"
+    },
+    {
+      "detail": "clean slice is 6949 bytes (soft limit 24576, hard limit 49152)",
+      "name": "size",
+      "status": "ok"
+    },
+    {
+      "detail": "referenced but cut: wsgidav/samples/mysql_dav_provider.py::MySQLBrowserResource",
+      "name": "dropped-references",
+      "status": "warn"
+    },
+    {
+      "detail": "no string literal uses security wording",
+      "name": "flagged-strings",
+      "status": "ok"
+    }
+  ],
+  "clean_commit": "6f35776c9188f130ab044ce557015d51aaa83500",
+  "event_id": "wsgidav-p6gw",
+  "files": {
+    "wsgidav/samples/mysql_dav_provider.py": {
+      "clean": {
+        "approx_tokens": 1986,
+        "bytes": 6949,
+        "dropped_references": [
+          "MySQLBrowserResource"
+        ],
+        "kept": [
+          "MySQLBrowserProvider.__init__",
+          "MySQLBrowserProvider._exists_record_by_primary_key",
+          "MySQLBrowserProvider._init_connection",
+          "MySQLBrowserProvider._is_data_type_numeric",
+          "MySQLBrowserProvider._list_tables",
+          "MySQLBrowserProvider._split_path",
+          "MySQLBrowserProvider.exists",
+          "MySQLBrowserProvider.get_resource_inst",
+          "_escape_id"
+        ],
+        "lines": 202,
+        "missing": [],
+        "original_lines": 549,
+        "syntax_error": null
+      },
+      "regressed": {
+        "approx_tokens": 2094,
+        "bytes": 7328,
+        "dropped_references": [
+          "MySQLBrowserResource"
+        ],
+        "kept": [
+          "MySQLBrowserProvider.__init__",
+          "MySQLBrowserProvider._exists_record_by_primary_key",
+          "MySQLBrowserProvider._init_connection",
+          "MySQLBrowserProvider._is_data_type_numeric",
+          "MySQLBrowserProvider._list_tables",
+          "MySQLBrowserProvider._split_path",
+          "MySQLBrowserProvider.exists",
+          "MySQLBrowserProvider.get_resource_inst"
+        ],
+        "lines": 220,
+        "missing": [
+          "_escape_id"
+        ],
+        "original_lines": 601,
+        "syntax_error": null
+      }
+    }
+  },
+  "flagged_strings": {
+    "clean": [],
+    "regressed": []
+  },
+  "flow": {
+    "entry": [
+      {
+        "kind": "http-request",
+        "note": "the framework (dav_provider.py / request_server.py) hands the request URL path (e.g. /users/<key>, share prefix already stripped) to the provider's get_resource_inst on every request, including a plain GET; it calls self.exists(path, environ), where _split_path splits the path into (tableName, primKey). tableName is checked against SHOW TABLES, primKey is not checked at all",
+        "symbol": "wsgidav/samples/mysql_dav_provider.py::MySQLBrowserProvider.get_resource_inst"
+      }
+    ],
+    "guards": [
+      {
+        "note": "clean: the SELECT text is built only from backtick-quoted identifiers (_escape_id) with a %s placeholder, and the key is bound via cursor.execute(sql, (pri_key_value,)); regressed: the key is concatenated into the WHERE clause (quoted branch ... = '<key>', or unquoted numeric branch chosen by _is_data_type_numeric)",
+        "symbol": "wsgidav/samples/mysql_dav_provider.py::MySQLBrowserProvider._exists_record_by_primary_key"
+      }
+    ],
+    "sinks": [
+      {
+        "kind": "sql",
+        "note": "MySQLdb cursor.execute on SELECT <pk> FROM <db>.<table> WHERE <pk> = '<key>'; a quote in the key breaks out of the literal, and the found/not-found result becomes the response status (boolean oracle)",
+        "symbol": "wsgidav/samples/mysql_dav_provider.py::MySQLBrowserProvider._exists_record_by_primary_key"
+      }
+    ]
+  },
+  "flow_files": [
+    "wsgidav/samples/mysql_dav_provider.py"
+  ],
+  "notes": "Pilot spec, re-reviewed at 2.3 (2026-09-29): entry moved from exists to get_resource_inst, the method the framework actually calls with the request path (exists is its first hop); slice and scope unchanged. Class sql (CWE-89), verified in code at both commits: regressed 67abdbd get_resource_inst -> exists -> _split_path (util.save_split, no validation of primKey) -> _exists_record_by_primary_key(conn, tableName, primKey) -> cursor.execute with the key concatenated; clean 6f35776 binds the key as a query parameter, which closes the flow. Fix touches only this file. Parallel flows closed by the same commit but not modelled: _get_record_by_primary_key (from MySQLBrowserResource._init / get_content) and _get_field_by_primary_key (from get_property_value), same concatenation pattern; identifier escaping (_escape_id in DESCRIBE, _list_fields, get_content, _find_primary_key) is defence in depth, since table names are checked against SHOW TABLES and field names against DESCRIBE before use. _is_data_type_numeric still exists at the clean commit (its callers were removed by the fix), so it stays in both slices; its INTT typo sends INT keys to the quoted branch, which is equally injectable. The module is a sample provider, not enabled by default. Dropped reference accepted: MySQLBrowserResource (the object get_resource_inst returns after exists() succeeds; a large class not on the key-to-query flow).",
+  "regressed_commit": "67abdbd7d622fcf29aefdfbd0c9910de9e0c8b3d",
+  "regression_files": [
+    "wsgidav/samples/mysql_dav_provider.py"
+  ],
+  "repo": "mar10/wsgidav",
+  "schema_version": 1,
+  "scope": "local",
+  "scrubbed": {
+    "clean": [],
+    "regressed": []
+  },
+  "slice": {
+    "wsgidav/samples/mysql_dav_provider.py": [
+      "_escape_id",
+      "MySQLBrowserProvider.__init__",
+      "MySQLBrowserProvider._split_path",
+      "MySQLBrowserProvider._init_connection",
+      "MySQLBrowserProvider._list_tables",
+      "MySQLBrowserProvider._is_data_type_numeric",
+      "MySQLBrowserProvider.exists",
+      "MySQLBrowserProvider.get_resource_inst"
+    ]
+  },
+  "spec_sha256": "4050b591c6d90d3234a3dd67334e4c64353dc3ef38d5776294d8ee093774a30e",
+  "totals": {
+    "clean": {
+      "approx_tokens": 1986,
+      "bytes": 6949
+    },
+    "regressed": {
+      "approx_tokens": 2094,
+      "bytes": 7328
+    }
+  },
+  "vulnerability_class": "sql"
+}

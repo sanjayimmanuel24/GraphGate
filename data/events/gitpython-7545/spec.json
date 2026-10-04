@@ -1,0 +1,66 @@
+{
+  "event_id": "gitpython-7545",
+  "advisories": [
+    "GHSA-7545-fcxq-7j24"
+  ],
+  "repo": "gitpython-developers/gitpython",
+  "clean_commit": "25ba54dd3fb374b8fade7de4be1ac2ac84722190",
+  "regressed_commit": "4199cb89755f705801a4cb241723325b46201f51",
+  "vulnerability_class": "path-traversal",
+  "flow": {
+    "entry": [
+      {
+        "symbol": "git/refs/symbolic.py::SymbolicReference.delete",
+        "kind": "library-api",
+        "note": "caller-supplied ref path (e.g. '../../outside.txt'); to_full_path returns it unchanged for SymbolicReference and only prefixes 'refs/' for Reference"
+      },
+      {
+        "symbol": "git/refs/symbolic.py::SymbolicReference.create",
+        "kind": "library-api",
+        "note": "caller-supplied ref path (Reference.create inherits this method); passed unchanged to _create, which builds full_ref_path and hands SymbolicReference(repo, full_ref_path) to set_reference"
+      }
+    ],
+    "guards": [
+      {
+        "symbol": "git/refs/symbolic.py::SymbolicReference._get_validated_ref_path",
+        "note": "added by the fix and called on the ref path in delete, _create and set_reference (and rename, not sliced): runs _check_ref_name_valid (rejects '..', a leading '.' or '/', '/.', backslashes, colons) and then _get_validated_path (realpath + commonpath containment in the git dir); the regression goes back to a plain os.path.join / self.abspath with no check"
+      }
+    ],
+    "sinks": [
+      {
+        "symbol": "git/refs/symbolic.py::SymbolicReference.delete",
+        "kind": "filesystem",
+        "note": "os.remove(abs_path) with abs_path = os.path.join(repo.common_dir, full_ref_path); also os.remove on the reflog path derived from the same ref path"
+      },
+      {
+        "symbol": "git/refs/symbolic.py::SymbolicReference.set_reference",
+        "kind": "filesystem",
+        "note": "fpath = self.abspath (join_path_native(common_dir, path)); assure_directory_exists(fpath) then LockedFD(fpath).open(write=True) + commit() writes the target sha to fpath (LockedFD comes from gitdb, outside this repo)"
+      }
+    ]
+  },
+  "slice": {
+    "git/refs/symbolic.py": [
+      "__all__",
+      "T_References",
+      "_git_dir",
+      "SymbolicReference.__init__",
+      "SymbolicReference.abspath",
+      "SymbolicReference._get_validated_path",
+      "SymbolicReference._get_validated_ref_path",
+      "SymbolicReference._get_packed_refs_path",
+      "SymbolicReference._iter_packed_refs",
+      "SymbolicReference._check_ref_name_valid",
+      "SymbolicReference._get_ref_info_helper",
+      "SymbolicReference._get_ref_info",
+      "SymbolicReference._get_reference",
+      "SymbolicReference.set_reference",
+      "SymbolicReference.reference",
+      "SymbolicReference.to_full_path",
+      "SymbolicReference.delete",
+      "SymbolicReference._create",
+      "SymbolicReference.create"
+    ]
+  },
+  "notes": "Pilot spec, re-reviewed at 2.3 on 2026-09-29 (flows kept, slice extended). Two parallel flows in git/refs/symbolic.py, both from the advisory PoC and both closed by the same guard: (1) delete(repo, path): to_full_path -> os.path.join(repo.common_dir, full_ref_path) -> os.remove (arbitrary delete); (2) create(repo, path) -> _create -> cls(repo, full_ref_path).set_reference -> self.abspath -> LockedFD(fpath) write (arbitrary write; Reference.create inherits create, and Reference.__init__ only checks the 'refs/' prefix, which 'refs/../../../x' passes). In the regressed commit _check_ref_name_valid is called only on the read path (_get_ref_info_helper), never before a write, rename or delete. 2026-09-29 change: the read path (_get_reference -> _get_ref_info -> _get_ref_info_helper, plus _iter_packed_refs) is now in the slice, so the regressed slice shows the validator still in use for reads but skipped on the write/delete paths, as in the real code. Before, the validator had no caller at all in the regressed slice. That was a slicing artifact that would make the regression look like an orphaned sanitizer, which is easier to detect than the real state. The read path is identical in both variants and adds no hunk to regression.diff. Clean slice 15.3 KB -> 20.2 KB. Verified end to end on the built slices of this spec (gitdb/git imports stubbed; LockedFD mimicked as lock-file write + rename; RefLog.path stubbed with the regressed log.py behaviour; slice code unchanged; git dir <tmp>/repo/.git): regressed SymbolicReference.create(repo, '../../outside_write.txt', commit), SymbolicReference(repo, '../../outside_write2.txt').set_reference(commit) and Reference.create(repo, '../../../outside_ref.txt', commit) each write a file in <tmp>, and SymbolicReference.delete(repo, '../../outside_delete.txt') removes <tmp>/outside_delete.txt. Clean raises ValueError from _check_ref_name_valid on all four and leaves the files untouched. Reference.create(repo, 'heads/feature') and delete(repo, 'refs/heads/feature') work in both variants. Absolute paths are also closed: the regressed os.path.join(git_dir, '/abs') returns '/abs', and the clean validator rejects a leading '/' (and ':' and '\\' on Windows). Reference (git/refs/reference.py) overrides none of create/_create/set_reference/delete, so the advisory's Reference.create PoC runs this same code. Parallel flows the same fix closes, left out to keep the slice small: rename (os.rename, symbolic.py), RefLog.path (git/refs/log.py; reflog write via log_append), and the RemoteReference.delete cleanup (git/refs/remote.py). The fix's _get_validated_reflog_path (symbolic.py) is called only from RefLog.path in log.py, so it is outside the slice and regression.diff has no hunk for it. As a result the clean slice is not runnable against the real clean log.py, but no gate or model sees log.py. The reflog os.remove in delete is still covered in the clean slice, because delete validates full_ref_path before it builds the reflog path. Accepted dropped references: from_path (resolves the target Reference subclass on the read path; it pulls in HEAD/Head/Tag types and is off the flow), and commit and log_append (reached only when logmsg is not None, i.e. the reflog branch; create defaults to logmsg=None, and delete never calls them). LockedFD is gitdb.util's (outside the repo), so the in-repo write sink is set_reference; assure_directory_exists (git/util.py) only creates parent dirs. The PR's second commit 4af8463c (review polish, RemoteReference.delete ordering) is not in the pair and does not touch these flows: it changes only git/refs/log.py, git/refs/remote.py, git/util.py and tests, not git/refs/symbolic.py."
+}

@@ -1,0 +1,30 @@
+{
+  "event_id": "gitpython-pr76",
+  "advisories": ["GHSA-pr76-5cm5-w9cj"],
+  "repo": "gitpython-developers/gitpython",
+  "clean_commit": "ca965ecc81853bca7675261729143f54e5bf4cdd",
+  "regressed_commit": "c09a71e2caefd5c25195b0b2decc8177d658216a",
+  "vulnerability_class": "os-command",
+  "flow": {
+    "entry": [
+      {"symbol": "git/repo/base.py::Repo.clone_from", "kind": "library-api",
+       "note": "the caller's **kwargs (keys and values) are forwarded unchanged to Repo._clone, where they become git-clone options; e.g. u=<program> or upload-pack=<program> (the advisory's PoC)"},
+      {"symbol": "git/repo/base.py::Repo.clone", "kind": "library-api",
+       "note": "same **kwargs forwarding to Repo._clone as clone_from, cloning from this repository (self.common_dir)"}
+    ],
+    "guards": [
+      {"symbol": "git/repo/base.py::Repo._clone",
+       "note": "the fix adds `if not allow_unsafe_options: Git.check_unsafe_options(options=list(kwargs.keys()), unsafe_options=cls.unsafe_git_clone_options)`, which raises for the kwarg keys u / upload-pack / c / config; before it only multi_options were checked, so plain kwargs reached git.clone(...) unchecked"}
+    ],
+    "sinks": [
+      {"symbol": "git/cmd.py::Git._call_process", "true_symbol": "git/cmd.py::Git.execute", "kind": "subprocess",
+       "note": "git.clone(..., **add_progress(kwargs, ...)) in Repo._clone dispatches via Git.__getattr__ to _call_process, where transform_kwargs/transform_kwarg turn u=<program> into ['-u', '<program>'] (upload-pack=<program> into '--upload-pack=<program>') and self.execute(call) starts `git clone -v -u <program> -- <url> <path>` (Popen inside Git.execute, ~335 lines / 13.9 KB, too large for the slice); git then runs <program> through the shell as its upload-pack"}
+    ]
+  },
+  "slice": {
+    "git/repo/base.py": ["log", "Repo.common_dir", "Repo._clone", "Repo.clone", "Repo.clone_from"],
+    "git/cmd.py": ["execute_kwargs", "dashify", "Git.check_unsafe_options", "Git.__getattr__",
+                   "Git.transform_kwarg", "Git.transform_kwargs", "Git._unpack_args", "Git._call_process"]
+  },
+  "notes": "Reviewed at 2.3 (pilot spec kept; sink symbol moved from Repo._clone to Git._call_process, the in-slice call site of Git.execute, matching gitpython-2f96; the scope label is unchanged because the true sink is Git.execute either way). Fix = merge of PR #1609; its first-parent diff equals the PR's only commit 5c59e0d6 and touches only git/repo/base.py (Repo._clone, +2 lines) plus tests. git/cmd.py is byte-identical at both commits; Git.check_unsafe_options is in the slice as the helper the guard calls. Verified concretely: extracting the real Repo._clone guard statements, Repo.unsafe_git_clone_options and Git.check_unsafe_options/transform_kwarg(s) from both blobs, the regressed commit lets kwargs u, upload-pack, c and config through (u='PROG' -> ['-u', 'PROG']) and the clean commit raises UnsafeOptionError for all four; a real git 2.55 `git clone -v -u \"touch <marker>; true\" -- <local bare repo> <dst>` created the marker. The c=/config= variant needs a second ingredient (e.g. protocol.ext.allow=always plus an ext:: URL, which check_unsafe_protocols blocks by default, or a core.sshCommand/gitProxy setting), so the modelled flow is u=/upload-pack=<program>. Known-incomplete fix: the check compares kwarg names by bare equality or '--'/'-' prefix, so the Python-natural key upload_pack=<program> still passes at the clean commit and is dashified to --upload-pack=<program> by transform_kwarg (verified with the same harness); that bypass is a separate advisory (GHSA-rpm5-65cw-6hj4, fixed in 14219588 / 3.1.47), and prefix abbreviations such as upload_p are GHSA-2f96-g7mh-g2hx (event gitpython-2f96). The tainted datum is a kwarg KEY (option name) together with its value; taint engines that only propagate values may see the value reach argv but not the option name that makes it dangerous. Re-reviewed 2026-09-29 (structure kept): the guard harness was re-run on the built slices with the same result, and git 2.55 `git clone -v -u \"touch MARKER; git-upload-pack\" -- src.git dst` again created the marker. Class: os-command, as the advisory (CWE-78) and gitpython-2f96; the mechanism is argument injection into git's argv (shell=False), but the injected -u/--upload-pack makes git run the caller's value as a shell command. Accepted dropped reference: Git.execute (the true sink, recorded as true_symbol). Also cut, not on the kwarg flow: Git.check_unsafe_protocols, Git.polish_url, Git.is_cygwin (URL/platform handling), add_progress (git/remote.py; only sets kwargs['progress']=True, does not filter kwargs), and the nested classes Git.AutoInterrupt/Git.CatFileContentStream (named only in string annotations). The kept Repo class body still carries class-level assignments naming cut methods (description = property(_get_description, ...), refs = references, branches = heads, daemon_export, alternates); the builder does not report these, and they are left out on purpose (~2.6 KB, off-flow)."
+}

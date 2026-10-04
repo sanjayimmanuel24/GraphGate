@@ -1,0 +1,120 @@
+{
+  "event_id": "alerta-8prr",
+  "advisories": [
+    "GHSA-8prr-286p-4w7j"
+  ],
+  "repo": "alerta/alerta",
+  "clean_commit": "fdd52cd1abad8d02d1dfb8ecdcdbb43b6af3b883",
+  "regressed_commit": "71c098d8bb8091e76edaefeef4662eb77c753ce7",
+  "vulnerability_class": "sql",
+  "flow": {
+    "entry": [
+      {
+        "symbol": "alerta/views/alerts.py::get_counts",
+        "kind": "http-request",
+        "note": "GET /alerts/count: request.args (including the q search string) is passed to qb.alerts.from_params, which at runtime is the Postgres Alerts.from_params (QueryBuilder.init_app in alerta/database/base.py mixes the backend class into qb.alerts)"
+      }
+    ],
+    "guards": [
+      {
+        "symbol": "alerta/database/backends/postgres/queryparser.py::QueryParser.parse",
+        "note": "clean: renders the parsed tree with to_sql(params), so every search value becomes a %(_qp_N)s placeholder and is collected in params, and returns (sql, params); regressed: returns repr() of the tree, where SearchTerm.__repr__ writes the search values straight into single-quoted SQL literals"
+      },
+      {
+        "symbol": "alerta/database/backends/postgres/queryparser.py::SearchTerm.to_sql",
+        "note": "clean only (absent at the regressed commit): per-term rendering that binds singleterm/phrase/wildcard/regex/range bounds/attribute key as named parameters"
+      },
+      {
+        "symbol": "alerta/database/backends/postgres/utils.py::Alerts.from_params",
+        "note": "clean: unpacks (parsed_query, parsed_vars) and seeds qvars with the parsed parameters, so they reach cursor.execute as bound values via Query.vars; regressed: puts the parser's finished SQL text into the WHERE list with empty qvars"
+      }
+    ],
+    "sinks": [
+      {
+        "symbol": "alerta/database/backends/postgres/base.py::Backend._fetchall",
+        "kind": "sql",
+        "note": "psycopg2 cursor.execute(query, vars); the statement text is built by Backend.get_counts_by_severity / get_counts_by_status, which format Query.where into SELECT ... WHERE {query.where}"
+      }
+    ]
+  },
+  "slice": {
+    "alerta/views/alerts.py": [
+      "count_timer",
+      "get_counts"
+    ],
+    "alerta/app.py": [
+      "alarm_model",
+      "db",
+      "qb"
+    ],
+    "alerta/models/alert.py": [
+      "Alert.get_counts_by_severity",
+      "Alert.get_counts_by_status"
+    ],
+    "alerta/database/base.py": [
+      "Query",
+      "Base",
+      "get_backend",
+      "load_backend",
+      "Database.__init__",
+      "Database.init_db",
+      "Database.get_db",
+      "QueryBuilder.__init__",
+      "QueryBuilder.init_app",
+      "QueryBuilder.Alerts"
+    ],
+    "alerta/database/backends/postgres/utils.py": [
+      "Query",
+      "EXCLUDE_FROM_QUERY",
+      "QueryBuilder",
+      "Alerts",
+      "<wiring>"
+    ],
+    "alerta/database/backends/postgres/queryparser.py": [
+      "_next_param",
+      "UnaryOperation",
+      "BinaryOperation",
+      "SearchModifier",
+      "SearchAnd",
+      "SearchOr",
+      "SearchNot",
+      "SearchTerm",
+      "LBRACK",
+      "LPAR",
+      "AND",
+      "OR",
+      "NOT",
+      "TO",
+      "query_expr",
+      "required_modifier",
+      "prohibit_modifier",
+      "special_characters",
+      "valid_word",
+      "clause",
+      "field_name",
+      "single_term",
+      "phrase",
+      "wildcard",
+      "regex",
+      "_all",
+      "lower_range",
+      "upper_range",
+      "_range",
+      "GT",
+      "GTE",
+      "LT",
+      "LTE",
+      "one_sided_range",
+      "term",
+      "QueryParser",
+      "<wiring>"
+    ],
+    "alerta/database/backends/postgres/base.py": [
+      "Backend.get_counts_by_severity",
+      "Backend.get_counts_by_status",
+      "Backend._fetchall",
+      "Backend._log"
+    ]
+  },
+  "notes": "Reviewed at 2.3 (2026-10-04). Class sql (CWE-89), verified in code at both commits. Pair corrected in 2.2 (the advisory also links aeba85a3, the 2018 commit that introduced the parser); fdd52cd1 is the fix, 71c098d8 its parent. Flow at regressed 71c098d8: views/alerts.py get_counts (GET /alerts/count, request.args) -> qb.alerts.from_params (QueryBuilder.init_app in database/base.py mixes in the Postgres Alerts class) -> postgres/utils.py Alerts.from_params -> QueryParser.parse(params['q']) -> repr() of the pyparsing tree, SearchTerm.__repr__ writing the search values inside single-quoted SQL literals -> Query.where -> models/alert.py Alert.get_counts_by_severity -> db.get_counts_by_severity (Database.init_db mixes in the Postgres Backend) -> postgres/base.py Backend.get_counts_by_severity formats WHERE {query.where} -> Backend._fetchall -> cursor.execute. At clean fdd52cd1 QueryParser.parse renders with to_sql(params) and returns (sql, params); from_params seeds qvars with them, so the values travel as bound parameters. Checked by running both commits' queryparser.py: q = \"x' OR 1=1 --\" (phrase) gives \"text\" ~* '\\yx' OR 1=1 --\\y' at the regressed commit and '\"text\" ~* %(_qp_0)s' plus a params dict at the clean one; same for regex and single-term inputs. Parallel flows closed by the same commit, not modelled: every other view calling qb.alerts.from_params (search_alerts, history, topn, environments, services, groups, tags, bulk handlers) and Blackouts.from_params. search_alerts (GET /alerts) is the best-known entry; get_counts was used because it is the shortest view with the identical path (same file, same scope label). Known-incomplete fix: default_field (q.df) is still inserted into the SQL text by str.replace in QueryParser.parse at the clean commit (confirmed by running it); that is a different request parameter and not this event's flow. Scoring: a gate finding on default_field / q.df in the clean slice is a true report of that residual issue and must be counted separately, not as a false positive on a clean turn. Field/attr identifiers also stay interpolated inside double quotes, but the grammar's valid_word excludes the double-quote character. Slicer limitation: module-level statements that are not assignments are not kept, so in queryparser.py the grammar wiring is missing from both variants (ParserElement.enablePackrat(), valid_word.setParseAction, wildcard.setParseAction, clause << ..., clause.addParseAction(SearchTerm), query_expr << infixNotation(... SearchModifier/SearchNot/SearchAnd/SearchOr)), and in postgres/utils.py Query.__new__.__defaults__ = (...) is missing. The link from query_expr.parseString to the Search* classes is therefore not visible in the slice and the sliced grammar would not run as is. UNRESOLVED after the 2.3 adversarial check (2026-10-04, blocking): this cannot be repaired from spec.json, because the slicer has no way to request a module-level expression statement; confirmed by importing the built regressed queryparser.py, where QueryParser().parse('foo') raises pyparsing's 'No expression defined'. The event needs a slicer change (keep module-level expression statements that reference kept names, about 15 lines / 1 KB per variant here) and a rebuild before it is used; until then the model sees an unwired parser and no gate can link parseString to SearchTerm.__repr__ / to_sql. Even with the wiring restored, parser-to-Search* dispatch goes through pyparsing parse actions and the two backend hops go through type(), so a static call graph should record unknown edges at all three. Not trimmed further: get_counts calls both Alert.get_counts_by_severity and Alert.get_counts_by_status, so dropping the status pair would leave a dangling call. Accepted dropped references: app.py audit/config/hooks/mailer/tracing (module names inside kept import lines, not uses); Database.connect/create_engine/teardown_db (connection setup, not on the flow); QueryBuilder.ApiKeys/Blackouts/Customers/Groups/Heartbeats/Permissions/Users (sibling query-builder stubs named in init_app). Size 27.9 KB clean (over the 24 KB soft limit): the clean queryparser.py alone is 10.8 KB because __repr__ and to_sql coexist. [2026-10-04, after the checker's blocking defect] The slicer gained an opt-in '<wiring>' marker that keeps module-level statements referring to kept names; it is set on queryparser.py and postgres/utils.py so the pyparsing grammar wiring (clause << ..., query_expr << infixNotation(...), the setParseAction calls) and Query.__new__.__defaults__ are in both variants. Rebuilt; an independent re-check of the rebuilt slice is still pending."
+}

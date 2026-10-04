@@ -1,0 +1,240 @@
+{
+  "advisories": [
+    "GHSA-7pgr-32fx-c6x9"
+  ],
+  "checks": [
+    {
+      "detail": "regressed commit is an ancestor of the clean commit",
+      "name": "commits",
+      "status": "ok"
+    },
+    {
+      "detail": "every requested symbol exists in at least one variant",
+      "name": "symbols-found",
+      "status": "ok"
+    },
+    {
+      "detail": "entry and sinks exist in both variants, guards in the clean one",
+      "name": "flow-present",
+      "status": "ok"
+    },
+    {
+      "detail": "files changed by the regression: lollms/server/endpoints/lollms_file_system.py",
+      "name": "regression-nonempty",
+      "status": "ok"
+    },
+    {
+      "detail": "every slice file parses",
+      "name": "parses",
+      "status": "ok"
+    },
+    {
+      "detail": "clean slice is 7278 bytes (soft limit 24576, hard limit 49152)",
+      "name": "size",
+      "status": "ok"
+    },
+    {
+      "detail": "nothing referenced was cut",
+      "name": "dropped-references",
+      "status": "ok"
+    },
+    {
+      "detail": "string literals with security wording (kept, review them): lollms/security.py:28",
+      "name": "flagged-strings",
+      "status": "warn"
+    }
+  ],
+  "clean_commit": "aeace796d861e922133b769710019608a6363264",
+  "event_id": "lollms-7pgr",
+  "files": {
+    "lollms/security.py": {
+      "clean": {
+        "approx_tokens": 564,
+        "bytes": 1972,
+        "dropped_references": [],
+        "kept": [
+          "check_access",
+          "sanitize_path"
+        ],
+        "lines": 60,
+        "missing": [],
+        "original_lines": 331,
+        "syntax_error": null
+      },
+      "regressed": {
+        "approx_tokens": 564,
+        "bytes": 1972,
+        "dropped_references": [],
+        "kept": [
+          "check_access",
+          "sanitize_path"
+        ],
+        "lines": 60,
+        "missing": [],
+        "original_lines": 331,
+        "syntax_error": null
+      }
+    },
+    "lollms/server/endpoints/lollms_file_system.py": {
+      "clean": {
+        "approx_tokens": 1516,
+        "bytes": 5306,
+        "dropped_references": [],
+        "kept": [
+          "FolderInfos",
+          "lollmsElfServer",
+          "router",
+          "vectorize_folder"
+        ],
+        "lines": 116,
+        "missing": [],
+        "original_lines": 377,
+        "syntax_error": null
+      },
+      "regressed": {
+        "approx_tokens": 1514,
+        "bytes": 5298,
+        "dropped_references": [],
+        "kept": [
+          "FolderInfos",
+          "lollmsElfServer",
+          "router",
+          "vectorize_folder"
+        ],
+        "lines": 116,
+        "missing": [],
+        "original_lines": 377,
+        "syntax_error": null
+      }
+    }
+  },
+  "flagged_strings": {
+    "clean": [
+      {
+        "kind": "string",
+        "line": 28,
+        "path": "lollms/security.py",
+        "text": "\"Detected an attempt of path traversal or command injection. Are you kidding me?\""
+      }
+    ],
+    "regressed": [
+      {
+        "kind": "string",
+        "line": 28,
+        "path": "lollms/security.py",
+        "text": "\"Detected an attempt of path traversal or command injection. Are you kidding me?\""
+      }
+    ]
+  },
+  "flow": {
+    "entry": [
+      {
+        "kind": "http-request",
+        "note": "POST /vectorize_folder JSON body field FolderInfos.db_path, formatted '<db_name>::<folder_path>'; the nested process() closure splits it on '::' and takes parts[1] as folder_path",
+        "symbol": "lollms/server/endpoints/lollms_file_system.py::vectorize_folder"
+      }
+    ],
+    "guards": [
+      {
+        "note": "clean: folder_path = sanitize_path(parts[1], True), which raises HTTPException on any '..' run, '//' or $(...) and on shell punctuation, before any filesystem use (the exception kills the worker thread). Regressed: folder_path = parts[1] unchecked. allow_absolute_path=True, so absolute folders still pass in both versions",
+        "symbol": "lollms/server/endpoints/lollms_file_system.py::vectorize_folder"
+      }
+    ],
+    "sinks": [
+      {
+        "kind": "filesystem",
+        "note": "in process(): VectorDatabase(Path(folder_path)/f'{db_name}.sqlite', ..., reset=True) creates/resets a sqlite file there, and Path(folder_path).glob(...) + TextDocumentsLoader.read_file(fn) reads every supported file under it",
+        "symbol": "lollms/server/endpoints/lollms_file_system.py::vectorize_folder"
+      }
+    ]
+  },
+  "flow_files": [
+    "lollms/server/endpoints/lollms_file_system.py"
+  ],
+  "notes": "Reviewed at 2.3 (2026-09-29). Pair: aeace796 ('added sanitization to vectorize_folder paths', 2024-07-22) is the direct child of 28ee567a; the pair diff touches only lollms/server/endpoints/lollms_file_system.py (+2/-2): the unused import sanitize_path_from_endpoint becomes sanitize_path, and in vectorize_folder's nested process() folder_path = parts[1] becomes sanitize_path(parts[1], True). lollms/security.py is byte-identical at both commits, so the sliced sanitize_path/check_access produce no diff hunk; they are included so the guard's behaviour is readable. Class: path-traversal (advisory CWE-22); by the code, a request-body path selects the directory in which a sqlite file is created/reset (VectorDatabase(..., reset=True)) and whose supported files are all read and indexed. Flow: POST /vectorize_folder body {client_id, db_path:'<db_name>::<folder>'} -> vectorize_folder -> process() split on '::' -> folder_path -> Path(folder_path)/f'{db_name}.sqlite' -> VectorDatabase, and Path(folder_path).glob(...) -> TextDocumentsLoader.read_file. Entry, guard and sink are the same function (the nested closure), so scope is local; sanitize_path in security.py is an unchanged helper, not the guard. Verified concretely by executing the real sanitize_path source from aeace796 (stubbed HTTPException/ASCIIColors) with allow_absolute_path=True: '../../secret', 'docs/../../x' and '..\\..\\Users' are rejected (HTTPException), 'my_docs' passes unchanged. The exception is raised in the worker thread before any filesystem call, so the thread ends without touching the target. The regressed version passes all of these straight to Path/VectorDatabase/glob. KNOWN-INCOMPLETE FIX (per the 2.2 refute reviewer, confirmed): (1) allow_absolute_path=True, so absolute folders ('C:/Users/victim', '/etc') still pass in the clean version; this appears deliberate (the feature vectorizes a user-chosen local folder) and upstream never tightened it; (2) db_name (parts[0]) is not sanitized, so '../x' in the name still moves the created .sqlite file relative to folder_path; (3) the non-'::' branch still uses db_path unsanitized but requires a server-side Tk dialog answer. The modelled flow is the relative '..'-sequence traversal through folder_path, which the clean commit does close. Because an attacker can still name any absolute folder, the practical attacker capability is only partly reduced; the event is a real guard insertion on a real source->sink path, but reviewers of results should know the residual flows exist in the clean slice (a gate flagging the db_name or absolute-path flows on the clean version is not a false positive in the security sense). Parallel code named by the advisory but not changed: add_rag_database (folder from a server-side Tk dialog) and toggle_mount_rag_database (path from stored config by exact name) take no request path at the vulnerable commit and are not in the slice. Flagged string kept: sanitize_path's default exception_text ('Detected an attempt of path traversal or command injection...') in lollms/security.py is real behaviour. The regressed endpoint imports sanitize_path_from_endpoint (unused there), which is not in the sliced security.py.",
+  "regressed_commit": "28ee567a9a120967215ff19b96ab7515ce469620",
+  "regression_files": [
+    "lollms/server/endpoints/lollms_file_system.py"
+  ],
+  "repo": "parisneo/lollms_legacy",
+  "schema_version": 1,
+  "scope": "local",
+  "scrubbed": {
+    "clean": [
+      {
+        "kind": "docstring",
+        "line": 29,
+        "path": "lollms/security.py",
+        "text": "Args:\n    -----\n    path (str): The file path to sanitize.\n    allow_absolute_path (bool, optional): Whether to allow absolute paths. Default is False.\n    error_text (str, optional): The error message to display if an absolute path is detected. Default is \"Absolute database path detected\".\n    exception_text (str, optional): The exception message to display if a path traversal, command injection, or unauthorized character is detected. Default is \"Detected an attempt of path traversal or command injection. Are you kidding me?\"."
+      },
+      {
+        "kind": "docstring",
+        "line": 29,
+        "path": "lollms/security.py",
+        "text": "Raises:\n    ------\n    HTTPException: If an absolute path, path traversal, command injection, or unauthorized character is detected."
+      },
+      {
+        "kind": "docstring",
+        "line": 29,
+        "path": "lollms/security.py",
+        "text": "Note:\n    -----\n    This function checks for patterns like \"....\", multiple forward slashes, and command injection attempts like $(whoami). It also checks for unauthorized punctuation characters, excluding the dot (.) character."
+      },
+      {
+        "kind": "comment",
+        "line": 61,
+        "path": "lollms/security.py",
+        "text": "# Regular expression to detect patterns like \"....\", multiple forward slashes, and command injection attempts like $(whoami)"
+      }
+    ],
+    "regressed": [
+      {
+        "kind": "docstring",
+        "line": 29,
+        "path": "lollms/security.py",
+        "text": "Args:\n    -----\n    path (str): The file path to sanitize.\n    allow_absolute_path (bool, optional): Whether to allow absolute paths. Default is False.\n    error_text (str, optional): The error message to display if an absolute path is detected. Default is \"Absolute database path detected\".\n    exception_text (str, optional): The exception message to display if a path traversal, command injection, or unauthorized character is detected. Default is \"Detected an attempt of path traversal or command injection. Are you kidding me?\"."
+      },
+      {
+        "kind": "docstring",
+        "line": 29,
+        "path": "lollms/security.py",
+        "text": "Raises:\n    ------\n    HTTPException: If an absolute path, path traversal, command injection, or unauthorized character is detected."
+      },
+      {
+        "kind": "docstring",
+        "line": 29,
+        "path": "lollms/security.py",
+        "text": "Note:\n    -----\n    This function checks for patterns like \"....\", multiple forward slashes, and command injection attempts like $(whoami). It also checks for unauthorized punctuation characters, excluding the dot (.) character."
+      },
+      {
+        "kind": "comment",
+        "line": 61,
+        "path": "lollms/security.py",
+        "text": "# Regular expression to detect patterns like \"....\", multiple forward slashes, and command injection attempts like $(whoami)"
+      }
+    ]
+  },
+  "slice": {
+    "lollms/security.py": [
+      "check_access",
+      "sanitize_path"
+    ],
+    "lollms/server/endpoints/lollms_file_system.py": [
+      "router",
+      "lollmsElfServer",
+      "FolderInfos",
+      "vectorize_folder"
+    ]
+  },
+  "spec_sha256": "a01dc37f895d63fddc07e1ff65fc6af2ba5f4545624aa28fa24ce33428490e28",
+  "totals": {
+    "clean": {
+      "approx_tokens": 2080,
+      "bytes": 7278
+    },
+    "regressed": {
+      "approx_tokens": 2078,
+      "bytes": 7270
+    }
+  },
+  "vulnerability_class": "path-traversal"
+}

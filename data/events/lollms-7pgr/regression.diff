@@ -1,0 +1,20 @@
+--- a/lollms/server/endpoints/lollms_file_system.py
++++ b/lollms/server/endpoints/lollms_file_system.py
+@@ -14,7 +14,7 @@
+ from lollms.server.elf_server import LOLLMSElfServer
+ from fastapi.responses import FileResponse
+ from lollms.binding import BindingBuilder, InstallOption
+-from lollms.security import sanitize_path
++from lollms.security import sanitize_path_from_endpoint
+ from ascii_colors import ASCIIColors
+ from lollms.utilities import load_config, trace_exception, gc, PackageManager, run_async
+ from pathlib import Path
+@@ -44,7 +44,7 @@
+         if "::" in database_infos.db_path:
+             parts = database_infos.db_path.split("::")
+             db_name = parts[0]
+-            folder_path = sanitize_path(parts[1], True) 
++            folder_path = parts[1]
+         else:
+             import tkinter as tk
+             from tkinter import simpledialog, filedialog

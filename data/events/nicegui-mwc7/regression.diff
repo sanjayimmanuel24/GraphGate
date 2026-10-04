@@ -1,0 +1,13 @@
+--- a/nicegui/nicegui.py
++++ b/nicegui/nicegui.py
+@@ -63,10 +63,6 @@
+ def _get_resource(key: str, path: str) -> FileResponse:
+     if key in resources:
+         filepath = resources[key].path / path
+-        try:
+-            filepath.resolve().relative_to(resources[key].path.resolve())  # NOTE: use is_relative_to() in Python 3.9
+-        except ValueError as e:
+-            raise HTTPException(status_code=403, detail='forbidden') from e
+         if filepath.exists():
+             headers = {'Cache-Control': 'public, max-age=3600'}
+             media_type, _ = mimetypes.guess_type(filepath)

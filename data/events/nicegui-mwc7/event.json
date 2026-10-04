@@ -1,0 +1,159 @@
+{
+  "advisories": [
+    "GHSA-mwc7-64wg-pgvj"
+  ],
+  "checks": [
+    {
+      "detail": "regressed commit is an ancestor of the clean commit",
+      "name": "commits",
+      "status": "ok"
+    },
+    {
+      "detail": "every requested symbol exists in at least one variant",
+      "name": "symbols-found",
+      "status": "ok"
+    },
+    {
+      "detail": "entry and sinks exist in both variants, guards in the clean one",
+      "name": "flow-present",
+      "status": "ok"
+    },
+    {
+      "detail": "files changed by the regression: nicegui/nicegui.py",
+      "name": "regression-nonempty",
+      "status": "ok"
+    },
+    {
+      "detail": "every slice file parses",
+      "name": "parses",
+      "status": "ok"
+    },
+    {
+      "detail": "clean slice is 4830 bytes (soft limit 24576, hard limit 49152)",
+      "name": "size",
+      "status": "ok"
+    },
+    {
+      "detail": "nothing referenced was cut",
+      "name": "dropped-references",
+      "status": "ok"
+    },
+    {
+      "detail": "no string literal uses security wording",
+      "name": "flagged-strings",
+      "status": "ok"
+    }
+  ],
+  "clean_commit": "ed12eb14f2a6c48b388a05c04b3c5a107ea9d330",
+  "event_id": "nicegui-mwc7",
+  "files": {
+    "nicegui/nicegui.py": {
+      "clean": {
+        "approx_tokens": 1380,
+        "bytes": 4830,
+        "dropped_references": [],
+        "kept": [
+          "Client",
+          "_get_component",
+          "_get_library",
+          "_get_resource",
+          "_lifespan",
+          "_shutdown",
+          "_startup",
+          "app",
+          "sio"
+        ],
+        "lines": 113,
+        "missing": [],
+        "original_lines": 200,
+        "syntax_error": null
+      },
+      "regressed": {
+        "approx_tokens": 1312,
+        "bytes": 4591,
+        "dropped_references": [],
+        "kept": [
+          "Client",
+          "_get_component",
+          "_get_library",
+          "_get_resource",
+          "_lifespan",
+          "_shutdown",
+          "_startup",
+          "app",
+          "sio"
+        ],
+        "lines": 109,
+        "missing": [],
+        "original_lines": 196,
+        "syntax_error": null
+      }
+    }
+  },
+  "flagged_strings": {
+    "clean": [],
+    "regressed": []
+  },
+  "flow": {
+    "entry": [
+      {
+        "kind": "http-request",
+        "note": "FastAPI route GET /_nicegui/{version}/resources/{key}/{path:path}; the path parameter is request-controlled and may contain '..' segments",
+        "symbol": "nicegui/nicegui.py::_get_resource"
+      }
+    ],
+    "guards": [
+      {
+        "note": "filepath.resolve().relative_to(resources[key].path.resolve()) with HTTPException(403) on ValueError keeps the joined path inside the registered resource directory",
+        "symbol": "nicegui/nicegui.py::_get_resource"
+      }
+    ],
+    "sinks": [
+      {
+        "kind": "filesystem",
+        "note": "FileResponse(filepath) on filepath = resources[key].path / path after only an exists() check",
+        "symbol": "nicegui/nicegui.py::_get_resource"
+      }
+    ]
+  },
+  "flow_files": [
+    "nicegui/nicegui.py"
+  ],
+  "notes": "Single-function flow (entry, guard and sink all in nicegui/nicegui.py::_get_resource). The resource base directory comes from dependencies.register_resource (called by Element.add_resource, e.g. the leaflet element) and is trusted; only the {path:path} URL segment is request-controlled. _get_library and _get_component are sibling route handlers unchanged by the fix; app, sio, Client (auto_index_client assignment), _lifespan, _startup and _shutdown are kept so every name the slice references is defined. Fix is complete for this route (both sides resolved before relative_to).",
+  "regressed_commit": "7c3e01af16dc5166814410c4a609db3ddc1a4cc5",
+  "regression_files": [
+    "nicegui/nicegui.py"
+  ],
+  "repo": "zauberzeug/nicegui",
+  "schema_version": 1,
+  "scope": "local",
+  "scrubbed": {
+    "clean": [],
+    "regressed": []
+  },
+  "slice": {
+    "nicegui/nicegui.py": [
+      "_lifespan",
+      "_startup",
+      "_shutdown",
+      "app",
+      "sio",
+      "Client",
+      "_get_library",
+      "_get_component",
+      "_get_resource"
+    ]
+  },
+  "spec_sha256": "431cc2c744dfb3f95da914f143a76a57f5497653f9f145975e8bd3b02d4008de",
+  "totals": {
+    "clean": {
+      "approx_tokens": 1380,
+      "bytes": 4830
+    },
+    "regressed": {
+      "approx_tokens": 1312,
+      "bytes": 4591
+    }
+  },
+  "vulnerability_class": "path-traversal"
+}

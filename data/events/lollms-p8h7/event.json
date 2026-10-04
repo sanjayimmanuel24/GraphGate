@@ -1,0 +1,231 @@
+{
+  "advisories": [
+    "GHSA-p8h7-c8gw-6x8c",
+    "GHSA-vqwr-q6cc-c242"
+  ],
+  "checks": [
+    {
+      "detail": "regressed commit is an ancestor of the clean commit",
+      "name": "commits",
+      "status": "ok"
+    },
+    {
+      "detail": "every requested symbol exists in at least one variant",
+      "name": "symbols-found",
+      "status": "ok"
+    },
+    {
+      "detail": "entry and sinks exist in both variants, guards in the clean one",
+      "name": "flow-present",
+      "status": "ok"
+    },
+    {
+      "detail": "files changed by the regression: lollms/security.py",
+      "name": "regression-nonempty",
+      "status": "ok"
+    },
+    {
+      "detail": "every slice file parses",
+      "name": "parses",
+      "status": "ok"
+    },
+    {
+      "detail": "clean slice is 3727 bytes (soft limit 24576, hard limit 49152)",
+      "name": "size",
+      "status": "ok"
+    },
+    {
+      "detail": "nothing referenced was cut",
+      "name": "dropped-references",
+      "status": "ok"
+    },
+    {
+      "detail": "string literals with security wording (kept, review them): lollms/security.py:13",
+      "name": "flagged-strings",
+      "status": "warn"
+    }
+  ],
+  "clean_commit": "95ad36eeffc6a6be3e3f35ed35a384d768f0ecf6",
+  "event_id": "lollms-p8h7",
+  "files": {
+    "lollms/security.py": {
+      "clean": {
+        "approx_tokens": 381,
+        "bytes": 1331,
+        "dropped_references": [],
+        "kept": [
+          "sanitize_path_from_endpoint"
+        ],
+        "lines": 41,
+        "missing": [],
+        "original_lines": 239,
+        "syntax_error": null
+      },
+      "regressed": {
+        "approx_tokens": 460,
+        "bytes": 1608,
+        "dropped_references": [],
+        "kept": [
+          "sanitize_path_from_endpoint"
+        ],
+        "lines": 45,
+        "missing": [],
+        "original_lines": 236,
+        "syntax_error": null
+      }
+    },
+    "lollms/server/endpoints/lollms_binding_files_server.py": {
+      "clean": {
+        "approx_tokens": 685,
+        "bytes": 2396,
+        "dropped_references": [],
+        "kept": [
+          "lollmsElfServer",
+          "router",
+          "serve_personalities",
+          "serve_user_infos"
+        ],
+        "lines": 71,
+        "missing": [],
+        "original_lines": 279,
+        "syntax_error": null
+      },
+      "regressed": {
+        "approx_tokens": 685,
+        "bytes": 2396,
+        "dropped_references": [],
+        "kept": [
+          "lollmsElfServer",
+          "router",
+          "serve_personalities",
+          "serve_user_infos"
+        ],
+        "lines": 71,
+        "missing": [],
+        "original_lines": 279,
+        "syntax_error": null
+      }
+    }
+  },
+  "flagged_strings": {
+    "clean": [
+      {
+        "kind": "string",
+        "line": 13,
+        "path": "lollms/security.py",
+        "text": "\"A suspected LFI attack detected. The path sent to the server has suspicious elements in it!\""
+      }
+    ],
+    "regressed": [
+      {
+        "kind": "string",
+        "line": 13,
+        "path": "lollms/security.py",
+        "text": "\"A suspected LFI attack detected. The path sent to the server has suspicious elements in it!\""
+      }
+    ]
+  },
+  "flow": {
+    "entry": [
+      {
+        "kind": "http-request",
+        "note": "GET /user_infos/{path:path}; the URL path segment `path` (e.g. \\windows\\win.ini, URL-encoded %5Cwindows%5Cwin.ini) goes through sanitize_path_from_endpoint and its return value is used (GHSA-p8h7 / CVE-2024-4881)",
+        "symbol": "lollms/server/endpoints/lollms_binding_files_server.py::serve_user_infos"
+      },
+      {
+        "kind": "http-request",
+        "note": "GET /personalities/{path:path}; same pattern, the route named by GHSA-vqwr / CVE-2024-4315",
+        "symbol": "lollms/server/endpoints/lollms_binding_files_server.py::serve_personalities"
+      }
+    ],
+    "guards": [
+      {
+        "note": "the clean version runs path.replace('\\\\', '/') before the startswith('/') check, so the root-relative Windows path \\windows\\win.ini becomes /windows/win.ini and is rejected with HTTP 400. The regressed version never normalises backslashes: \\windows\\win.ini has no leading '/', no '..', no blocklisted character, and on Windows Path(...).is_absolute() is False (no drive), so it is returned unchanged",
+        "symbol": "lollms/security.py::sanitize_path_from_endpoint"
+      }
+    ],
+    "sinks": [
+      {
+        "kind": "filesystem",
+        "note": "file_path = personal_user_infos_path / path; on Windows pathlib resets a root-relative component to the drive root (C:\\windows\\win.ini), then file_path.exists() and FileResponse(str(file_path)) serve the arbitrary file",
+        "symbol": "lollms/server/endpoints/lollms_binding_files_server.py::serve_user_infos"
+      },
+      {
+        "kind": "filesystem",
+        "note": "file_path = personalities_zoo_path / path (the non-custom branch), then FileResponse(str(file_path)); same drive-root reset on Windows",
+        "symbol": "lollms/server/endpoints/lollms_binding_files_server.py::serve_personalities"
+      }
+    ]
+  },
+  "flow_files": [
+    "lollms/security.py",
+    "lollms/server/endpoints/lollms_binding_files_server.py"
+  ],
+  "notes": "Reviewed at 2.3 (2026-09-29). One event for two advisories: GHSA-p8h7 (CVE-2024-4881, /user_infos) and GHSA-vqwr (CVE-2024-4315, /personalities, plus /del_preset which lives in the separate lollms-webui repo and is out of scope) report the same root cause, sanitize_path_from_endpoint not normalising Windows backslashes, reached through different routes of lollms_binding_files_server.py. That is one flaw in one shared sanitizer, with parallel entry/sink routes; both named in-repo routes are modelled as entries/sinks, closed by the single guard hunk. Verified concretely by importing the built security.py slices (fastapi/ascii_colors stubbed) on Windows: regressed returns \\windows\\win.ini unchanged and Path('C:/Users/u/personal/user_infos') / it == C:\\windows\\win.ini; clean rejects it (Invalid path!). UNC input (\\\\host\\share) is already rejected at the regressed commit (is_absolute True), so the fix's effect is specifically the drive-root-relative form. Platform caveat: the flow is exploitable only on Windows; on POSIX a backslash is an ordinary filename character and no traversal results. Static gates see the same code either way. Class path-traversal (CWE-22/CWE-36). Scope cross_file: entry and sink in lollms_binding_files_server.py, guard in lollms/security.py (the only file the fix changes). Regression diff also contains two real fix-commit hunks that are not the guard: the error branch's ASCIIColors.error(error_text) + detail=exception_text (regressed) vs detail=error_text (clean), and docstring text: the fix rewrote the summary paragraph (clean summary scrubbed for 'directory traversal attacks') and deleted the 'Note' paragraph, so the regressed docstring keeps two paragraphs the clean one lacks. The fix's second hunk, in sanitize_path (normalisation added after that function's startswith('/') check, ineffective until bbabf14), is outside the slice and does not appear in regression.diff. Flagged string kept (real behaviour): the default error_text 'A suspected LFI attack detected...' in sanitize_path_from_endpoint's signature, present at both commits. Other serve_* routes (bindings, extensions, etc.) share the same pattern and are cut to keep the slice small.",
+  "regressed_commit": "41577f470d46743616f2379fa114c40baf1b605e",
+  "regression_files": [
+    "lollms/security.py"
+  ],
+  "repo": "parisneo/lollms_legacy",
+  "schema_version": 1,
+  "scope": "cross_file",
+  "scrubbed": {
+    "clean": [
+      {
+        "kind": "docstring",
+        "line": 14,
+        "path": "lollms/security.py",
+        "text": "Sanitize a given file path from an endpoint by checking for potentially dangerous patterns and unauthorized characters,\n    and standardizing path separators to prevent directory traversal attacks."
+      },
+      {
+        "kind": "docstring",
+        "line": 14,
+        "path": "lollms/security.py",
+        "text": "Args:\n    -----\n    path (str): The file path to sanitize.\n    error_text (str, optional): Error message to display if a path traversal or unauthorized character is detected. Default is a warning about a suspected LFI attack.\n    exception_text (str, optional): Exception message to display if an absolute path or invalid character is detected. Default is \"Invalid path!\"."
+      },
+      {
+        "kind": "docstring",
+        "line": 14,
+        "path": "lollms/security.py",
+        "text": "Raises:\n    ------\n    HTTPException: If an absolute path, path traversal, or unauthorized character is detected."
+      }
+    ],
+    "regressed": [
+      {
+        "kind": "docstring",
+        "line": 14,
+        "path": "lollms/security.py",
+        "text": "Args:\n    -----\n    path (str): The file path to sanitize.\n    error_text (str, optional): The error message to display if a path traversal or unauthorized character is detected. Default is \"A suspected LFI attack detected. The path sent to the server has suspicious elements in it!\".\n    exception_text (str, optional): The exception message to display if an absolute path or invalid character is detected. Default is \"Invalid path!\"."
+      },
+      {
+        "kind": "docstring",
+        "line": 14,
+        "path": "lollms/security.py",
+        "text": "Raises:\n    ------\n    HTTPException: If an absolute path, path traversal, or unauthorized character is detected."
+      }
+    ]
+  },
+  "slice": {
+    "lollms/security.py": [
+      "sanitize_path_from_endpoint"
+    ],
+    "lollms/server/endpoints/lollms_binding_files_server.py": [
+      "router",
+      "lollmsElfServer",
+      "serve_user_infos",
+      "serve_personalities"
+    ]
+  },
+  "spec_sha256": "45c87f8f22620d17cd98943c527671bc99d9d1dd55d3056a53ab0c6555dc832f",
+  "totals": {
+    "clean": {
+      "approx_tokens": 1066,
+      "bytes": 3727
+    },
+    "regressed": {
+      "approx_tokens": 1145,
+      "bytes": 4004
+    }
+  },
+  "vulnerability_class": "path-traversal"
+}

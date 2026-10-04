@@ -1,0 +1,283 @@
+{
+  "advisories": [
+    "GHSA-956x-8gvw-wg5v"
+  ],
+  "checks": [
+    {
+      "detail": "regressed commit is an ancestor of the clean commit",
+      "name": "commits",
+      "status": "ok"
+    },
+    {
+      "detail": "every requested symbol exists in at least one variant",
+      "name": "symbols-found",
+      "status": "ok"
+    },
+    {
+      "detail": "entry and sinks exist in both variants, guards in the clean one",
+      "name": "flow-present",
+      "status": "ok"
+    },
+    {
+      "detail": "files changed by the regression: git/cmd.py, git/repo/base.py",
+      "name": "regression-nonempty",
+      "status": "ok"
+    },
+    {
+      "detail": "every slice file parses",
+      "name": "parses",
+      "status": "ok"
+    },
+    {
+      "detail": "clean slice is 20044 bytes (soft limit 24576, hard limit 49152)",
+      "name": "size",
+      "status": "ok"
+    },
+    {
+      "detail": "referenced but cut: git/cmd.py::Git.execute, git/cmd.py::_AutoInterrupt, git/cmd.py::_CatFileContentStream, git/cmd.py::_GitMeta",
+      "name": "dropped-references",
+      "status": "warn"
+    },
+    {
+      "detail": "no string literal uses security wording",
+      "name": "flagged-strings",
+      "status": "ok"
+    }
+  ],
+  "clean_commit": "701ce32fe5ba8cb622c0e0342a376a6beb47d738",
+  "event_id": "gitpython-956x",
+  "files": {
+    "git/cmd.py": {
+      "clean": {
+        "approx_tokens": 3989,
+        "bytes": 13959,
+        "dropped_references": [
+          "Git.execute",
+          "_AutoInterrupt",
+          "_CatFileContentStream",
+          "_GitMeta"
+        ],
+        "kept": [
+          "Git.__getattr__",
+          "Git._call_process",
+          "Git._canonicalize_option_name",
+          "Git._option_candidates",
+          "Git._unpack_args",
+          "Git.check_unsafe_options",
+          "Git.check_unsafe_protocols",
+          "Git.transform_kwarg",
+          "Git.transform_kwargs",
+          "dashify",
+          "execute_kwargs"
+        ],
+        "lines": 393,
+        "missing": [],
+        "original_lines": 1869,
+        "syntax_error": null
+      },
+      "regressed": {
+        "approx_tokens": 3751,
+        "bytes": 13127,
+        "dropped_references": [
+          "Git.execute",
+          "_AutoInterrupt",
+          "_CatFileContentStream",
+          "_GitMeta"
+        ],
+        "kept": [
+          "Git.__getattr__",
+          "Git._call_process",
+          "Git._canonicalize_option_name",
+          "Git._unpack_args",
+          "Git.check_unsafe_options",
+          "Git.check_unsafe_protocols",
+          "Git.transform_kwarg",
+          "Git.transform_kwargs",
+          "dashify",
+          "execute_kwargs"
+        ],
+        "lines": 375,
+        "missing": [
+          "Git._option_candidates"
+        ],
+        "original_lines": 1834,
+        "syntax_error": null
+      }
+    },
+    "git/repo/base.py": {
+      "clean": {
+        "approx_tokens": 1739,
+        "bytes": 6085,
+        "dropped_references": [],
+        "kept": [
+          "Repo.archive",
+          "Repo.head"
+        ],
+        "lines": 218,
+        "missing": [],
+        "original_lines": 1730,
+        "syntax_error": null
+      },
+      "regressed": {
+        "approx_tokens": 1479,
+        "bytes": 5175,
+        "dropped_references": [],
+        "kept": [
+          "Repo.archive",
+          "Repo.head"
+        ],
+        "lines": 190,
+        "missing": [],
+        "original_lines": 1664,
+        "syntax_error": null
+      }
+    }
+  },
+  "flagged_strings": {
+    "clean": [],
+    "regressed": []
+  },
+  "flow": {
+    "entry": [
+      {
+        "kind": "library-api",
+        "note": "the caller's **kwargs (e.g. remote='.', exec='<cmd>') are passed unchanged into self.git.archive('--', treeish, *path, **kwargs)",
+        "symbol": "git/repo/base.py::Repo.archive"
+      }
+    ],
+    "guards": [
+      {
+        "note": "clean only: unless allow_unsafe_options=True, Git.check_unsafe_options(Git._option_candidates([], kwargs), self.unsafe_git_archive_options) rejects --exec/--output/-o and their abbreviations (exe=) before git runs. Unless allow_unsafe_protocols=True, the remote kwarg also goes through Git.check_unsafe_protocols (ext::...)",
+        "symbol": "git/repo/base.py::Repo.archive"
+      },
+      {
+        "note": "new in the fix: maps the kwargs to the option spellings git will receive (exec -> --exec, o -> -o). check_unsafe_options compares these spellings with the blocked list",
+        "symbol": "git/cmd.py::Git._option_candidates"
+      }
+    ],
+    "sinks": [
+      {
+        "kind": "subprocess",
+        "note": "transform_kwargs/transform_kwarg turn exec='<cmd>' into '--exec=<cmd>', placed before '--'. execute() then calls safer_popen on ['git', 'archive', '--remote=.', '--exec=<cmd>', '--', <treeish>], and git runs <cmd> as the upload-archive helper",
+        "symbol": "git/cmd.py::Git._call_process",
+        "true_symbol": "git/cmd.py::Git.execute"
+      }
+    ]
+  },
+  "flow_files": [
+    "git/cmd.py",
+    "git/repo/base.py"
+  ],
+  "notes": "Reviewed at 2.3 (second pass); re-reviewed 2026-09-29 (third pass), structure kept: rebuilt with no FAIL, the extracted-code check was re-run at both commits (regressed passes exec=/exe=/output=/o=/remote=ext::..., clean blocks all five, benign format=/prefix=/remote=origin pass at both), and real git 2.55.0.windows.3 again created the marker for git archive --remote=. --exec=<cmd>. Flow chosen: Repo.archive with --exec. This is the advisory's PoC 1: repo.archive(stream, **{'remote': '.', 'exec': cmd}) runs cmd. Hops in the regressed slice: Repo.archive -> self.git.archive(...) -> Git.__getattr__ (a lambda wrapping _call_process) -> Git._call_process -> transform_kwargs/transform_kwarg ('--exec=<cmd>', placed before '--') -> self.execute(call) -> safer_popen. Git.execute is ~16 KB (348 lines), so it is recorded only as true_symbol. Repo.__init__ (~7 KB, where self.git = self.GitCommandWrapperType(...) is set) is left out; the class attributes git = cast('Git', None) and GitCommandWrapperType = Git show the receiver type. Repo.head (191 B) is kept because archive uses it for the default treeish. Verified concretely: Repo.archive and the Git methods on the path were extracted from each commit and run with Git.execute stubbed. At 65a72839, exec='touch M' with remote='.' produces argv ['git', 'archive', '--remote=.', '--exec=touch M', '--', 'HEAD'], and exe=, output= and o= also pass unchecked. At 701ce32f, exec= and exe= raise UnsafeOptionError ('--exec is not allowed'), output= and o= raise UnsafeOptionError, and remote='ext::...' raises UnsafeProtocolError. Benign format=/prefix= and remote='origin' still pass, and allow_unsafe_options=True still reaches git. Running that argv with real git 2.55.0.windows.3 on a fresh local repo, with protocol.ext.allow unset, created the marker file; git exits 128 afterwards, as in the advisory's PoC. Class 'command': caller data becomes git options (argument injection, CWE-88, a child of CWE-77; advisory CWE-77/88), and the effect is that git starts a program. Sibling events with the same mechanism but CWE-78 advisories (gitpython-2f96, -r9mr, -pr76, -6p8h) are labelled os-command; see the concerns in the 2.3 dossier. The fix covers parallel flows left out of this slice. (1) git.ls_remote(upload_pack=...): at the regressed commit it goes through dynamic __getattr__, and the new Git.ls_remote exists only at the clean commit, so it cannot be a flow symbol present at both commits. (2) A rev such as '--output=<file>' in Repo.iter_commits/Commit.iter_items/Repo.blame(_incremental), which truncates a file rather than running a command. (3) Remote.fetch/pull/push and Repo._clone now use _option_candidates instead of kwargs.keys(). The class-level lists for (1) and (2) (Git.unsafe_git_ls_remote_options, Repo.unsafe_git_revision_options) and the _unpack_args type hint (Sequence[str] -> Sequence[Any]) still show in regression.diff, because class-level assignments are always kept. They are part of the real fix, but nothing in the slice uses them. Accepted dropped references: Git.execute (true sink, too large), _AutoInterrupt/_CatFileContentStream (TypeAlias targets), _GitMeta (metaclass). None is on the flow. Later advisories harden archive further (GHSA-539m-9xh6-q6rr: --add-file/--add-virtual-file, 7a4f5dcb), but 701ce32 closes the --exec flow chosen here. Known-incomplete fix, verified the same way: at 701ce32f, archive(stream, remote='.', v='--exec=<cmd>') passes the guard. _option_candidates emits only '-v' for a one-letter kwarg, and transform_kwarg splits it into ['-v', '--exec=<cmd>']; real git parsed the second token as --exec and created the marker. That residual bypass is GHSA-r9mr-m37c-5fr3 (e8d0fbf7, event gitpython-r9mr). The modelled flow, the plain exec= kwarg from the advisory's PoC, is closed by the clean commit. As in gitpython-2f96, the tainted datum is a kwarg key (the option name) as well as its value. Scrubber gap (model-visible, clean only): the comment '# Writes output to a caller-controlled filesystem path.' inside the class-level Repo.unsafe_git_archive_options list survives, because it lacks the wording the scrubber matches; its sibling comments were stripped. It cannot be removed from spec.json because class-level assignments are always kept. The word 'unsafe' in identifiers, parameters and their docstrings (allow_unsafe_options, check_unsafe_options, UnsafeOptionError) and the 'looks suspicious' error message are the library's real API and behaviour, so they stay.",
+  "regressed_commit": "65a72839c92768754bd51a37381235842a5ae0d8",
+  "regression_files": [
+    "git/cmd.py",
+    "git/repo/base.py"
+  ],
+  "repo": "gitpython-developers/gitpython",
+  "schema_version": 1,
+  "scope": "cross_file",
+  "scrubbed": {
+    "clean": [
+      {
+        "kind": "comment",
+        "line": 123,
+        "path": "git/cmd.py",
+        "text": "# This option allows arbitrary command execution in git-ls-remote."
+      },
+      {
+        "kind": "docstring",
+        "line": 142,
+        "path": "git/cmd.py",
+        "text": "Apart from the usual protocols (http, git, ssh), Git allows \"remote helpers\"\n        that have the form ``<transport>::<address>``. One of these helpers (``ext::``)\n        can be used to invoke any arbitrary command."
+      },
+      {
+        "kind": "docstring",
+        "line": 177,
+        "path": "git/cmd.py",
+        "text": "Some options passed to ``git <command>`` can execute arbitrary commands and\n        are therefore blocked by default unless the caller explicitly allows them."
+      },
+      {
+        "kind": "comment",
+        "line": 124,
+        "path": "git/repo/base.py",
+        "text": "# Executes arbitrary commands:"
+      },
+      {
+        "kind": "comment",
+        "line": 127,
+        "path": "git/repo/base.py",
+        "text": "# Can override configuration variables that execute arbitrary commands:"
+      },
+      {
+        "kind": "comment",
+        "line": 133,
+        "path": "git/repo/base.py",
+        "text": "# Allows arbitrary command execution through the remote git-upload-archive command."
+      },
+      {
+        "kind": "comment",
+        "line": 141,
+        "path": "git/repo/base.py",
+        "text": "# This option allows output to be written to arbitrary files before revision parsing."
+      }
+    ],
+    "regressed": [
+      {
+        "kind": "docstring",
+        "line": 137,
+        "path": "git/cmd.py",
+        "text": "Apart from the usual protocols (http, git, ssh), Git allows \"remote helpers\"\n        that have the form ``<transport>::<address>``. One of these helpers (``ext::``)\n        can be used to invoke any arbitrary command."
+      },
+      {
+        "kind": "docstring",
+        "line": 172,
+        "path": "git/cmd.py",
+        "text": "Some options passed to ``git <command>`` can execute arbitrary commands and\n        are therefore blocked by default unless the caller explicitly allows them."
+      },
+      {
+        "kind": "comment",
+        "line": 124,
+        "path": "git/repo/base.py",
+        "text": "# Executes arbitrary commands:"
+      },
+      {
+        "kind": "comment",
+        "line": 127,
+        "path": "git/repo/base.py",
+        "text": "# Can override configuration variables that execute arbitrary commands:"
+      }
+    ]
+  },
+  "slice": {
+    "git/cmd.py": [
+      "dashify",
+      "execute_kwargs",
+      "Git.check_unsafe_protocols",
+      "Git._canonicalize_option_name",
+      "Git.check_unsafe_options",
+      "Git._option_candidates",
+      "Git.__getattr__",
+      "Git.transform_kwarg",
+      "Git.transform_kwargs",
+      "Git._unpack_args",
+      "Git._call_process"
+    ],
+    "git/repo/base.py": [
+      "Repo.head",
+      "Repo.archive"
+    ]
+  },
+  "spec_sha256": "58ddadb6e77c35260013c6a6dda37b0c09313f1c8e54e68e582a246c1d57768f",
+  "totals": {
+    "clean": {
+      "approx_tokens": 5728,
+      "bytes": 20044
+    },
+    "regressed": {
+      "approx_tokens": 5230,
+      "bytes": 18302
+    }
+  },
+  "vulnerability_class": "command"
+}

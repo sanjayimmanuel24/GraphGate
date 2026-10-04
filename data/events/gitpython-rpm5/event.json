@@ -1,0 +1,266 @@
+{
+  "advisories": [
+    "GHSA-rpm5-65cw-6hj4"
+  ],
+  "checks": [
+    {
+      "detail": "regressed commit is an ancestor of the clean commit",
+      "name": "commits",
+      "status": "ok"
+    },
+    {
+      "detail": "every requested symbol exists in at least one variant",
+      "name": "symbols-found",
+      "status": "ok"
+    },
+    {
+      "detail": "entry and sinks exist in both variants, guards in the clean one",
+      "name": "flow-present",
+      "status": "ok"
+    },
+    {
+      "detail": "files changed by the regression: git/cmd.py",
+      "name": "regression-nonempty",
+      "status": "ok"
+    },
+    {
+      "detail": "every slice file parses",
+      "name": "parses",
+      "status": "ok"
+    },
+    {
+      "detail": "clean slice is 15258 bytes (soft limit 24576, hard limit 49152)",
+      "name": "size",
+      "status": "ok"
+    },
+    {
+      "detail": "referenced but cut: git/cmd.py::Git.execute, git/cmd.py::_AutoInterrupt, git/cmd.py::_CatFileContentStream, git/cmd.py::_GitMeta, git/remote.py::FetchInfo, git/remote.py::Remote._assert_refspec, git/remote.py::Remote._get_fetch_info_from_stderr",
+      "name": "dropped-references",
+      "status": "warn"
+    },
+    {
+      "detail": "no string literal uses security wording",
+      "name": "flagged-strings",
+      "status": "ok"
+    }
+  ],
+  "clean_commit": "142195888e713542189533a52cdfc333f05c3af6",
+  "event_id": "gitpython-rpm5",
+  "files": {
+    "git/cmd.py": {
+      "clean": {
+        "approx_tokens": 2649,
+        "bytes": 9269,
+        "dropped_references": [
+          "Git.execute",
+          "_AutoInterrupt",
+          "_CatFileContentStream",
+          "_GitMeta"
+        ],
+        "kept": [
+          "Git.__getattr__",
+          "Git._call_process",
+          "Git._canonicalize_option_name",
+          "Git._unpack_args",
+          "Git.check_unsafe_options",
+          "Git.transform_kwarg",
+          "Git.transform_kwargs",
+          "dashify",
+          "execute_kwargs"
+        ],
+        "lines": 303,
+        "missing": [],
+        "original_lines": 1754,
+        "syntax_error": null
+      },
+      "regressed": {
+        "approx_tokens": 2598,
+        "bytes": 9092,
+        "dropped_references": [
+          "Git.execute",
+          "_AutoInterrupt",
+          "_CatFileContentStream",
+          "_GitMeta"
+        ],
+        "kept": [
+          "Git.__getattr__",
+          "Git._call_process",
+          "Git._unpack_args",
+          "Git.check_unsafe_options",
+          "Git.transform_kwarg",
+          "Git.transform_kwargs",
+          "dashify",
+          "execute_kwargs"
+        ],
+        "lines": 298,
+        "missing": [
+          "Git._canonicalize_option_name"
+        ],
+        "original_lines": 1749,
+        "syntax_error": null
+      }
+    },
+    "git/remote.py": {
+      "clean": {
+        "approx_tokens": 1712,
+        "bytes": 5989,
+        "dropped_references": [
+          "FetchInfo",
+          "Remote._assert_refspec",
+          "Remote._get_fetch_info_from_stderr"
+        ],
+        "kept": [
+          "Remote.fetch",
+          "add_progress"
+        ],
+        "lines": 179,
+        "missing": [],
+        "original_lines": 1248,
+        "syntax_error": null
+      },
+      "regressed": {
+        "approx_tokens": 1712,
+        "bytes": 5989,
+        "dropped_references": [
+          "FetchInfo",
+          "Remote._assert_refspec",
+          "Remote._get_fetch_info_from_stderr"
+        ],
+        "kept": [
+          "Remote.fetch",
+          "add_progress"
+        ],
+        "lines": 179,
+        "missing": [],
+        "original_lines": 1248,
+        "syntax_error": null
+      }
+    }
+  },
+  "flagged_strings": {
+    "clean": [],
+    "regressed": []
+  },
+  "flow": {
+    "entry": [
+      {
+        "kind": "library-api",
+        "note": "the caller's **kwargs (keys and values) become git-fetch options; e.g. upload_pack=<program>. add_progress only adds progress=True, and the dict goes unchanged into self.repo.git.fetch('--', self, *args, ..., v=verbose, **kwargs)",
+        "symbol": "git/remote.py::Remote.fetch"
+      }
+    ],
+    "guards": [
+      {
+        "note": "Remote.fetch passes list(kwargs.keys()) with unsafe_git_fetch_options=['--upload-pack']. Clean: both sides are compared by canonical name, so the key upload_pack (canonical upload-pack) raises UnsafeOptionError before git runs. Regressed: the raw key is only compared with option.startswith('--upload-pack') or option == 'upload-pack', so upload_pack passes",
+        "symbol": "git/cmd.py::Git.check_unsafe_options"
+      },
+      {
+        "note": "new in the fix: strips leading dashes and any '=value' or ' value' part, then dashifies, so a kwarg key is compared in the same spelling transform_kwarg will later give it",
+        "symbol": "git/cmd.py::Git._canonicalize_option_name"
+      }
+    ],
+    "sinks": [
+      {
+        "kind": "subprocess",
+        "note": "self.repo.git.fetch(...) dispatches via Git.__getattr__ to _call_process; transform_kwargs/transform_kwarg dashify upload_pack=<program> into '--upload-pack=<program>' and self.execute(call) starts 'git fetch -v --upload-pack=<program> -- <remote>' (safer_popen/Popen inside Git.execute, too large for the slice); git runs the upload-pack value as a command",
+        "symbol": "git/cmd.py::Git._call_process",
+        "true_symbol": "git/cmd.py::Git.execute"
+      }
+    ]
+  },
+  "flow_files": [
+    "git/cmd.py",
+    "git/remote.py"
+  ],
+  "notes": "Reviewed 2026-09-29 (structure of the draft kept). Pair da545232 -> 142195888 is the core commit of PR #2131 (merge 0f68db07, released in 3.1.47); the regression diff touches only git/cmd.py (Git.check_unsafe_options and the new Git._canonicalize_option_name). The PR's other commits are 9aed7cf8 (lint only) and 43d92dec (makes _canonicalize_option_name return '' for an empty/whitespace-only token instead of raising IndexError: a crash, not a bypass, so not needed to close this flow). Class: os-command (advisory CWE-78); the mechanism is argument injection into git's argv, but --upload-pack makes git run the caller-supplied value as a program. Verified from the code at both commits: regressed check compares the raw key 'upload_pack' with startswith('--upload-pack') / == 'upload-pack', so it passes; clean canonicalizes both sides to 'upload-pack' and raises UnsafeOptionError; transform_kwarg('upload_pack', prog) yields '--upload-pack=prog' at both commits. Parallel flows closed by the same change but not modelled: Remote.pull (upload_pack), Remote.push (receive_pack), Repo._clone/clone_from/clone in git/repo/base.py (upload_pack). Known-incomplete fix: the clean commit still admits long-option prefix abbreviations (upload_p -> --upload-p, GHSA-2f96, event gitpython-2f96) and, by dropping the old startswith check, reopens joined short options (-u<prog>, -c...) for clone (GHSA-v396); neither affects the modelled fetch/upload_pack flow, which the clean commit closes. The tainted datum is a kwarg KEY (option name) as well as its value; value-only taint engines may miss it. Accepted dropped references: Git.execute (true sink, recorded as true_symbol; ~16 KB with overloads), _AutoInterrupt/_CatFileContentStream (targets of class-level TypeAlias assignments, not on the flow), _GitMeta (metaclass), FetchInfo (return annotation only), Remote._assert_refspec (only runs when refspec is None, config check), Remote._get_fetch_info_from_stderr (parses git output after the process has started, downstream of the sink). Git.check_unsafe_protocols is called by fetch on the refspec (URL handling, not the kwarg flow) and is cut.",
+  "regressed_commit": "da545232d0401fb9fb7660f9ff67991996674dda",
+  "regression_files": [
+    "git/cmd.py"
+  ],
+  "repo": "gitpython-developers/gitpython",
+  "schema_version": 1,
+  "scope": "cross_file",
+  "scrubbed": {
+    "clean": [
+      {
+        "kind": "docstring",
+        "line": 143,
+        "path": "git/cmd.py",
+        "text": "Some options that are passed to ``git <command>`` can be used to execute\n        arbitrary commands. These are blocked by default."
+      },
+      {
+        "kind": "comment",
+        "line": 85,
+        "path": "git/remote.py",
+        "text": "# This option allows users to execute arbitrary commands."
+      },
+      {
+        "kind": "comment",
+        "line": 90,
+        "path": "git/remote.py",
+        "text": "# This option allows users to execute arbitrary commands."
+      },
+      {
+        "kind": "comment",
+        "line": 95,
+        "path": "git/remote.py",
+        "text": "# This option allows users to execute arbitrary commands."
+      }
+    ],
+    "regressed": [
+      {
+        "kind": "docstring",
+        "line": 137,
+        "path": "git/cmd.py",
+        "text": "Some options that are passed to ``git <command>`` can be used to execute\n        arbitrary commands. These are blocked by default."
+      },
+      {
+        "kind": "comment",
+        "line": 85,
+        "path": "git/remote.py",
+        "text": "# This option allows users to execute arbitrary commands."
+      },
+      {
+        "kind": "comment",
+        "line": 90,
+        "path": "git/remote.py",
+        "text": "# This option allows users to execute arbitrary commands."
+      },
+      {
+        "kind": "comment",
+        "line": 95,
+        "path": "git/remote.py",
+        "text": "# This option allows users to execute arbitrary commands."
+      }
+    ]
+  },
+  "slice": {
+    "git/cmd.py": [
+      "execute_kwargs",
+      "dashify",
+      "Git._canonicalize_option_name",
+      "Git.check_unsafe_options",
+      "Git.__getattr__",
+      "Git.transform_kwarg",
+      "Git.transform_kwargs",
+      "Git._unpack_args",
+      "Git._call_process"
+    ],
+    "git/remote.py": [
+      "add_progress",
+      "Remote.fetch"
+    ]
+  },
+  "spec_sha256": "59e84525f1db49da14c8e5ad1bab205f237a4e112a040ccb59acc5a5052ad150",
+  "totals": {
+    "clean": {
+      "approx_tokens": 4361,
+      "bytes": 15258
+    },
+    "regressed": {
+      "approx_tokens": 4310,
+      "bytes": 15081
+    }
+  },
+  "vulnerability_class": "os-command"
+}

@@ -1,0 +1,216 @@
+{
+  "advisories": [
+    "GHSA-hmq2-w58f-27jc"
+  ],
+  "checks": [
+    {
+      "detail": "regressed commit is an ancestor of the clean commit",
+      "name": "commits",
+      "status": "ok"
+    },
+    {
+      "detail": "every requested symbol exists in at least one variant",
+      "name": "symbols-found",
+      "status": "ok"
+    },
+    {
+      "detail": "entry and sinks exist in both variants, guards in the clean one",
+      "name": "flow-present",
+      "status": "ok"
+    },
+    {
+      "detail": "files changed by the regression: git/objects/submodule/base.py",
+      "name": "regression-nonempty",
+      "status": "ok"
+    },
+    {
+      "detail": "every slice file parses",
+      "name": "parses",
+      "status": "ok"
+    },
+    {
+      "detail": "clean slice is 24216 bytes (soft limit 24576, hard limit 49152)",
+      "name": "size",
+      "status": "ok"
+    },
+    {
+      "detail": "referenced but cut: git/objects/submodule/base.py::BEGIN, git/objects/submodule/base.py::CLONE, git/objects/submodule/base.py::END, git/objects/submodule/base.py::FETCH, git/objects/submodule/base.py::Submodule._config_parser, git/objects/submodule/base.py::Submodule._write_git_file_and_module_config, git/objects/submodule/base.py::Submodule.branch_name, git/objects/submodule/base.py::Submodule.branch_path, git/objects/submodule/base.py::Submodule.module, git/objects/submodule/base.py::Submodule.url, git/objects/submodule/base.py::UPDWKTREE, git/objects/submodule/base.py::UpdateProgress",
+      "name": "dropped-references",
+      "status": "warn"
+    },
+    {
+      "detail": "no string literal uses security wording",
+      "name": "flagged-strings",
+      "status": "ok"
+    }
+  ],
+  "clean_commit": "e4b8e7d026ca6abb4cf604f8e77093432ce23c06",
+  "event_id": "gitpython-hmq2",
+  "files": {
+    "git/objects/submodule/base.py": {
+      "clean": {
+        "approx_tokens": 6751,
+        "bytes": 23626,
+        "dropped_references": [
+          "BEGIN",
+          "CLONE",
+          "END",
+          "FETCH",
+          "Submodule._config_parser",
+          "Submodule._write_git_file_and_module_config",
+          "Submodule.branch_name",
+          "Submodule.branch_path",
+          "Submodule.module",
+          "Submodule.url",
+          "UPDWKTREE",
+          "UpdateProgress"
+        ],
+        "kept": [
+          "Submodule._clone_repo",
+          "Submodule._module_abspath",
+          "Submodule._need_gitfile_submodules",
+          "Submodule._validated_name",
+          "Submodule.iter_items",
+          "Submodule.name",
+          "Submodule.update",
+          "_logger"
+        ],
+        "lines": 603,
+        "missing": [],
+        "original_lines": 1704,
+        "syntax_error": null
+      },
+      "regressed": {
+        "approx_tokens": 6631,
+        "bytes": 23206,
+        "dropped_references": [
+          "BEGIN",
+          "CLONE",
+          "END",
+          "FETCH",
+          "Submodule._config_parser",
+          "Submodule._write_git_file_and_module_config",
+          "Submodule.branch_name",
+          "Submodule.branch_path",
+          "Submodule.module",
+          "Submodule.url",
+          "UPDWKTREE",
+          "UpdateProgress"
+        ],
+        "kept": [
+          "Submodule._clone_repo",
+          "Submodule._module_abspath",
+          "Submodule._need_gitfile_submodules",
+          "Submodule.iter_items",
+          "Submodule.name",
+          "Submodule.update",
+          "_logger"
+        ],
+        "lines": 589,
+        "missing": [
+          "Submodule._validated_name"
+        ],
+        "original_lines": 1683,
+        "syntax_error": null
+      }
+    },
+    "git/objects/submodule/util.py": {
+      "clean": {
+        "approx_tokens": 169,
+        "bytes": 590,
+        "dropped_references": [],
+        "kept": [
+          "sm_name"
+        ],
+        "lines": 25,
+        "missing": [],
+        "original_lines": 121,
+        "syntax_error": null
+      },
+      "regressed": {
+        "approx_tokens": 169,
+        "bytes": 590,
+        "dropped_references": [],
+        "kept": [
+          "sm_name"
+        ],
+        "lines": 25,
+        "missing": [],
+        "original_lines": 121,
+        "syntax_error": null
+      }
+    }
+  },
+  "flagged_strings": {
+    "clean": [],
+    "regressed": []
+  },
+  "flow": {
+    "entry": [
+      {
+        "kind": "file-content",
+        "note": "each [submodule \"<name>\"] section header of the cloned repository's .gitmodules (parser.sections()) is stripped by sm_name() and stored unchecked as sm._name, read back through the Submodule.name property",
+        "symbol": "git/objects/submodule/base.py::Submodule.iter_items"
+      }
+    ],
+    "guards": [
+      {
+        "note": "added by the fix: raises ValueError for an empty name, a name starting with / or \\, a drive-qualified name, or any '..' component under either separator",
+        "symbol": "git/objects/submodule/base.py::Submodule._validated_name"
+      },
+      {
+        "note": "the gitfile branch, the only place the name becomes a path (.git/modules/<name>), now joins cls._validated_name(name) instead of the raw name; covers both the clone and the reconnect branch of update",
+        "symbol": "git/objects/submodule/base.py::Submodule._module_abspath"
+      },
+      {
+        "note": "the fix also calls self._validated_name(self.name) first inside the try block, before module lookup, reconnect or clone",
+        "symbol": "git/objects/submodule/base.py::Submodule.update"
+      }
+    ],
+    "sinks": [
+      {
+        "kind": "filesystem",
+        "note": "module_abspath = _module_abspath(repo, path, name) = <git_dir>/modules/<name>, not normalised; os.makedirs(osp.dirname(module_abspath)) creates directories outside the repository, and separate_git_dir=module_abspath makes git.Repo.clone_from run git clone --separate-git-dir there (the option is not in unsafe_git_clone_options at either commit)",
+        "symbol": "git/objects/submodule/base.py::Submodule._clone_repo"
+      }
+    ]
+  },
+  "flow_files": [
+    "git/objects/submodule/base.py"
+  ],
+  "notes": "Written at 2.3, re-reviewed 2026-09-29 (flow, guards, sink and slice kept; re-checked with the functions extracted from each commit: the regressed name reaches os.makedirs and creates <parent-of-clone>/escaped, the clean _validated_name raises ValueError). Flow (regressed 6e61b1d3):an attacker-controlled repository's .gitmodules names a submodule '../../../../tmp/x/y' (the path entry must still name a real gitlink so iter_items yields it). Repo.submodules -> Submodule.list_items -> Submodule.iter_items: parser.sections() -> sm_name(sms) (util.py, only strips the 'submodule \"...\"' wrapper) -> sm._name. The caller runs sm.update(init=True) (or Repo.submodule_update -> RootModule.update -> sm.update). update: self.module() raises InvalidGitRepositoryError for a not-yet-cloned module -> module_abspath = self._module_abspath(self.repo, self.path, self.name) -> (no repository there) self._clone_repo(self.repo, url, self.path, self.name, ...) -> _clone_repo: _module_abspath -> osp.join(git_dir, 'modules', name) when git >= 1.7.5 (_need_gitfile_submodules) -> os.makedirs(osp.dirname(module_abspath)) and git clone --separate-git-dir=<module_abspath>, which creates a full repository at the escaped path (the advisory PoC and the fix's test reproduce this). Verified concretely at 2.3 (GitPython's gitdb dependency is not installed, so the real functions were extracted from each commit and exercised directly): sm_name('submodule \"../../../escaped/module\"') returns '../../../escaped/module'; the regressed _module_abspath returns <clone>/.git/modules/../../../escaped/module, which resolves to <parent-of-clone>/escaped/module; running _clone_repo's two sink operations on it (os.makedirs of the dirname, then git 2.55 clone -n --separate-git-dir=<that path>) created a repository (HEAD, config, hooks, ...) outside the clone; the clean _module_abspath raises ValueError for the same name, and the clean _validated_name rejects '..', '../m', 'a/../../m', '/abs/m', '\\m', 'C:m' and 'a\\..\\..\\m' while accepting 'module' and 'lib/sub'. Clean (e4b8e7d0): update calls self._validated_name(self.name) before anything else, and _module_abspath validates the name on the gitfile branch, so the ValueError is raised before any path is built; with keep_going=True the error is logged and nothing is cloned. Second path in the same slice: update's reconnect branch (osp.isdir(module_abspath) and git.Repo(module_abspath) succeed when a repository already exists at the escaped path) calls _write_git_file_and_module_config(checkout, module_abspath), which writes core.worktree into that outside repository's config; the same guards close it. The legacy branch of _module_abspath (git < 1.7.5) uses path, not name, so follow-up 4299c990 (validation moved ahead of the version branch) is not needed to close this flow. Parallel sites the fix also guards but the slice leaves out: add (caller-supplied name -> _clone_repo), move, remove, rename (new_name -> _module_abspath -> os.renames) and module(). Scope: entry, guards and sink all in git/objects/submodule/base.py -> local. The entry is iter_items because that is where the section name is read from the parser and bound to the submodule; sm_name is a pure string helper on the path (kept in the slice to show it does no checking), and the .gitmodules bytes are read by the generic GitConfigParser in git/config.py (opened via Submodule._config_parser / _sio_modules, also base.py). The 2.2 reviewers split on scope (confirm: local; refute: cross-file, treating util.py::sm_name as the source); this spec follows the confirm reading. The sink is _clone_repo because its os.makedirs(osp.dirname(module_abspath)) is the first dangerous call that receives the tainted path; the git clone subprocess itself runs through Repo.clone_from (git/repo/base.py) -> Git.execute (git/cmd.py), and a reader who records that as the true sink would label the event cross_file. Slice: Submodule.update alone is ~15.7 KB, so the clean slice (24.2 KB) keeps only the hops entry -> name -> update -> _clone_repo -> _module_abspath plus the guard. Accepted dropped references: UpdateProgress, BEGIN, END, CLONE, FETCH, UPDWKTREE (progress reporting in update); Submodule.branch_name, branch_path, url (properties update reads for checkout and remote setup, not the name); Submodule.module (only decides whether the clone branch runs); Submodule._config_parser (opens .gitmodules for iter_items, upstream of the entry); Submodule._write_git_file_and_module_config (second filesystem write after the clone / in the reconnect branch, downstream of the recorded sink). Clean-side caveat: at e4b8e7d0, update(recursive=True, keep_going=True) on a rejected name reaches 'if mrepo is not None' with mrepo unbound (UnboundLocalError); follow-up b324c831 fixes that and does not affect the guard.",
+  "regressed_commit": "6e61b1d3bdcd2d9b81bac4eb4d17c18b270e5787",
+  "regression_files": [
+    "git/objects/submodule/base.py"
+  ],
+  "repo": "gitpython-developers/gitpython",
+  "schema_version": 1,
+  "scope": "local",
+  "scrubbed": {
+    "clean": [],
+    "regressed": []
+  },
+  "slice": {
+    "git/objects/submodule/base.py": [
+      "_logger",
+      "Submodule._need_gitfile_submodules",
+      "Submodule.update",
+      "Submodule.name"
+    ],
+    "git/objects/submodule/util.py": [
+      "sm_name"
+    ]
+  },
+  "spec_sha256": "59d1f66d2210370874719238da63433eca2db695c8cd56c55e57cbe471963830",
+  "totals": {
+    "clean": {
+      "approx_tokens": 6920,
+      "bytes": 24216
+    },
+    "regressed": {
+      "approx_tokens": 6800,
+      "bytes": 23796
+    }
+  },
+  "vulnerability_class": "path-traversal"
+}

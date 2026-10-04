@@ -1,0 +1,40 @@
+{
+  "event_id": "lollms-m45c",
+  "advisories": [
+    "GHSA-m45c-v46h-c788"
+  ],
+  "repo": "parisneo/lollms_legacy",
+  "clean_commit": "eda3af5f5c4ea9b2f3569f72f8d05989e29367fc",
+  "regressed_commit": "104293d5e922d0631f307e23da30069efcc8e2de",
+  "vulnerability_class": "path-traversal",
+  "flow": {
+    "entry": [
+      {
+        "symbol": "lollms/server/endpoints/lollms_personalities_infos.py::set_personality_config",
+        "kind": "http-request",
+        "note": "POST /set_personality_config JSON body (PersonalityConfig): category, name and the config dict to write"
+      }
+    ],
+    "guards": [
+      {
+        "symbol": "lollms/server/endpoints/lollms_personalities_infos.py::set_personality_config",
+        "note": "clean adds `if category==\"\": return error` after sanitize_path (plus forbid_remote_access(lollmsElfServer) at the top). Regressed lets category==\"\" through, so package_path = f\"/{name}\" is absolute and pathlib discards personalities_zoo_path"
+      }
+    ],
+    "sinks": [
+      {
+        "symbol": "lollms/server/endpoints/lollms_personalities_infos.py::set_personality_config",
+        "kind": "filesystem",
+        "note": "open(config_file, \"w\") + yaml.safe_dump(config, f), config_file = personalities_zoo_path / f\"{category}/{name}\" / \"config.yaml\"; with category=\"\" and name=\"home/u/lollms/configs\" it overwrites an arbitrary existing config.yaml"
+      }
+    ]
+  },
+  "slice": {
+    "lollms/server/endpoints/lollms_personalities_infos.py": [
+      "router",
+      "lollmsElfServer",
+      "PersonalityConfig"
+    ]
+  },
+  "notes": "Reviewed at 2.3. Local event: request fields, path construction, the fix's empty-category check and the file write are all in set_personality_config. Verified at 104293d: lollms/security.py::sanitize_path (unchanged by the fix) accepts an empty string (no leading '/', no '..'/'//', Path('').is_absolute() is False, no forbidden chars) and a name like 'home/u/lollms/configs'; package_path = f'{category}/{name}' becomes '/home/u/lollms/configs', which pathlib treats as absolute so personalities_zoo_path / package_path discards the zoo base; if <that dir>/config.yaml exists it is overwritten with the attacker's config dict via yaml.safe_dump (advisory: overwrite configs/config.yaml, then RCE via force_accept_remote_access / turn_on_code_validation). At eda3af5 the added `if category==\"\": return error` rejects that input before the path is built; forbid_remote_access(lollmsElfServer) is added as well (defence in depth, blocks the endpoint when the host is not localhost unless force_accept_remote_access). Parallel flows closed by the same commit but not modelled: get_personality_config (read), mount_personality, remount_personality, unmount_personality, get_personality_settings in the same file. Known residual variant: on Windows category='C:' still passes sanitize_path at eda3af5 (closed later by 28ee567, sanitize_path hardening); the modelled POSIX empty-category flow is closed by the clean commit. sanitize_path is deliberately left out of the slice: it is unchanged, and including lollms/security.py would add an unrelated regression hunk (the fix commit's new PackageManager/lxml imports for sanitize_svg) plus security-worded default string literals ('Detected an attempt of path traversal or command injection...'). Unrelated parts of the fix commit not in the slice: sanitize_svg in security.py and function-level sanitize_shell_code imports in utilities.py."
+}

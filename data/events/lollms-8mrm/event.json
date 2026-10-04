@@ -1,0 +1,309 @@
+{
+  "advisories": [
+    "GHSA-8mrm-r7h3-c3hj"
+  ],
+  "checks": [
+    {
+      "detail": "regressed commit is an ancestor of the clean commit",
+      "name": "commits",
+      "status": "ok"
+    },
+    {
+      "detail": "every requested symbol exists in at least one variant",
+      "name": "symbols-found",
+      "status": "ok"
+    },
+    {
+      "detail": "entry and sinks exist in both variants, guards in the clean one",
+      "name": "flow-present",
+      "status": "ok"
+    },
+    {
+      "detail": "files changed by the regression: lollms/server/endpoints/lollms_configuration_infos.py",
+      "name": "regression-nonempty",
+      "status": "ok"
+    },
+    {
+      "detail": "every slice file parses",
+      "name": "parses",
+      "status": "ok"
+    },
+    {
+      "detail": "clean slice is 9092 bytes (soft limit 24576, hard limit 49152)",
+      "name": "size",
+      "status": "ok"
+    },
+    {
+      "detail": "nothing referenced was cut",
+      "name": "dropped-references",
+      "status": "ok"
+    },
+    {
+      "detail": "string literals with security wording (kept, review them): lollms/security.py:16, lollms/server/endpoints/lollms_configuration_infos.py:63, lollms/server/endpoints/lollms_configuration_infos.py:66, lollms/server/endpoints/lollms_configuration_infos.py:69",
+      "name": "flagged-strings",
+      "status": "warn"
+    }
+  ],
+  "clean_commit": "26a3ff35acf152b49e1087d5698ad4864c7b6092",
+  "event_id": "lollms-8mrm",
+  "files": {
+    "lollms/security.py": {
+      "clean": {
+        "approx_tokens": 454,
+        "bytes": 1586,
+        "dropped_references": [],
+        "kept": [
+          "sanitize_path"
+        ],
+        "lines": 47,
+        "missing": [],
+        "original_lines": 270,
+        "syntax_error": null
+      },
+      "regressed": {
+        "approx_tokens": 454,
+        "bytes": 1586,
+        "dropped_references": [],
+        "kept": [
+          "sanitize_path"
+        ],
+        "lines": 47,
+        "missing": [],
+        "original_lines": 270,
+        "syntax_error": null
+      }
+    },
+    "lollms/server/endpoints/lollms_configuration_infos.py": {
+      "clean": {
+        "approx_tokens": 1529,
+        "bytes": 5350,
+        "dropped_references": [],
+        "kept": [
+          "apply_settings",
+          "lollmsElfServer",
+          "router"
+        ],
+        "lines": 87,
+        "missing": [],
+        "original_lines": 209,
+        "syntax_error": null
+      },
+      "regressed": {
+        "approx_tokens": 1529,
+        "bytes": 5349,
+        "dropped_references": [],
+        "kept": [
+          "apply_settings",
+          "lollmsElfServer",
+          "router"
+        ],
+        "lines": 87,
+        "missing": [],
+        "original_lines": 209,
+        "syntax_error": null
+      }
+    },
+    "lollms/server/endpoints/lollms_discussion.py": {
+      "clean": {
+        "approx_tokens": 616,
+        "bytes": 2156,
+        "dropped_references": [],
+        "kept": [
+          "DiscussionDelete",
+          "delete_discussion",
+          "lollmsElfServer",
+          "router"
+        ],
+        "lines": 60,
+        "missing": [],
+        "original_lines": 250,
+        "syntax_error": null
+      },
+      "regressed": {
+        "approx_tokens": 616,
+        "bytes": 2156,
+        "dropped_references": [],
+        "kept": [
+          "DiscussionDelete",
+          "delete_discussion",
+          "lollmsElfServer",
+          "router"
+        ],
+        "lines": 60,
+        "missing": [],
+        "original_lines": 250,
+        "syntax_error": null
+      }
+    }
+  },
+  "flagged_strings": {
+    "clean": [
+      {
+        "kind": "string",
+        "line": 16,
+        "path": "lollms/security.py",
+        "text": "\"Detected an attempt of path traversal or command injection. Are you kidding me?\""
+      },
+      {
+        "kind": "string",
+        "line": 63,
+        "path": "lollms/server/endpoints/lollms_configuration_infos.py",
+        "text": "\"You are changing the host value to something other than localhost, which can be dangerous if you do not trust the network you are on.\\nIt is strongly advised not to do this as it may expose your computer to remote access, posing potential security risks.\\nDo you want to ignore this message and proceed with changing the host value?\""
+      },
+      {
+        "kind": "string",
+        "line": 66,
+        "path": "lollms/server/endpoints/lollms_configuration_infos.py",
+        "text": "\"I received a request to deactivate code execution validation.\\nAre you sure?\\nThis is a very bad idea, especially if you activate remote access.\\nProceeding without proper validation can pose a serious security risk to your system and data.\\nOnly proceed if you are absolutely certain of the security measures in place.\\nDo you want to continue despite the warning?\""
+      },
+      {
+        "kind": "string",
+        "line": 69,
+        "path": "lollms/server/endpoints/lollms_configuration_infos.py",
+        "text": "\"I received a request to deactivate settings update validation.\\nAre you sure?\\nThis is a very risky decision, especially if you have enabled remote access.\\nDisabling this validation can allow attackers to manipulate server settings and gain unauthorized access.\\nProceed only if you are completely confident in the security of your system.\\nDo you want to continue despite the warning?\""
+      }
+    ],
+    "regressed": [
+      {
+        "kind": "string",
+        "line": 16,
+        "path": "lollms/security.py",
+        "text": "\"Detected an attempt of path traversal or command injection. Are you kidding me?\""
+      },
+      {
+        "kind": "string",
+        "line": 63,
+        "path": "lollms/server/endpoints/lollms_configuration_infos.py",
+        "text": "\"You are changing the host value to something other than localhost, which can be dangerous if you do not trust the network you are on.\\nIt is strongly advised not to do this as it may expose your computer to remote access, posing potential security risks.\\nDo you want to ignore this message and proceed with changing the host value?\""
+      },
+      {
+        "kind": "string",
+        "line": 66,
+        "path": "lollms/server/endpoints/lollms_configuration_infos.py",
+        "text": "\"I received a request to deactivate code execution validation.\\nAre you sure?\\nThis is a very bad idea, especially if you activate remote access.\\nProceeding without proper validation can pose a serious security risk to your system and data.\\nOnly proceed if you are absolutely certain of the security measures in place.\\nDo you want to continue despite the warning?\""
+      },
+      {
+        "kind": "string",
+        "line": 69,
+        "path": "lollms/server/endpoints/lollms_configuration_infos.py",
+        "text": "\"I received a request to deactivate settings update validation.\\nAre you sure?\\nThis is a very risky decision, especially if you have enabled remote access.\\nDisabling this validation can allow attackers to manipulate server settings and gain unauthorized access.\\nProceed only if you are completely confident in the security of your system.\\nDo you want to continue despite the warning?\""
+      }
+    ]
+  },
+  "flow": {
+    "entry": [
+      {
+        "kind": "http-request",
+        "note": "POST /apply_settings: the JSON body's config['discussion_db_name'] is read via await request.json() and copied into lollmsElfServer.config.config[key] (and saved when auto_save is on)",
+        "symbol": "lollms/server/endpoints/lollms_configuration_infos.py::apply_settings"
+      }
+    ],
+    "guards": [
+      {
+        "note": "the path_traversal_prone_settings list: in the regressed version a missing comma makes Python concatenate \"discussion_db_name\" \"user_avatar\" into the single entry 'discussion_db_nameuser_avatar', so `key in path_traversal_prone_settings` is False for discussion_db_name and sanitize_path is never applied; the clean version adds the comma, so sanitize_path runs and raises on '..', leading '/', absolute paths and special characters before the value is stored",
+        "symbol": "lollms/server/endpoints/lollms_configuration_infos.py::apply_settings"
+      }
+    ],
+    "sinks": [
+      {
+        "kind": "filesystem",
+        "note": "POST /delete_discussion builds personal_discussions_path/lollmsElfServer.config.discussion_db_name/f'{id}' from the stored config value and calls shutil.rmtree on it; with discussion_db_name='../../x' the recursive delete escapes the discussions directory. Second-order flow through the shared lollmsElfServer.config object, not a call chain",
+        "symbol": "lollms/server/endpoints/lollms_discussion.py::delete_discussion"
+      }
+    ]
+  },
+  "flow_files": [
+    "lollms/server/endpoints/lollms_configuration_infos.py",
+    "lollms/server/endpoints/lollms_discussion.py"
+  ],
+  "notes": "Fix 26a3ff35 is a one-character change (a missing comma in the path_traversal_prone_settings list of apply_settings); regressed 473ae0a0 is its only parent and the regression diff is exactly that line. Class path-traversal (CWE-22) by what the code does: an HTTP-supplied config value becomes a directory component of paths passed to shutil.rmtree / Path.mkdir. user_avatar (also named in the commit subject) was already in the list earlier, so discussion_db_name is the only setting the fix newly guards. The guard is effective: sanitize_path raises HTTPException inside apply_settings' try block before `lollmsElfServer.config.config[key] = ...` executes for that key, so the tainted value is never stored. Sink choice: delete_discussion (lollms_discussion.py) is an HTTP endpoint in the same package that reads config.discussion_db_name and rmtree's under it. Other consumers of the same config value, not modelled: lollms/app.py::LollmsApplication.build_long_term_skills_memory (Path.mkdir(parents=True) + skills_memory.json; it has no caller inside this repo, it is called by the lollms-webui host application) and the discussion-path join in client_session.py (uses DiscussionsDB.discussion_db_name, set via select_database, which already sanitized at both commits). Caveats: the flow is second-order (stored in the shared config object by one request, used by another); lollms_discussion.py imports LOLLMSWebUI from the external lollms_webui package, i.e. this router is mounted by the web UI rather than by lollms' own elf server (which mounts lollms_configuration_infos). apply_settings is gated by forbid_remote_access (localhost unless force_accept_remote_access) and check_access (valid client_id), and optionally an interactive confirmation dialog; these limit exposure but do not neutralise the traversal. sanitize_path (lollms/security.py, unchanged by the fix) is included so the guard's behaviour is readable.",
+  "regressed_commit": "473ae0a0e883c9b4c0ff16bd22eff63a4afaac20",
+  "regression_files": [
+    "lollms/server/endpoints/lollms_configuration_infos.py"
+  ],
+  "repo": "parisneo/lollms_legacy",
+  "schema_version": 1,
+  "scope": "cross_file",
+  "scrubbed": {
+    "clean": [
+      {
+        "kind": "docstring",
+        "line": 17,
+        "path": "lollms/security.py",
+        "text": "Args:\n    -----\n    path (str): The file path to sanitize.\n    allow_absolute_path (bool, optional): Whether to allow absolute paths. Default is False.\n    error_text (str, optional): The error message to display if an absolute path is detected. Default is \"Absolute database path detected\".\n    exception_text (str, optional): The exception message to display if a path traversal, command injection, or unauthorized character is detected. Default is \"Detected an attempt of path traversal or command injection. Are you kidding me?\"."
+      },
+      {
+        "kind": "docstring",
+        "line": 17,
+        "path": "lollms/security.py",
+        "text": "Raises:\n    ------\n    HTTPException: If an absolute path, path traversal, command injection, or unauthorized character is detected."
+      },
+      {
+        "kind": "docstring",
+        "line": 17,
+        "path": "lollms/security.py",
+        "text": "Note:\n    -----\n    This function checks for patterns like \"....\", multiple forward slashes, and command injection attempts like $(whoami). It also checks for unauthorized punctuation characters, excluding the dot (.) character."
+      },
+      {
+        "kind": "comment",
+        "line": 48,
+        "path": "lollms/security.py",
+        "text": "# Regular expression to detect patterns like \"....\", multiple forward slashes, and command injection attempts like $(whoami)"
+      }
+    ],
+    "regressed": [
+      {
+        "kind": "docstring",
+        "line": 17,
+        "path": "lollms/security.py",
+        "text": "Args:\n    -----\n    path (str): The file path to sanitize.\n    allow_absolute_path (bool, optional): Whether to allow absolute paths. Default is False.\n    error_text (str, optional): The error message to display if an absolute path is detected. Default is \"Absolute database path detected\".\n    exception_text (str, optional): The exception message to display if a path traversal, command injection, or unauthorized character is detected. Default is \"Detected an attempt of path traversal or command injection. Are you kidding me?\"."
+      },
+      {
+        "kind": "docstring",
+        "line": 17,
+        "path": "lollms/security.py",
+        "text": "Raises:\n    ------\n    HTTPException: If an absolute path, path traversal, command injection, or unauthorized character is detected."
+      },
+      {
+        "kind": "docstring",
+        "line": 17,
+        "path": "lollms/security.py",
+        "text": "Note:\n    -----\n    This function checks for patterns like \"....\", multiple forward slashes, and command injection attempts like $(whoami). It also checks for unauthorized punctuation characters, excluding the dot (.) character."
+      },
+      {
+        "kind": "comment",
+        "line": 48,
+        "path": "lollms/security.py",
+        "text": "# Regular expression to detect patterns like \"....\", multiple forward slashes, and command injection attempts like $(whoami)"
+      }
+    ]
+  },
+  "slice": {
+    "lollms/security.py": [
+      "sanitize_path"
+    ],
+    "lollms/server/endpoints/lollms_configuration_infos.py": [
+      "router",
+      "lollmsElfServer",
+      "apply_settings"
+    ],
+    "lollms/server/endpoints/lollms_discussion.py": [
+      "router",
+      "lollmsElfServer",
+      "DiscussionDelete",
+      "delete_discussion"
+    ]
+  },
+  "spec_sha256": "a18e2247e97f46584ef97759612898b4ad03a8713df9fa4405bf33a38c8f43be",
+  "totals": {
+    "clean": {
+      "approx_tokens": 2599,
+      "bytes": 9092
+    },
+    "regressed": {
+      "approx_tokens": 2599,
+      "bytes": 9091
+    }
+  },
+  "vulnerability_class": "path-traversal"
+}

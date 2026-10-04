@@ -1,0 +1,97 @@
+{
+  "event_id": "tortoise-orm-9j2c",
+  "advisories": [
+    "GHSA-9j2c-x8qm-qmjq"
+  ],
+  "repo": "tortoise/tortoise-orm",
+  "clean_commit": "91c364053e0ddf77edc5442914c6f049512678b3",
+  "regressed_commit": "816ff00e988f79b4ff1601f247062bb5eb9db802",
+  "vulnerability_class": "sql",
+  "flow": {
+    "entry": [
+      {
+        "symbol": "tortoise/queryset.py::QuerySet.filter",
+        "kind": "library-api",
+        "note": "the caller's filter keyword values, e.g. Model.filter(name__contains=<text>) -> QuerySet.filter(**kwargs); _filter_or_exclude wraps each key/value in a Q object. Only the VALUE is the tainted datum (the key is checked against the model's known filters in Q._get_actual_filter_params). On await, QuerySet.__await__ -> _make_query -> AwaitableQuery.resolve_filters -> Q.resolve -> Q._resolve_kwargs -> Q._resolve_regular_kwarg -> query_utils._process_filter_kwarg, which runs value through string_encoder (str(value)) and calls param['operator'](column, value)"
+      }
+    ],
+    "guards": [
+      {
+        "symbol": "tortoise/backends/mysql/executor.py::mysql_contains",
+        "note": "for a MySQL connection MetaInfo._generate_filters replaces the generic 'contains' operator with mysql_contains (MySQLExecutor.FILTER_FUNC_OVERRIDE). clean: the value goes through escape_like (backslash -> four backslashes, % and _ escaped) and is rendered by StrWrapper (quote doubling) inside a Like criterion, so a backslash can no longer swallow the doubled quote. regressed: Cast(field, CHAR).like(f\"%{value}%\") - pypika's stock ValueWrapper only doubles single quotes, so the value ' renders as '' and, with MySQL's default backslash escapes, the second quote ends the literal and the rest of the value is SQL. The six sibling operators (mysql_starts_with, mysql_ends_with, mysql_insensitive_contains/_starts_with/_ends_with and, via a different mechanism, mysql_insensitive_exact) are parallel flows changed by the same fix and are in the slice"
+      }
+    ],
+    "sinks": [
+      {
+        "symbol": "tortoise/backends/mysql/client.py::MySQLClient.execute_query",
+        "kind": "sql",
+        "note": "QuerySet._execute -> BaseExecutor.execute_select -> self.db.execute_query(query.get_sql()): the pypika query is rendered to one SQL string with every value inlined as a literal, and cursor.execute(query, None) runs it with no bound parameters"
+      }
+    ]
+  },
+  "slice": {
+    "tortoise/queryset.py": [
+      "MODEL",
+      "AwaitableQuery.resolve_filters",
+      "QuerySet._filter_or_exclude",
+      "QuerySet.filter",
+      "QuerySet._make_query",
+      "QuerySet.__await__",
+      "QuerySet._execute"
+    ],
+    "tortoise/query_utils.py": [
+      "_process_filter_kwarg",
+      "EmptyCriterion",
+      "_and",
+      "_or",
+      "QueryModifier.__init__",
+      "QueryModifier.__and__",
+      "QueryModifier.get_query_modifiers",
+      "Q.__init__",
+      "Q._resolve_regular_kwarg",
+      "Q._get_actual_filter_params",
+      "Q._resolve_kwargs",
+      "Q.resolve"
+    ],
+    "tortoise/models.py": [
+      "MetaInfo.get_filter",
+      "MetaInfo._generate_filters"
+    ],
+    "tortoise/filters.py": [
+      "string_encoder",
+      "Like",
+      "escape_like",
+      "contains",
+      "starts_with",
+      "ends_with",
+      "insensitive_exact",
+      "insensitive_contains",
+      "insensitive_starts_with",
+      "insensitive_ends_with"
+    ],
+    "tortoise/backends/base/executor.py": [
+      "BaseExecutor.execute_select",
+      "BaseExecutor.get_overridden_filter_func"
+    ],
+    "tortoise/backends/mysql/executor.py": [
+      "StrWrapper",
+      "escape_like",
+      "mysql_contains",
+      "mysql_starts_with",
+      "mysql_ends_with",
+      "mysql_insensitive_exact",
+      "mysql_insensitive_contains",
+      "mysql_insensitive_starts_with",
+      "mysql_insensitive_ends_with",
+      "MySQLExecutor.parameter"
+    ],
+    "tortoise/backends/mysql/client.py": [
+      "FuncType",
+      "F",
+      "translate_exceptions",
+      "MySQLClient.acquire_connection",
+      "MySQLClient.execute_query"
+    ]
+  },
+  "notes": "Built at 2.3 (no pilot spec existed). Fix 91c3640 'Fixed various SQL generation issues' changes tortoise/filters.py and tortoise/backends/mysql/executor.py (plus CHANGELOG and tests/test_fuzz.py). Modelled flow: a LIKE-family filter value on the MySQL backend (QuerySet.filter(field__contains=v)). Class sql (CWE-89): the ORM renders values into the SQL text (pypika get_sql) and executes the text without parameters; in the regressed commit a backslash before a quote breaks out of the string literal on MySQL. Verification was by reading the code at both commits, NOT by execution: pypika and a MySQL server are not available in this environment, and pypika's own ValueWrapper.get_value_sql (third-party, not in the clone) was not read directly - its regressed behaviour (quote doubling only, no backslash handling) is inferred from the fix's replacement copy in tortoise/filters.py::get_value_sql, which is pypika's function plus one added mysql backslash line, and from both 2.2 reviewers. Parallel flows closed by the same fix but NOT modelled: (1) the advisory's headline MySQL flow for plain equality filters and mass updates (QuerySet.update -> UpdateQuery._make_query -> query.set(db_field, value) -> UpdateQuery._execute -> execute_query(str(query))): its guard is tortoise/filters.py::get_value_sql, assigned over pypika's ValueWrapper.get_value_sql at import time. That guard has no call edge from tortoise code (pypika dispatches to it) and UpdateQuery would add ~4 KB, so it is left out of the slice; consequently regression.diff is a subset of the inverted fix for filters.py (the get_value_sql/escape_val hunk and the monkey-patch assignment are not shown) and the clean slice's filters.py imports Enum, basestring, date, format_quotes that only the cut function uses. (2) the generic filters.py operators (contains, starts_with, ...) used on SQLite/PostgreSQL: they are in the slice because they are the keys of FILTER_FUNC_OVERRIDE and filters.py::Like is what the clean guard builds, and the regression reverts them too; on those backends quote doubling already prevents literal breakout, so the regressed behaviour there is LIKE-wildcard/escape mishandling (the CHANGELOG calls it malformed SQL), not statement injection. In the clean slice mysql_insensitive_exact still passes Upper(str(value)) to pypika's ValueWrapper and relies on the cut get_value_sql patch for backslash escaping. Hops cut for size: filters.py::get_filters_for_field (the table mapping '<field>__contains' to contains with value_encoder string_encoder, ~5 KB) and the ModelMeta/MetaInfo code that fills MetaInfo._filters; Model.filter (models.py classmethod that returns QuerySet(cls).filter(...)), so QuerySet.filter is recorded as the entry. Accepted dropped references: QuerySet._clone (copies the queryset, plumbing), AwaitableQuery._resolve_annotate, Q._resolve_children / _resolve_custom_kwarg / _resolve_nested_filter (other branches of Q.resolve, not taken for a plain field filter), BaseExecutor._execute_prefetch_queries (after the query has run), MetaInfo.db (property returning the connection), filters.py::ValueWrapper (pypika name re-exported through tortoise.filters imports). Size: clean slice ~25.3 KB across 7 files, slightly over the 24 KB soft target; most of the remainder is import headers and MetaInfo.__slots__. Scrubbed: one docstring paragraph in Q.resolve (the word 'inject' in a parameter description)."
+}

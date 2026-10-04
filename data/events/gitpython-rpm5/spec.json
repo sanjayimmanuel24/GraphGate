@@ -1,0 +1,25 @@
+{
+  "event_id": "gitpython-rpm5",
+  "advisories": ["GHSA-rpm5-65cw-6hj4"],
+  "repo": "gitpython-developers/gitpython",
+  "clean_commit": "142195888e713542189533a52cdfc333f05c3af6",
+  "regressed_commit": "da545232d0401fb9fb7660f9ff67991996674dda",
+  "vulnerability_class": "os-command",
+  "flow": {
+    "entry": [{"symbol": "git/remote.py::Remote.fetch", "kind": "library-api",
+               "note": "the caller's **kwargs (keys and values) become git-fetch options; e.g. upload_pack=<program>. add_progress only adds progress=True, and the dict goes unchanged into self.repo.git.fetch('--', self, *args, ..., v=verbose, **kwargs)"}],
+    "guards": [{"symbol": "git/cmd.py::Git.check_unsafe_options",
+                "note": "Remote.fetch passes list(kwargs.keys()) with unsafe_git_fetch_options=['--upload-pack']. Clean: both sides are compared by canonical name, so the key upload_pack (canonical upload-pack) raises UnsafeOptionError before git runs. Regressed: the raw key is only compared with option.startswith('--upload-pack') or option == 'upload-pack', so upload_pack passes"},
+               {"symbol": "git/cmd.py::Git._canonicalize_option_name",
+                "note": "new in the fix: strips leading dashes and any '=value' or ' value' part, then dashifies, so a kwarg key is compared in the same spelling transform_kwarg will later give it"}],
+    "sinks": [{"symbol": "git/cmd.py::Git._call_process", "true_symbol": "git/cmd.py::Git.execute", "kind": "subprocess",
+               "note": "self.repo.git.fetch(...) dispatches via Git.__getattr__ to _call_process; transform_kwargs/transform_kwarg dashify upload_pack=<program> into '--upload-pack=<program>' and self.execute(call) starts 'git fetch -v --upload-pack=<program> -- <remote>' (safer_popen/Popen inside Git.execute, too large for the slice); git runs the upload-pack value as a command"}]
+  },
+  "slice": {
+    "git/remote.py": ["add_progress", "Remote.fetch"],
+    "git/cmd.py": ["execute_kwargs", "dashify", "Git._canonicalize_option_name", "Git.check_unsafe_options",
+                   "Git.__getattr__", "Git.transform_kwarg", "Git.transform_kwargs", "Git._unpack_args",
+                   "Git._call_process"]
+  },
+  "notes": "Reviewed 2026-09-29 (structure of the draft kept). Pair da545232 -> 142195888 is the core commit of PR #2131 (merge 0f68db07, released in 3.1.47); the regression diff touches only git/cmd.py (Git.check_unsafe_options and the new Git._canonicalize_option_name). The PR's other commits are 9aed7cf8 (lint only) and 43d92dec (makes _canonicalize_option_name return '' for an empty/whitespace-only token instead of raising IndexError: a crash, not a bypass, so not needed to close this flow). Class: os-command (advisory CWE-78); the mechanism is argument injection into git's argv, but --upload-pack makes git run the caller-supplied value as a program. Verified from the code at both commits: regressed check compares the raw key 'upload_pack' with startswith('--upload-pack') / == 'upload-pack', so it passes; clean canonicalizes both sides to 'upload-pack' and raises UnsafeOptionError; transform_kwarg('upload_pack', prog) yields '--upload-pack=prog' at both commits. Parallel flows closed by the same change but not modelled: Remote.pull (upload_pack), Remote.push (receive_pack), Repo._clone/clone_from/clone in git/repo/base.py (upload_pack). Known-incomplete fix: the clean commit still admits long-option prefix abbreviations (upload_p -> --upload-p, GHSA-2f96, event gitpython-2f96) and, by dropping the old startswith check, reopens joined short options (-u<prog>, -c...) for clone (GHSA-v396); neither affects the modelled fetch/upload_pack flow, which the clean commit closes. The tainted datum is a kwarg KEY (option name) as well as its value; value-only taint engines may miss it. Accepted dropped references: Git.execute (true sink, recorded as true_symbol; ~16 KB with overloads), _AutoInterrupt/_CatFileContentStream (targets of class-level TypeAlias assignments, not on the flow), _GitMeta (metaclass), FetchInfo (return annotation only), Remote._assert_refspec (only runs when refspec is None, config check), Remote._get_fetch_info_from_stderr (parses git output after the process has started, downstream of the sink). Git.check_unsafe_protocols is called by fetch on the refspec (URL handling, not the kwarg flow) and is cut."
+}

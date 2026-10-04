@@ -1,0 +1,235 @@
+{
+  "advisories": [
+    "GHSA-v92g-xgxw-vvmm"
+  ],
+  "checks": [
+    {
+      "detail": "regressed commit is an ancestor of the clean commit",
+      "name": "commits",
+      "status": "ok"
+    },
+    {
+      "detail": "every requested symbol exists in at least one variant",
+      "name": "symbols-found",
+      "status": "ok"
+    },
+    {
+      "detail": "entry and sinks exist in both variants, guards in the clean one",
+      "name": "flow-present",
+      "status": "ok"
+    },
+    {
+      "detail": "files changed by the regression: mako/template.py",
+      "name": "regression-nonempty",
+      "status": "ok"
+    },
+    {
+      "detail": "every slice file parses",
+      "name": "parses",
+      "status": "ok"
+    },
+    {
+      "detail": "clean slice is 23985 bytes (soft limit 24576, hard limit 49152)",
+      "name": "size",
+      "status": "ok"
+    },
+    {
+      "detail": "referenced but cut: mako/template.py::ModuleInfo, mako/template.py::_compile_module_file, mako/template.py::_compile_text",
+      "name": "dropped-references",
+      "status": "warn"
+    },
+    {
+      "detail": "no string literal uses security wording",
+      "name": "flagged-strings",
+      "status": "ok"
+    }
+  ],
+  "clean_commit": "e05ac61989a7fb9dd7dcde6cfd72dc48328719a3",
+  "event_id": "mako-v92g",
+  "files": {
+    "mako/lookup.py": {
+      "clean": {
+        "approx_tokens": 2852,
+        "bytes": 9979,
+        "dropped_references": [],
+        "kept": [
+          "TemplateCollection",
+          "TemplateLookup.__init__",
+          "TemplateLookup._check",
+          "TemplateLookup._load",
+          "TemplateLookup.get_template"
+        ],
+        "lines": 288,
+        "missing": [],
+        "original_lines": 361,
+        "syntax_error": null
+      },
+      "regressed": {
+        "approx_tokens": 2852,
+        "bytes": 9979,
+        "dropped_references": [],
+        "kept": [
+          "TemplateCollection",
+          "TemplateLookup.__init__",
+          "TemplateLookup._check",
+          "TemplateLookup._load",
+          "TemplateLookup.get_template"
+        ],
+        "lines": 288,
+        "missing": [],
+        "original_lines": 361,
+        "syntax_error": null
+      }
+    },
+    "mako/template.py": {
+      "clean": {
+        "approx_tokens": 3872,
+        "bytes": 13551,
+        "dropped_references": [
+          "ModuleInfo",
+          "_compile_module_file",
+          "_compile_text"
+        ],
+        "kept": [
+          "Template.__init__",
+          "Template._compile_from_file",
+          "Template._setup_cache_args"
+        ],
+        "lines": 377,
+        "missing": [],
+        "original_lines": 709,
+        "syntax_error": null
+      },
+      "regressed": {
+        "approx_tokens": 3888,
+        "bytes": 13606,
+        "dropped_references": [
+          "ModuleInfo",
+          "_compile_module_file",
+          "_compile_text"
+        ],
+        "kept": [
+          "Template.__init__",
+          "Template._compile_from_file",
+          "Template._setup_cache_args"
+        ],
+        "lines": 379,
+        "missing": [],
+        "original_lines": 711,
+        "syntax_error": null
+      }
+    },
+    "mako/util.py": {
+      "clean": {
+        "approx_tokens": 130,
+        "bytes": 455,
+        "dropped_references": [],
+        "kept": [
+          "read_file"
+        ],
+        "lines": 19,
+        "missing": [],
+        "original_lines": 388,
+        "syntax_error": null
+      },
+      "regressed": {
+        "approx_tokens": 130,
+        "bytes": 455,
+        "dropped_references": [],
+        "kept": [
+          "read_file"
+        ],
+        "lines": 19,
+        "missing": [],
+        "original_lines": 388,
+        "syntax_error": null
+      }
+    }
+  },
+  "flagged_strings": {
+    "clean": [],
+    "regressed": []
+  },
+  "flow": {
+    "entry": [
+      {
+        "kind": "library-api",
+        "note": "the application passes a template uri (typically derived from a request path) to get_template(uri). On a cache miss it strips ALL leading slashes (re.sub of ^/+), joins the rest onto each template directory with posixpath.normpath(posixpath.join(dir_, u)), tests os.path.isfile(srcfile) and calls self._load(srcfile, uri), which constructs Template(uri=uri, filename=srcfile, ...) with the ORIGINAL uri",
+        "symbol": "mako/lookup.py::TemplateLookup.get_template"
+      }
+    ],
+    "guards": [
+      {
+        "note": "the uri check: u_norm = os.path.normpath(uri without leading slashes); if it starts with '..' a TemplateLookupException is raised before any file is read. Clean: u_norm = self.uri.lstrip('/'), the same stripping get_template applied. Regressed: only one leading '/' is removed, so '//../../x' becomes '/../../x', normpath collapses that to the root-anchored '/x', the '..' test passes, while get_template already resolved '../../x' against the template directory",
+        "symbol": "mako/template.py::Template.__init__"
+      }
+    ],
+    "sinks": [
+      {
+        "kind": "filesystem",
+        "note": "open(path, mode).read() on the filename built in get_template; reached from Template.__init__ -> Template._compile_from_file(path, filename) -> util.read_file(filename) (all three branches). The content is compiled as a template and returned to the caller for rendering",
+        "symbol": "mako/util.py::read_file"
+      }
+    ]
+  },
+  "flow_files": [
+    "mako/lookup.py",
+    "mako/template.py",
+    "mako/util.py"
+  ],
+  "notes": "Validated at 2.3. Fix e05ac619 (issue #434, released in 1.3.11) changes only the uri normalisation in Template.__init__ (plus a test and a changelog file); the regression diff is that single hunk. Class: path-traversal (CWE-22), arbitrary file read outside the template directories. Verified concretely with the two normalisations extracted from each commit: for uri '//../../secrets/creds.txt' and '///../x' the regressed check does not raise (posixpath and ntpath both), the clean check raises; a single-slash '/../../x' is rejected at both commits; get_template resolves '//../../secrets/creds.txt' under /base/app/templates to /base/secrets/creds.txt at both commits (lookup.py is unchanged by the fix). Scope is cross_file because entry and path construction are in mako/lookup.py, the guard in mako/template.py and the open() in mako/util.py. Not modelled: the same flow entered through template tags (include/inherit/namespace -> runtime._lookup_template -> lookup.get_template), which needs attacker-controlled template source. Residual behaviour not closed by the fix: get_template calls os.path.isfile(srcfile) before the Template check, so a file-existence difference (TopLevelLookupException vs TemplateLookupException) remains at the clean commit; the file read itself is closed. Secondary effect of the same line: with module_directory set, the regressed u_norm is root-anchored, so the generated module path os.path.join(module_directory, u_norm + '.py') also leaves module_directory. Later sibling advisories (backslash uri #435 fixed by 72e10c5, drive-letter uri #441 fixed by 000ed85) are separate Windows-only bypasses of the same check and are still open at the clean commit; the modelled double-slash flow is closed. Accepted dropped references: ModuleInfo, _compile_text, _compile_module_file (template compilation after the file has been read, downstream of the sink). The scrubber removed the modulename_callable docstring paragraph in lookup.py (wording false positive, no behaviour).",
+  "regressed_commit": "91232d80e4914fd82b42628bb2e2b061abb3dcfc",
+  "regression_files": [
+    "mako/template.py"
+  ],
+  "repo": "sqlalchemy/mako",
+  "schema_version": 1,
+  "scope": "cross_file",
+  "scrubbed": {
+    "clean": [
+      {
+        "kind": "docstring",
+        "line": 82,
+        "path": "mako/lookup.py",
+        "text": ":param modulename_callable: A callable which, when present,\n     is passed the path of the source file as well as the\n     requested URI, and then returns the full path of the\n     generated Python module file. This is used to inject\n     alternate schemes for Python module location. If left at\n     its default of ``None``, the built in system of generation\n     based on ``module_directory`` plus ``uri`` is used."
+      }
+    ],
+    "regressed": [
+      {
+        "kind": "docstring",
+        "line": 82,
+        "path": "mako/lookup.py",
+        "text": ":param modulename_callable: A callable which, when present,\n     is passed the path of the source file as well as the\n     requested URI, and then returns the full path of the\n     generated Python module file. This is used to inject\n     alternate schemes for Python module location. If left at\n     its default of ``None``, the built in system of generation\n     based on ``module_directory`` plus ``uri`` is used."
+      }
+    ]
+  },
+  "slice": {
+    "mako/lookup.py": [
+      "TemplateCollection",
+      "TemplateLookup.__init__",
+      "TemplateLookup.get_template",
+      "TemplateLookup._load",
+      "TemplateLookup._check"
+    ],
+    "mako/template.py": [
+      "Template.__init__",
+      "Template._setup_cache_args",
+      "Template._compile_from_file"
+    ],
+    "mako/util.py": [
+      "read_file"
+    ]
+  },
+  "spec_sha256": "97fb606f9bd275029041093c40d9c02a624b7d64c2357cdcb8e15fffeab9ccac",
+  "totals": {
+    "clean": {
+      "approx_tokens": 6854,
+      "bytes": 23985
+    },
+    "regressed": {
+      "approx_tokens": 6870,
+      "bytes": 24040
+    }
+  },
+  "vulnerability_class": "path-traversal"
+}

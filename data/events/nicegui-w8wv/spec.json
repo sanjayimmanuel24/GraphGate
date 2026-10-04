@@ -1,0 +1,24 @@
+{
+  "event_id": "nicegui-w8wv",
+  "advisories": ["GHSA-w8wv-vfpc-hw2w"],
+  "repo": "zauberzeug/nicegui",
+  "clean_commit": "d38a702e3af2da5b0708f689be8d71413fc77056",
+  "regressed_commit": "2580928afff6e34d31b77ff22769d773feb817a8",
+  "vulnerability_class": "path-traversal",
+  "flow": {
+    "entry": [{"symbol": "nicegui/elements/upload.py::Upload.__init__", "kind": "http-request",
+               "note": "the nested route handler upload_route (POST /_nicegui/client/{client}/upload/{element}, registered with @app.post inside Upload.__init__) reads the multipart form and passes each part (Starlette UploadFile, whose .filename is the client-supplied filename) to create_file_upload, then hands the resulting FileUpload objects to Upload.handle_uploads"}],
+    "guards": [{"symbol": "nicegui/elements/upload_files.py::create_file_upload",
+                "note": "the clean version computes the FileUpload name with _sanitize_filename(upload.filename), which keeps only the text after the last '/' and the last backslash; the regressed version uses PurePosixPath(upload.filename or '').name, which splits on '/' only, so a name like ..\\..\\secret\\evil.txt survives intact. The guard proper is the new helper upload_files.py::_sanitize_filename, which exists only at the clean commit"}],
+    "sinks": [{"symbol": "examples/ffmpeg_extract_images/main.py::handle_upload", "kind": "filesystem",
+               "note": "the on_upload handler (reached via Upload.handle_uploads -> events.handle_event with UploadEventArguments(file=...)) builds video_path = DATA_DIR / args.file.name and calls video_path.write_bytes(...). On Windows, pathlib treats the surviving backslashes as separators, so the write lands outside DATA_DIR (e.g. data\\..\\..\\secret\\evil.txt)"}]
+  },
+  "slice": {
+    "nicegui/elements/upload.py": ["Upload.__init__", "Upload.handle_uploads", "Upload.on_rejected"],
+    "nicegui/elements/upload_files.py": ["FileUpload", "SmallFileUpload", "LargeFileUpload", "_cleanup_path",
+                                         "create_file_upload", "_sanitize_filename"],
+    "nicegui/events.py": ["EventArguments", "UiEventArguments", "UploadEventArguments", "EventT", "Handler", "handle_event"],
+    "examples/ffmpeg_extract_images/main.py": ["DATA_DIR", "handle_upload"]
+  },
+  "notes": "Class: path-traversal (CWE-22). Pair 2580928a -> d38a702e ('Merge commit from fork', single parent); the fix touches only nicegui/elements/upload_files.py (import of PurePosixPath removed, create_file_upload's filename line replaced, new _sanitize_filename helper) plus a unit test. Verified concretely on Windows (Python 3.12): PurePosixPath('..\\\\..\\\\secret\\\\evil.txt').name returns the input unchanged and Path('data') / it normalises to ..\\secret\\evil.txt; the clean helper returns 'evil.txt'. The traversal is Windows-only: on POSIX a backslash is an ordinary filename character, so the regressed code is not exploitable there. The library itself contains no path join on FileUpload.name; the only in-repo sink is the bundled example examples/ffmpeg_extract_images/main.py (the pattern the advisory cites), which is unchanged between the two commits. The example registers handle_upload via a module-level `with ui.column(): upload = ui.upload(..., on_upload=handle_upload)` block; the slicer cannot keep that block, so the registration and the module-level names `upload` and `results` used inside handle_upload are cut (the dropped-references check does not report them, as they are bound inside a with block, not by a top-level assignment; they are UI plumbing after the write, not on the flow). The clean slice's _sanitize_filename docstring is scrubbed; the identifier _sanitize_filename itself is real code and stays (the only remaining security-flavoured word in the slice). Dispatch from Upload.handle_uploads to handle_upload is a registered callback (handle_event calls the handler stored in _upload_handlers), which call-graph resolution will record as an unknown edge. Known-incomplete fix (not modelled): _sanitize_filename leaves a Windows drive-relative name such as 'C:evil.txt' intact, and Path('data') / 'C:evil.txt' is C:evil.txt (outside DATA_DIR); a bare '..' also survives. The modelled flow (backslash-separated ../ components, the advisory's PoC) is closed by the clean commit. Parallel sinks: FileUpload.save (SmallFileUpload/LargeFileUpload) writes wherever the application points it, typically Path(dir) / file.name; no in-repo caller does that, so it is kept in the slice for reading but not modelled."
+}

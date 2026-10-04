@@ -1,0 +1,35 @@
+--- a/lollms/security.py
++++ b/lollms/security.py
+@@ -12,16 +12,19 @@
+ 
+ def sanitize_path_from_endpoint(path: str, error_text: str = "A suspected LFI attack detected. The path sent to the server has suspicious elements in it!", exception_text: str = "Invalid path!") -> str:
+     """
++    Sanitize a given file path from an endpoint by checking for potentially dangerous patterns and unauthorized characters.
++
+     Returns:
+     -------
+     str: The sanitized file path.
++
++    Note:
++    -----
++    This function checks for patterns like "...." and multiple forward slashes. It also checks for unauthorized punctuation characters, excluding the dot (.) character.
+     """
+ 
+     if path is None:
+         return path
+-
+-    # Normalize path to use forward slashes
+-    path = path.replace('\\', '/')
+ 
+     if path.strip().startswith("/"):
+         raise HTTPException(status_code=400, detail=exception_text)
+@@ -35,7 +38,8 @@
+         raise HTTPException(status_code=400, detail=exception_text)
+ 
+     if suspicious_patterns.search(path) or Path(path).is_absolute():
+-        raise HTTPException(status_code=400, detail=error_text)
++        ASCIIColors.error(error_text)
++        raise HTTPException(status_code=400, detail=exception_text)
+ 
+     path = path.lstrip('/')
+     return path

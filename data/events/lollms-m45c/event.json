@@ -1,0 +1,143 @@
+{
+  "advisories": [
+    "GHSA-m45c-v46h-c788"
+  ],
+  "checks": [
+    {
+      "detail": "regressed commit is an ancestor of the clean commit",
+      "name": "commits",
+      "status": "ok"
+    },
+    {
+      "detail": "every requested symbol exists in at least one variant",
+      "name": "symbols-found",
+      "status": "ok"
+    },
+    {
+      "detail": "entry and sinks exist in both variants, guards in the clean one",
+      "name": "flow-present",
+      "status": "ok"
+    },
+    {
+      "detail": "files changed by the regression: lollms/server/endpoints/lollms_personalities_infos.py",
+      "name": "regression-nonempty",
+      "status": "ok"
+    },
+    {
+      "detail": "every slice file parses",
+      "name": "parses",
+      "status": "ok"
+    },
+    {
+      "detail": "clean slice is 2330 bytes (soft limit 24576, hard limit 49152)",
+      "name": "size",
+      "status": "ok"
+    },
+    {
+      "detail": "nothing referenced was cut",
+      "name": "dropped-references",
+      "status": "ok"
+    },
+    {
+      "detail": "no string literal uses security wording",
+      "name": "flagged-strings",
+      "status": "ok"
+    }
+  ],
+  "clean_commit": "eda3af5f5c4ea9b2f3569f72f8d05989e29367fc",
+  "event_id": "lollms-m45c",
+  "files": {
+    "lollms/server/endpoints/lollms_personalities_infos.py": {
+      "clean": {
+        "approx_tokens": 666,
+        "bytes": 2330,
+        "dropped_references": [],
+        "kept": [
+          "PersonalityConfig",
+          "lollmsElfServer",
+          "router",
+          "set_personality_config"
+        ],
+        "lines": 64,
+        "missing": [],
+        "original_lines": 718,
+        "syntax_error": null
+      },
+      "regressed": {
+        "approx_tokens": 620,
+        "bytes": 2170,
+        "dropped_references": [],
+        "kept": [
+          "PersonalityConfig",
+          "lollmsElfServer",
+          "router",
+          "set_personality_config"
+        ],
+        "lines": 61,
+        "missing": [],
+        "original_lines": 704,
+        "syntax_error": null
+      }
+    }
+  },
+  "flagged_strings": {
+    "clean": [],
+    "regressed": []
+  },
+  "flow": {
+    "entry": [
+      {
+        "kind": "http-request",
+        "note": "POST /set_personality_config JSON body (PersonalityConfig): category, name and the config dict to write",
+        "symbol": "lollms/server/endpoints/lollms_personalities_infos.py::set_personality_config"
+      }
+    ],
+    "guards": [
+      {
+        "note": "clean adds `if category==\"\": return error` after sanitize_path (plus forbid_remote_access(lollmsElfServer) at the top). Regressed lets category==\"\" through, so package_path = f\"/{name}\" is absolute and pathlib discards personalities_zoo_path",
+        "symbol": "lollms/server/endpoints/lollms_personalities_infos.py::set_personality_config"
+      }
+    ],
+    "sinks": [
+      {
+        "kind": "filesystem",
+        "note": "open(config_file, \"w\") + yaml.safe_dump(config, f), config_file = personalities_zoo_path / f\"{category}/{name}\" / \"config.yaml\"; with category=\"\" and name=\"home/u/lollms/configs\" it overwrites an arbitrary existing config.yaml",
+        "symbol": "lollms/server/endpoints/lollms_personalities_infos.py::set_personality_config"
+      }
+    ]
+  },
+  "flow_files": [
+    "lollms/server/endpoints/lollms_personalities_infos.py"
+  ],
+  "notes": "Reviewed at 2.3. Local event: request fields, path construction, the fix's empty-category check and the file write are all in set_personality_config. Verified at 104293d: lollms/security.py::sanitize_path (unchanged by the fix) accepts an empty string (no leading '/', no '..'/'//', Path('').is_absolute() is False, no forbidden chars) and a name like 'home/u/lollms/configs'; package_path = f'{category}/{name}' becomes '/home/u/lollms/configs', which pathlib treats as absolute so personalities_zoo_path / package_path discards the zoo base; if <that dir>/config.yaml exists it is overwritten with the attacker's config dict via yaml.safe_dump (advisory: overwrite configs/config.yaml, then RCE via force_accept_remote_access / turn_on_code_validation). At eda3af5 the added `if category==\"\": return error` rejects that input before the path is built; forbid_remote_access(lollmsElfServer) is added as well (defence in depth, blocks the endpoint when the host is not localhost unless force_accept_remote_access). Parallel flows closed by the same commit but not modelled: get_personality_config (read), mount_personality, remount_personality, unmount_personality, get_personality_settings in the same file. Known residual variant: on Windows category='C:' still passes sanitize_path at eda3af5 (closed later by 28ee567, sanitize_path hardening); the modelled POSIX empty-category flow is closed by the clean commit. sanitize_path is deliberately left out of the slice: it is unchanged, and including lollms/security.py would add an unrelated regression hunk (the fix commit's new PackageManager/lxml imports for sanitize_svg) plus security-worded default string literals ('Detected an attempt of path traversal or command injection...'). Unrelated parts of the fix commit not in the slice: sanitize_svg in security.py and function-level sanitize_shell_code imports in utilities.py.",
+  "regressed_commit": "104293d5e922d0631f307e23da30069efcc8e2de",
+  "regression_files": [
+    "lollms/server/endpoints/lollms_personalities_infos.py"
+  ],
+  "repo": "parisneo/lollms_legacy",
+  "schema_version": 1,
+  "scope": "local",
+  "scrubbed": {
+    "clean": [],
+    "regressed": []
+  },
+  "slice": {
+    "lollms/server/endpoints/lollms_personalities_infos.py": [
+      "router",
+      "lollmsElfServer",
+      "PersonalityConfig"
+    ]
+  },
+  "spec_sha256": "ca8832f58884c692c80594890d801ba93613dc3965c39c9e16566f25e15f2fdf",
+  "totals": {
+    "clean": {
+      "approx_tokens": 666,
+      "bytes": 2330
+    },
+    "regressed": {
+      "approx_tokens": 620,
+      "bytes": 2170
+    }
+  },
+  "vulnerability_class": "path-traversal"
+}

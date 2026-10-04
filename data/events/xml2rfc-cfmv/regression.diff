@@ -1,0 +1,39 @@
+--- a/xml2rfc/utils.py
++++ b/xml2rfc/utils.py
+@@ -23,15 +23,6 @@
+     return find_duplicate_attr_values(attr, tree)
+ 
+ 
+-def strip_link_attachments(tree):
+-    """
+-    Find link tags with rel="attachment".
+-    """
+-    for attachment in tree.xpath('//link[@rel="attachment"]'):
+-        xml2rfc.log.warn(f"Removed {attachment}. link relationships type attachment is not allowed.")
+-        attachment.getparent().remove(attachment)
+-
+-
+ def slugify(s):
+     s = s.strip().lower()
+     s = re.sub(r'[^\w\s/|@=-]', '', s)
+--- a/xml2rfc/writers/base.py
++++ b/xml2rfc/writers/base.py
+@@ -24,7 +24,7 @@
+ from xml2rfc.util.file import can_access, FileAccessError
+ from xml2rfc.util.name import short_author_ascii_name_parts, full_author_name_expansion, short_author_name_parts
+ from xml2rfc.util.unicode import is_svg
+-from xml2rfc.utils import namespaces, find_duplicate_ids, slugify, strip_link_attachments
++from xml2rfc.utils import namespaces, find_duplicate_ids, slugify
+ 
+ 
+ class BaseV3Writer(object):
+@@ -124,9 +124,6 @@
+         # a duplicate xsd:ID attribute.  So we check all attributes with
+         # content specified as xsd:ID first, and give better messages:
+ 
+-        # Strip link attachments
+-        strip_link_attachments(self.tree)
+-
+         # Get the attributes we need to check
+         if when and not when.startswith(' '):
+             when = ' '+when

@@ -1,0 +1,53 @@
+{
+  "event_id": "xml2rfc-432c",
+  "advisories": [
+    "GHSA-432c-wxpg-m4q3"
+  ],
+  "repo": "ietf-tools/xml2rfc",
+  "clean_commit": "ec98f9cb4b9a8658222117df037dda473ca3f4e4",
+  "regressed_commit": "a46fad0649ce7f201db319cfb64eda6e44323d0b",
+  "vulnerability_class": "path-traversal",
+  "flow": {
+    "entry": [
+      {
+        "symbol": "xml2rfc/writers/base.py::BaseV3Writer.xinclude",
+        "kind": "file-content",
+        "note": "the href of each <xi:include> element in the input RFCXML document (self.tree, parsed from the user-supplied source); xinclude() is the step that expands them (called from PrepToolWriter.prep and ExpandV3Writer, outside the slice)"
+      }
+    ],
+    "guards": [
+      {
+        "symbol": "xml2rfc/writers/base.py::BaseV3Writer.check_includes",
+        "note": "clean: xinclude() calls check_includes() unconditionally, and check_includes passes every local/file: href to can_access(self.options, self.xmlrfc.source, href.path), dying on FileAccessError before tree.xinclude() runs. Regressed: xinclude() calls check_includes() only when allow_local_file_access is off, so with the option on no href is checked at all"
+      },
+      {
+        "symbol": "xml2rfc/util/file.py::can_access",
+        "note": "with allow_local_file_access on: rejects shell metacharacters, then resolves the path against the source file's directory and rejects it unless it starts with that directory, then requires it to exist; with the option off it rejects every local path. New in the fix, deleted by the regression"
+      }
+    ],
+    "sinks": [
+      {
+        "symbol": "xml2rfc/writers/base.py::BaseV3Writer.xinclude",
+        "kind": "filesystem",
+        "note": "self.tree.xinclude(): lxml/libxml2 loads each href (parse='text' or 'xml') and splices the file content into the document, which is written to the output"
+      }
+    ]
+  },
+  "slice": {
+    "xml2rfc/writers/base.py": [
+      "default_silenced_messages",
+      "default_options",
+      "RfcWriterError",
+      "BaseV3Writer.log",
+      "BaseV3Writer.msg",
+      "BaseV3Writer.die",
+      "BaseV3Writer.xinclude",
+      "BaseV3Writer.check_includes"
+    ],
+    "xml2rfc/util/file.py": [
+      "FileAccessError",
+      "can_access"
+    ]
+  },
+  "notes": "Reviewed at 2.3; revised after the adversarial check. Pair a46fad06 -> ec98f9cb is the advisory's own fix commit (message ends 'Fixes GHSA-432c-wxpg-m4q3'; v3.27.0 tag). RE-MODELLED: the first version modelled <sourcecode src=>, but on that flow both commits confine the path to the source directory; the fix only adds the --allow-local-file-access opt-in there (CWE-73/552-like, not CWE-22), so the checker rejected the class. This version models the <xi:include href> flow the same commit fixes, which is a genuine directory escape. Modelled flow: href of <xi:include> in the input document -> BaseV3Writer.xinclude -> (clean) check_includes -> can_access -> die, or (regressed, option on) straight to self.tree.xinclude(), which reads the file and splices it into the output. Precondition: the operator runs with --allow-local-file-access (run.py flag; default False in default_options, which is in the slice). With the option off both commits refuse every local href (regressed check_includes dies on any local href; clean can_access raises), so the regression shows only in the option-on configuration - exactly the advisory's table (xinclude, with flag: 'Access any file on filesystem' before, 'source directory and below' after). Verified by running the clean can_access blob against a temp tree (source doc/main.xml): option on, href='inc.xml' -> allowed at both; '../outside.txt', '/etc/passwd', 'file:///etc/passwd' -> clean dies (not beside or below the source), regressed never calls check_includes so xml2rfc raises nothing; option off -> refused at both. The regressed read itself (inside lxml) was established by reading the code, not executed (lxml not installed here): parser.py::CachingResolver.resolve at the regressed commit checks local paths only 'if not self.options.allow_local_file_access', and on any other failure returns None, which makes libxml2 fall back to its default loader, so nothing in xml2rfc refuses the read. Second guard not in the slice: the fix also routes CachingResolver.resolve (parser.py) through can_access; on this flow check_includes already dies before tree.xinclude(), so the sliced guard suffices. Scope note for B-vs-C interpretation: the label is cross_file because the containment check lives in util/file.py (new in the fix, deleted by the regression) while entry/sink are in writers/base.py. The whole regression - the deleted helper plus the now-conditional check_includes call - is visible in regression.diff, so a local diff gate sees all of it; the cross-file label comes from the fix extracting a shared helper. Not modelled (fixed by the same commit): <sourcecode src=> / <artwork src=> in preptool.py (opt-in check only, no directory escape); XML external entities via CachingResolver.resolve -> getReferenceRequest (too large). Known-incomplete fix (both commits): can_access tests containment with path.startswith(dir) with no trailing separator (a sibling dir sharing the prefix passes) and does not resolve symlinks; neither reopens '../' or absolute-path hrefs. Reachability: selector dispatch and prep() live in preptool.py/base.py outside the slice; xinclude() is called directly by PrepToolWriter.prep and ExpandV3Writer."
+}

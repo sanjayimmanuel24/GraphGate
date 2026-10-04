@@ -1,0 +1,73 @@
+--- a/wsgidav/samples/mysql_dav_provider.py
++++ b/wsgidav/samples/mysql_dav_provider.py
+@@ -71,11 +71,6 @@
+     PRECONDITION_CODE_ProtectedProperty,
+ )
+ from wsgidav.dav_provider import DAVProvider, _DAVResource
+-
+-
+-def _escape_id(identifier):
+-    """Escape MySQL identifier (table, column, database name)."""
+-    return identifier.replace("`", "``")
+ 
+ 
+ class MySQLBrowserProvider(DAVProvider):
+@@ -129,26 +124,49 @@
+ 
+     def _exists_record_by_primary_key(self, conn, table_name, pri_key_value):
+         pri_key = None
++        pri_field_type = None
+         cursor = conn.cursor(MySQLdb.cursors.DictCursor)
+-        cursor.execute("DESCRIBE `%s`" % _escape_id(table_name))
++        cursor.execute("DESCRIBE " + table_name)
+         result_set = cursor.fetchall()
+         for row in result_set:
+             if row["Key"] == "PRI":
+                 if pri_key is None:
+                     pri_key = row["Field"]
++                    pri_field_type = row["Type"]
+                 else:
+                     return False  # more than one primary key - multipart key?
+         cursor.close()
+ 
++        isNumType = self._is_data_type_numeric(pri_field_type)
++
+         cursor = conn.cursor(MySQLdb.cursors.DictCursor)
+-        sql = (
+-            "SELECT `{pri_key}` FROM `{db}`.`{table}` WHERE `{pri_key}` = %s"
+-        ).format(
+-            pri_key=_escape_id(pri_key),
+-            db=_escape_id(self._db),
+-            table=_escape_id(table_name),
+-        )
+-        cursor.execute(sql, (pri_key_value,))
++        if isNumType:
++            cursor.execute(
++                "SELECT "
++                + pri_key
++                + " FROM "
++                + self._db
++                + "."
++                + table_name
++                + " WHERE "
++                + pri_key
++                + " = "
++                + pri_key_value
++            )
++        else:
++            cursor.execute(
++                "SELECT "
++                + pri_key
++                + " FROM "
++                + self._db
++                + "."
++                + table_name
++                + " WHERE "
++                + pri_key
++                + " = '"
++                + pri_key_value
++                + "'"
++            )
+         row = cursor.fetchone()
+         if row is None:
+             cursor.close()

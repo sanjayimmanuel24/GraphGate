@@ -1,0 +1,283 @@
+{
+  "advisories": [
+    "GHSA-r9mr-m37c-5fr3"
+  ],
+  "checks": [
+    {
+      "detail": "regressed commit is an ancestor of the clean commit",
+      "name": "commits",
+      "status": "ok"
+    },
+    {
+      "detail": "every requested symbol exists in at least one variant",
+      "name": "symbols-found",
+      "status": "ok"
+    },
+    {
+      "detail": "entry and sinks exist in both variants, guards in the clean one",
+      "name": "flow-present",
+      "status": "ok"
+    },
+    {
+      "detail": "files changed by the regression: git/cmd.py",
+      "name": "regression-nonempty",
+      "status": "ok"
+    },
+    {
+      "detail": "every slice file parses",
+      "name": "parses",
+      "status": "ok"
+    },
+    {
+      "detail": "clean slice is 23109 bytes (soft limit 24576, hard limit 49152)",
+      "name": "size",
+      "status": "ok"
+    },
+    {
+      "detail": "referenced but cut: git/cmd.py::Git.execute, git/cmd.py::_AutoInterrupt, git/cmd.py::_CatFileContentStream, git/cmd.py::_GitMeta",
+      "name": "dropped-references",
+      "status": "warn"
+    },
+    {
+      "detail": "no string literal uses security wording",
+      "name": "flagged-strings",
+      "status": "ok"
+    }
+  ],
+  "clean_commit": "e8d0fbf774d1f6baa3b481adfe48bd262e43b453",
+  "event_id": "gitpython-r9mr",
+  "files": {
+    "git/cmd.py": {
+      "clean": {
+        "approx_tokens": 3962,
+        "bytes": 13864,
+        "dropped_references": [
+          "Git.execute",
+          "_AutoInterrupt",
+          "_CatFileContentStream",
+          "_GitMeta"
+        ],
+        "kept": [
+          "Git.__getattr__",
+          "Git._call_process",
+          "Git._canonicalize_option_name",
+          "Git._option_candidates",
+          "Git._unpack_args",
+          "Git.check_unsafe_options",
+          "Git.transform_kwarg",
+          "Git.transform_kwargs",
+          "dashify",
+          "execute_kwargs"
+        ],
+        "lines": 384,
+        "missing": [],
+        "original_lines": 1881,
+        "syntax_error": null
+      },
+      "regressed": {
+        "approx_tokens": 3842,
+        "bytes": 13446,
+        "dropped_references": [
+          "Git.execute",
+          "_AutoInterrupt",
+          "_CatFileContentStream",
+          "_GitMeta"
+        ],
+        "kept": [
+          "Git.__getattr__",
+          "Git._call_process",
+          "Git._canonicalize_option_name",
+          "Git._option_candidates",
+          "Git._unpack_args",
+          "Git.check_unsafe_options",
+          "Git.transform_kwarg",
+          "Git.transform_kwargs",
+          "dashify",
+          "execute_kwargs"
+        ],
+        "lines": 377,
+        "missing": [],
+        "original_lines": 1874,
+        "syntax_error": null
+      }
+    },
+    "git/repo/base.py": {
+      "clean": {
+        "approx_tokens": 2642,
+        "bytes": 9245,
+        "dropped_references": [],
+        "kept": [
+          "Repo._clone",
+          "Repo.clone_from",
+          "_logger"
+        ],
+        "lines": 302,
+        "missing": [],
+        "original_lines": 1731,
+        "syntax_error": null
+      },
+      "regressed": {
+        "approx_tokens": 2642,
+        "bytes": 9245,
+        "dropped_references": [],
+        "kept": [
+          "Repo._clone",
+          "Repo.clone_from",
+          "_logger"
+        ],
+        "lines": 302,
+        "missing": [],
+        "original_lines": 1731,
+        "syntax_error": null
+      }
+    }
+  },
+  "flagged_strings": {
+    "clean": [],
+    "regressed": []
+  },
+  "flow": {
+    "entry": [
+      {
+        "kind": "library-api",
+        "note": "caller-supplied keyword arguments become git-clone options; the value of a one-letter kwarg such as n=\"--upload-pack=<cmd>\" is forwarded untouched through Repo._clone",
+        "symbol": "git/repo/base.py::Repo.clone_from"
+      }
+    ],
+    "guards": [
+      {
+        "note": "when single-letter options are split, also emits each dash-prefixed value of a one-letter kwarg as a candidate, so check_unsafe_options sees --upload-pack=<cmd>; the regressed version emits only -n and the check passes",
+        "symbol": "git/cmd.py::Git._option_candidates"
+      }
+    ],
+    "sinks": [
+      {
+        "kind": "subprocess",
+        "note": "git.clone(...) reaches _call_process via Git.__getattr__; transform_kwargs/transform_kwarg turn n=VALUE into two argv tokens ['-n', VALUE] and execute() runs git clone -n --upload-pack=<cmd>, which runs <cmd>",
+        "symbol": "git/cmd.py::Git._call_process",
+        "true_symbol": "git/cmd.py::Git.execute"
+      }
+    ]
+  },
+  "flow_files": [
+    "git/cmd.py",
+    "git/repo/base.py"
+  ],
+  "notes": "Pilot spec, re-reviewed 2026-09-29 (structure kept; checks re-run). Pair faf3c090 -> e8d0fbf7: the regression diff touches only Git._option_candidates in git/cmd.py (the fix's other change is its own test in test/test_git.py, outside the slice). Class os-command (advisory CWE-78/CWE-88): the mechanism is argument injection into git's argv, but the injected --upload-pack makes git run the caller's string as a shell command. Advisory PoC flow: Repo.clone_from(url, path, n='--upload-pack=touch X;git-upload-pack'). Regressed: Repo._clone -> Git._option_candidates([], kwargs) returns ['-n'] (key only) -> Git.check_unsafe_options finds nothing on unsafe_git_clone_options (-n is a clusterable value-less flag) -> git.clone(...) -> Git.__getattr__ -> Git._call_process -> Git.transform_kwargs -> Git.transform_kwarg('n', value, True) = ['-n', '--upload-pack=...'] -> Git.execute (Popen of git clone -v -n --upload-pack=<cmd> -- url path; -n takes no value, so git parses the next token as --upload-pack and runs <cmd>). Clean: _option_candidates also returns '--upload-pack=...', whose canonical name matches the clone denylist, so UnsafeOptionError is raised before git runs. Verified by running the real _option_candidates/check_unsafe_options/transform_kwargs (extracted from both commits) with the real Repo.unsafe_git_clone_options: regressed passes the guard with argv ['-n', '--upload-pack=...']; clean raises UnsafeOptionError on the '--upload-pack=...' candidate; benign n=True, depth=1 and b='main' still pass in clean; list values (n=['--upload-pack=x']) pass in regressed and are rejected in clean. End to end with git 2.55.0.windows.3 (re-run 2026-09-29): git clone -v -n '--upload-pack=touch <marker>;git-upload-pack' -- <local bare repo> <dst> (the argv _call_process builds) created the marker, so the smuggled token is executed. Only a value-less short flag (n, or the other clusterable ones) makes git parse the next token as an option; after a value-taking flag such as b the smuggled token is just consumed as its value (re-run: git clone -b '--upload-pack=...' fails with 'Remote branch ... not found' and runs nothing). The clean check is broader (any dash-prefixed value of a one-letter kwarg is a candidate). Sink stand-in is Git._call_process (the direct caller of Git.execute; the execute implementation alone is ~16 KB / 348 lines at the clean commit, plus overloads, and would push the clean slice to ~39 KB, so it is left out; a trial build with Git.execute added gave a 39,844-byte clean slice), the same stand-in/true_symbol pair as gitpython-2f96. Scope follows the true sink either way (both in git/cmd.py; entry in git/repo/base.py, so cross_file). Hop not in the slice: Repo._clone passes kwargs to git.clone as **add_progress(kwargs, git, progress) (git/remote.py), which only sets progress=True when a progress object is given and returns the same dict; left out because adding it (git/remote.py imports plus the helper) takes the clean slice to 24,677 bytes, over the soft limit, and gitpython-2f96 leaves it out too. Also cut, not on the kwarg flow: Git.polish_url, Git.is_cygwin, Git.check_unsafe_protocols (URL and platform handling called from Repo._clone). The same key-only candidate builder feeds parallel guarded flows (Remote.fetch/pull/push, Repo.iter_commits/blame/blame_incremental/archive, Commit.iter_items, and Git.ls_remote, which lies entirely in git/cmd.py); only the clone flow is modelled. Known neighbour not closed by this fix: the joined -nVALUE token when split_single_char_options=False (GHSA-wvpp, fixed later in 96a888f4); the modelled flow uses the default split path, which this fix does close. Dropped references accepted: Git.execute (true sink, too large), _AutoInterrupt and _CatFileContentStream (targets of class-level TypeAlias assignments kept automatically), _GitMeta (metaclass); none is on the flow.",
+  "regressed_commit": "faf3c09038b03bc2bdd8545ef34bbf6d7f1cd11f",
+  "regression_files": [
+    "git/cmd.py"
+  ],
+  "repo": "gitpython-developers/gitpython",
+  "schema_version": 1,
+  "scope": "cross_file",
+  "scrubbed": {
+    "clean": [
+      {
+        "kind": "comment",
+        "line": 123,
+        "path": "git/cmd.py",
+        "text": "# This option allows arbitrary command execution in git-ls-remote."
+      },
+      {
+        "kind": "docstring",
+        "line": 157,
+        "path": "git/cmd.py",
+        "text": "Some options passed to ``git <command>`` can execute arbitrary commands and\n        are therefore blocked by default unless the caller explicitly allows them."
+      },
+      {
+        "kind": "comment",
+        "line": 126,
+        "path": "git/repo/base.py",
+        "text": "# Executes arbitrary commands:"
+      },
+      {
+        "kind": "comment",
+        "line": 129,
+        "path": "git/repo/base.py",
+        "text": "# Can override configuration variables that execute arbitrary commands:"
+      },
+      {
+        "kind": "comment",
+        "line": 135,
+        "path": "git/repo/base.py",
+        "text": "# Allows arbitrary command execution through the remote git-upload-archive command."
+      },
+      {
+        "kind": "comment",
+        "line": 143,
+        "path": "git/repo/base.py",
+        "text": "# This option allows output to be written to arbitrary files before revision parsing."
+      }
+    ],
+    "regressed": [
+      {
+        "kind": "comment",
+        "line": 123,
+        "path": "git/cmd.py",
+        "text": "# This option allows arbitrary command execution in git-ls-remote."
+      },
+      {
+        "kind": "docstring",
+        "line": 157,
+        "path": "git/cmd.py",
+        "text": "Some options passed to ``git <command>`` can execute arbitrary commands and\n        are therefore blocked by default unless the caller explicitly allows them."
+      },
+      {
+        "kind": "comment",
+        "line": 126,
+        "path": "git/repo/base.py",
+        "text": "# Executes arbitrary commands:"
+      },
+      {
+        "kind": "comment",
+        "line": 129,
+        "path": "git/repo/base.py",
+        "text": "# Can override configuration variables that execute arbitrary commands:"
+      },
+      {
+        "kind": "comment",
+        "line": 135,
+        "path": "git/repo/base.py",
+        "text": "# Allows arbitrary command execution through the remote git-upload-archive command."
+      },
+      {
+        "kind": "comment",
+        "line": 143,
+        "path": "git/repo/base.py",
+        "text": "# This option allows output to be written to arbitrary files before revision parsing."
+      }
+    ]
+  },
+  "slice": {
+    "git/cmd.py": [
+      "execute_kwargs",
+      "dashify",
+      "Git.__getattr__",
+      "Git._canonicalize_option_name",
+      "Git.check_unsafe_options",
+      "Git._option_candidates",
+      "Git.transform_kwarg",
+      "Git.transform_kwargs",
+      "Git._unpack_args",
+      "Git._call_process"
+    ],
+    "git/repo/base.py": [
+      "_logger",
+      "Repo._clone",
+      "Repo.clone_from"
+    ]
+  },
+  "spec_sha256": "b1c00c5555d0143499c8630c310ff837b28960f46773fdddecf63c8d9c1134f1",
+  "totals": {
+    "clean": {
+      "approx_tokens": 6604,
+      "bytes": 23109
+    },
+    "regressed": {
+      "approx_tokens": 6484,
+      "bytes": 22691
+    }
+  },
+  "vulnerability_class": "os-command"
+}

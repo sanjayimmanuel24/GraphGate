@@ -1,0 +1,23 @@
+{
+  "event_id": "gitpython-2f96",
+  "advisories": ["GHSA-2f96-g7mh-g2hx"],
+  "repo": "gitpython-developers/gitpython",
+  "clean_commit": "181e8ede7543dbbdcee92756cea260f675316c63",
+  "regressed_commit": "b920dcd4d97242e5a40ccbd742ecc9d5ef2511d1",
+  "vulnerability_class": "os-command",
+  "flow": {
+    "entry": [{"symbol": "git/repo/base.py::Repo.clone_from", "kind": "library-api",
+               "note": "the caller's **kwargs (keys and values) are forwarded unchanged to Repo._clone, whose keys become git-clone long options; e.g. upload_p=<program>. The multi_options list (e.g. ['--upl=<program>']) is a second tainted parameter on the same symbols"}],
+    "guards": [{"symbol": "git/cmd.py::Git.check_unsafe_options",
+                "note": "Repo._clone passes list(kwargs.keys()); the clean version also rejects any multi-character kwarg (or --long option) whose canonical name is a prefix of a blocked option, so upload_p -> upload-p is refused as --upload-pack. The regressed version only does an exact dict lookup, so upload_p passes"}],
+    "sinks": [{"symbol": "git/cmd.py::Git._call_process", "true_symbol": "git/cmd.py::Git.execute", "kind": "subprocess",
+               "note": "git.clone(...) in Repo._clone dispatches via Git.__getattr__ to _call_process, where transform_kwargs/transform_kwarg turn upload_p=<program> into --upload-p=<program> and self.execute(call) starts git (safer_popen/Popen inside Git.execute, ~16 KB with its overloads, too large for the slice); git expands --upload-p to --upload-pack and runs <program>"}]
+  },
+  "slice": {
+    "git/repo/base.py": ["_logger", "Repo._clone", "Repo.clone_from"],
+    "git/cmd.py": ["execute_kwargs", "dashify", "Git._canonicalize_option_name", "Git.check_unsafe_options",
+                   "Git.__getattr__", "Git.transform_kwarg", "Git.transform_kwargs", "Git._unpack_args",
+                   "Git._call_process"]
+  },
+  "notes": "Pilot spec, reviewed and extended at 2.3, re-reviewed 2026-09-28 (structure kept). Pair b920dcd4 -> 181e8ede is the first two commits of PR #2168 (2ab05169 adds prefix-aware matching in Git.check_unsafe_options, 181e8ede restricts it to --long options and multi-character kwargs); the regression diff touches only Git.check_unsafe_options (plus the fix's own explanatory comment). The PR's third commit 56806080 (joined short options such as -uVALUE, GHSA-v396-v7q4-x2qj) is the separate event gitpython-v396. Class: os-command (advisory CWE-78/CWE-184); the mechanism is argument injection into git's argv, but the injected option makes git run the caller-supplied value as a program, so the impact is OS command execution. Verified concretely: the guard extracted from each commit lets kwargs upload_p, upload_pac, conf and multi_option --upl=... through at b920dcd4 and rejects all of them at 181e8ede (exact upload_pack and u are rejected at both); transform_kwarg('upload_p', prog) yields --upload-p=prog at both; and git 2.55 (git clone --upload-p='touch MARKER; false' of a local bare repo) created the marker. add_progress (git/remote.py) only adds progress=True and does not filter kwargs. Parallel flows closed by the same change but not modelled as separate entries: Repo.clone (instance method), and Remote.fetch/pull/push in git/remote.py (upload_p, receive_p, exe); the multi_options path through _clone is visible in the slice (Git._unpack_args). Known-incomplete fix: at 181e8ede a crafted extra kwarg key starting with '-' whose value is False or None (e.g. **{'upload_p': prog, '-': False}) makes options_are_kwargs False, which switches off prefix matching for every kwarg; the '-' key emits no argv, so --upload-p=prog still reaches git. That residual bypass survives 56806080 (options_are_kwargs unchanged) and is closed upstream only by 701ce32f (GHSA-956x-8gvw-wg5v), where _clone passes Git._option_candidates([], kwargs), which drops False/None-valued keys and spells kwargs as --long options. The modelled flow (plain upload_p kwarg, the advisory's PoC) is closed by the clean commit. The tainted datum is a kwarg KEY (option name) as well as its value; taint engines that only propagate values may not see it. Accepted dropped references: Git.execute (the true sink, recorded as true_symbol), _AutoInterrupt and _CatFileContentStream (targets of the class-level TypeAlias assignments, not on the flow), _GitMeta (Git's metaclass, not on the flow). Base.py also calls Git.check_unsafe_protocols, Git.polish_url and Git.is_cygwin, which are cut (URL/platform handling, not on the kwarg flow)."
+}
