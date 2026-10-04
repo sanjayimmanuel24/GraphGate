@@ -12,24 +12,15 @@ rebuilt afterwards shows as needing review again.
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
+from graphgate.dataset.events import dossier_version
+
 TEMPLATE = Path(__file__).with_name("signoff_page.html")
 PLACEHOLDER = '/*__DATA__*/{"generated_at": "", "events": []}'
-
-
-def dossier_version(event_dir: Path, ai: dict) -> str:
-    """A short hash over everything the reviewer sees for this event."""
-    h = hashlib.sha256()
-    for path in sorted(p for p in event_dir.rglob("*") if p.is_file() and p.name != "spec.json"):
-        h.update(path.relative_to(event_dir).as_posix().encode())
-        h.update(path.read_bytes())
-    h.update(json.dumps(ai, sort_keys=True).encode())
-    return h.hexdigest()[:12]
 
 
 def read_tree(root: Path) -> dict[str, str]:

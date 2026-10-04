@@ -14,6 +14,7 @@ from typing import Callable
 
 from graphgate.config import RunConfig
 from graphgate.harness.diff import changed_paths, unified_diff
+from graphgate.harness.injection import InjectionError, InjectionPlan
 from graphgate.harness.protocol import (
     SYSTEM_PROMPT,
     ResponseParseError,
@@ -45,9 +46,19 @@ class RefinementDriver:
         client: CodeGenClient,
         clock: Callable[[], str] = utc_now_iso,
         initial: Snapshot | None = None,
+        injection: InjectionPlan | None = None,
+        schema_version: int = SCHEMA_VERSION,
     ):
+        if injection is not None and schema_version < 5:
+            raise ValueError("an injection plan needs trace schema v5 or later")
         self.config = config
         self.client = client
+        # The regression to place at one turn of every replication (BUILD_PLAN
+        # 2.4). None for a plain refinement run.
+        self._injection = injection
+        # Replay passes the source trace's version so an archived v4 trace is
+        # re-emitted as v4, byte for byte.
+        self._schema_version = schema_version
         # Injectable so replay (step 1.3) can re-emit the *recorded* timestamps
         # rather than the wall clock. Without this, a replayed trace could never
         # be byte-identical to its source, which is M1.1's exit check.
@@ -58,6 +69,8 @@ class RefinementDriver:
         # Outcome counters across all replications, for the run summary.
         self.refusals = 0
         self.errors = 0
+        self.injections_applied = 0
+        self.injections_failed = 0
 
     def run(self) -> int:
         """Execute every replication. Returns the number of turns recorded."""
@@ -95,7 +108,7 @@ class RefinementDriver:
 
     def _record(self, seed: int, turn: int, kind: str, **fields) -> TraceRecord:
         return TraceRecord(
-            schema_version=SCHEMA_VERSION,
+            schema_version=self._schema_version,
             trace_id=self.config.trace_id,
             seed=seed,
             turn=turn,
@@ -114,7 +127,13 @@ class RefinementDriver:
         the degradation curve.
         """
         writer.write(
-            self._record(seed, 0, KIND_INIT, files_after=dict(initial.files))
+            self._record(
+                seed,
+                0,
+                KIND_INIT,
+                files_after=dict(initial.files),
+                injection=None if self._injection is None else self._injection.to_dict(),
+            )
         )
 
         snapshot = initial
@@ -127,6 +146,14 @@ class RefinementDriver:
                 completion = self.client.complete(
                     SYSTEM_PROMPT, user_prompt, replication=seed
                 )
+                if completion.stop_reason == "max_tokens":
+                    # A reply cut off mid-file would still parse: the unfinished
+                    # block is dropped and the finished ones applied, recording
+                    # a smaller change than the model made. A failure instead.
+                    raise CompletionError(
+                        "response was cut off at max_tokens; the turn is not "
+                        "usable (raise --max-tokens and rerun)"
+                    )
                 changes = parse_file_blocks(completion.text)
             except RefusalError as refusal:
                 # Caught before CompletionError (its base class) so a refusal is
@@ -196,6 +223,25 @@ class RefinementDriver:
                 )
 
             new_snapshot = snapshot.updated(changes)
+            outcome = None
+            if self._injection is not None and turn == self._injection.turn:
+                # Bundled injection: the model's own change for this turn stays,
+                # and the regression is placed in the code it produced.
+                try:
+                    files, report = self._injection.apply(dict(new_snapshot.files))
+                    new_snapshot = Snapshot(files=files)
+                    outcome = {"status": "applied", **report}
+                    self.injections_applied += 1
+                except InjectionError as exc:
+                    outcome = {"status": "failed", "reason": str(exc)}
+                    self.injections_failed += 1
+                    log.warning(
+                        "trace %s seed %d turn %d: injection failed: %s",
+                        self.config.trace_id,
+                        seed,
+                        turn,
+                        exc,
+                    )
             diff = unified_diff(snapshot, new_snapshot)
             if not diff:
                 log.warning(
@@ -222,9 +268,15 @@ class RefinementDriver:
                     usage=dict(completion.usage),
                     latency_ms=completion.latency_ms,
                     cached=completion.cached,
+                    injection=outcome,
                 )
             )
             snapshot = new_snapshot
             turns += 1
+            if outcome is not None and outcome["status"] == "failed":
+                # Without its regression this replication cannot be scored, so
+                # it stops here rather than paying for turns nobody will use.
+                # The turns already recorded are ordinary model turns.
+                return turns
 
         return turns

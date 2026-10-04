@@ -19,7 +19,12 @@ from typing import Any, Iterator
 # explanation fields. Older files are rejected rather than silently upgraded:
 # the only pre-v3 traces are smoke runs, and they are cheap to regenerate.
 # v4 added `resolved_model`; `model` now always holds the requested ID.
-SCHEMA_VERSION = 4
+# v5 added `injection` (BUILD_PLAN 2.4): the init record carries the regression
+# plan and the injected turn carries its outcome. v4 files stay readable, and a
+# v4 record serialises exactly as it always did, because the archived smoke
+# traces are evidence and must keep replaying byte for byte.
+SCHEMA_VERSION = 5
+SUPPORTED_VERSIONS = frozenset({4, 5})
 
 # Record kinds.
 KIND_INIT = "init"  # turn 0: the starting snapshot, before any refinement
@@ -72,20 +77,27 @@ class TraceRecord:
     # The model snapshot the API reported. `model` is the ID requested, which
     # is what prompt_hash covers; see Completion.resolved_model.
     resolved_model: str | None = None
+    # v5. On an init record: the regression plan (InjectionPlan.to_dict()). On
+    # the turn where it was injected: {"status": "applied" | "failed", ...}.
+    # None everywhere else. Ground truth: never shown to the model or a gate.
+    injection: dict[str, Any] | None = None
 
     def to_json(self) -> str:
         # sort_keys so two runs producing the same record produce the same
         # bytes — the exit check for M1.1 is byte-identical trace files.
-        return json.dumps(asdict(self), sort_keys=True, ensure_ascii=False)
+        data = asdict(self)
+        if self.schema_version < 5:
+            del data["injection"]  # the key did not exist before v5
+        return json.dumps(data, sort_keys=True, ensure_ascii=False)
 
     @classmethod
     def from_json(cls, line: str) -> TraceRecord:
         data = json.loads(line)
         version = data.get("schema_version")
-        if version != SCHEMA_VERSION:
+        if version not in SUPPORTED_VERSIONS:
             raise ValueError(
                 f"trace schema version {version!r} is not supported "
-                f"(this build reads v{SCHEMA_VERSION})"
+                f"(this build reads v{min(SUPPORTED_VERSIONS)} to v{SCHEMA_VERSION})"
             )
         return cls(**data)
 

@@ -84,11 +84,14 @@ class RecordingFakeClient:
             )
         if isinstance(item, Exception):
             raise item
+        stop_reason = "end_turn"
+        if isinstance(item, tuple):  # (text, stop_reason), for a reply that was cut off
+            item, stop_reason = item
         return Completion(
             text=item,
             model=self.model,
             resolved_model=self.resolved_model,
-            stop_reason="end_turn",
+            stop_reason=stop_reason,
             prompt_hash=self.request_hash(system, user),
             latency_ms=1.5,
             usage={"input_tokens": 5, "output_tokens": 7},
@@ -183,7 +186,12 @@ def replay_into():
             seeds=client.seeds,
         )
         driver = RefinementDriver(
-            config, client, clock=client.clock, initial=client.initial_snapshot
+            config,
+            client,
+            clock=client.clock,
+            initial=client.initial_snapshot,
+            injection=client.injection,
+            schema_version=client.schema_version,
         )
         return driver.run()
 

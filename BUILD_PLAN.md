@@ -148,6 +148,40 @@ X", "optimize") with the regression injected at a randomized turn.
 > generate a 5-8 turn refinement trace using these prompt templates [...], injecting the
 > vulnerable variant at a randomized turn between 2 and 6."*
 
+*As built (2026-10-04; tool finished, no dataset trace recorded yet). Decided with the owner: the
+regression is **bundled with a model turn**. At the chosen turn the model makes its own change and
+the regression is then placed in the code it produced, so that turn's diff holds both.*
+- *Plan (`graphgate.dataset.traceplan`): turn count (5–8), the instructions and the injection turn
+  (2–6) come from a generator seeded with `plan_seed:event_id`. Every replication of an event
+  follows one plan; replications differ only in what the model writes. Instructions are drawn
+  without repetition from `data/refinement_prompts.txt` (10 neutral, ISTAS-style requests).*
+- *Injection (`graphgate.harness.injection`): a file the model has not touched is swapped for its
+  regressed version; a file it has changed gets the regression merged unit by unit (functions,
+  class attributes, imports, statements), keeping the model's other edits. If a changed function
+  can no longer be found by name the injection **fails**: recorded as such, and the replication
+  ends. Checked against every real dossier: of the 39 changed files the merge reproduces 35
+  byte-for-byte and 4 up to blank lines.*
+- *Trace schema v5 adds `injection`: the plan on each init record, the outcome on the injected
+  turn. It is ground truth and is never shown to the model or to a gate. Replay re-applies it
+  through the same driver, so injected traces replay byte-for-byte; v4 traces still replay as v4.*
+- *`scripts/synthesize_traces.py` records the traces (one file per event, all replications) and a
+  `manifest.json` with each replication's outcome. Dataset traces come only from events accepted
+  in `data/validation_signoff.json` on the current dossier, and go to `data/traces/`. `--pilot`
+  also takes AI-prepared events and writes to `runs/pilot-traces/`; those test the tool and are
+  not dataset traces. `--dry-run` prints the plan and a rough cost and sends nothing.*
+- *Found on the way and fixed: a reply cut off at `max_tokens` used to be half-applied (the
+  unfinished file block dropped, the finished ones kept). It is now recorded as an error.*
+
+*Open:*
+- *Nothing has been run live. Dry-run estimate for the 31 AI-prepared events at 3 seeds: 621
+  calls, roughly $75–127 on Opus 4.8. Run the three-event pilot in `HOW_TO_RUN.md` first (21
+  calls, roughly $2–3).*
+- *For 2.5: a later turn may undo the regression (the model can put a guard back), so a label
+  cannot assume the regression persists after the injection turn — check each turn.*
+- *xml2rfc-cfmv is large enough that a turn rewriting every file may pass 16k output tokens.*
+- *The refusal rule (a refusal ends the replication) is to be revisited here once the pilot shows
+  how often it happens.*
+
 **2.5** Label every turn `{clean, local_regression, cross_file_regression}` and store alongside
 the trace.
 

@@ -22,6 +22,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterator
 
+from graphgate.harness.injection import InjectionPlan
 from graphgate.harness.snapshot import Snapshot
 from graphgate.harness.trace import (
     KIND_ERROR,
@@ -176,6 +177,19 @@ class ReplayClient:
     @property
     def trace_id(self) -> str:
         return self._source[0].trace_id
+
+    @property
+    def schema_version(self) -> int:
+        """The source's schema version, so the replay is written in the same one."""
+        return self._source[0].schema_version
+
+    @property
+    def injection(self) -> InjectionPlan | None:
+        """The regression plan recorded on the init record, if the run had one."""
+        for record in self._source:
+            if record.kind == KIND_INIT:
+                return None if record.injection is None else InjectionPlan.from_dict(record.injection)
+        return None
 
     @property
     def seeds(self) -> tuple[int, ...]:

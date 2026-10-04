@@ -121,6 +121,25 @@ def test_api_failure_is_recorded_and_stops_that_replication(snapshot_dir, tmp_pa
     assert "declined" in records[-1].error
 
 
+def test_reply_cut_off_at_max_tokens_is_an_error_not_a_partial_turn(
+    snapshot_dir, tmp_path, file_block
+):
+    """The first block is complete and would parse; applying it alone would
+    record a smaller change than the model made."""
+    config = make_config(snapshot_dir, tmp_path, ["a", "b"])
+    cut_off = file_block("def run():\n    return 2") + "### FILE: extra.py\n```python\ndef half("
+    client = FakeClient([(cut_off, "max_tokens"), file_block("never reached")])
+
+    turns = RefinementDriver(config, client).run()
+
+    assert turns == 0
+    records = list(read_trace(config.trace_path))
+    assert [r.kind for r in records] == [KIND_INIT, KIND_ERROR]
+    assert "max_tokens" in records[1].error
+    assert records[1].files_after == records[0].files_after  # nothing was applied
+    assert client.calls == 1
+
+
 def test_one_seed_failing_does_not_abort_the_others(snapshot_dir, tmp_path, file_block):
     config = make_config(snapshot_dir, tmp_path, ["a"], seeds=(0, 1))
     client = FakeClient([CompletionError("transient"), file_block("v = 2")])

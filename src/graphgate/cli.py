@@ -220,6 +220,8 @@ def _run_replay(args: argparse.Namespace) -> int:
         client,
         clock=client.clock,
         initial=client.initial_snapshot,
+        injection=client.injection,
+        schema_version=client.schema_version,
     )
     return driver.run()
 

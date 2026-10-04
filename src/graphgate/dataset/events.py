@@ -173,6 +173,20 @@ def approx_tokens(text: str) -> int:
     return math.ceil(len(text) / CHARS_PER_TOKEN)
 
 
+def dossier_version(event_dir: Path, ai_review: dict[str, Any]) -> str:
+    """A short hash over everything a reviewer sees for this event.
+
+    A sign-off decision stores the version it was made on, so a dossier (or its
+    AI review) changed afterwards no longer counts as signed off.
+    """
+    h = hashlib.sha256()
+    for path in sorted(p for p in event_dir.rglob("*") if p.is_file() and p.name != "spec.json"):
+        h.update(path.relative_to(event_dir).as_posix().encode())
+        h.update(path.read_bytes())
+    h.update(json.dumps(ai_review, sort_keys=True).encode())
+    return h.hexdigest()[:12]
+
+
 def build_event(spec_path: Path, repo_dir: Path, *, soft_limit: int = SOFT_LIMIT_BYTES,
                 hard_limit: int = HARD_LIMIT_BYTES) -> dict[str, Any]:
     """Build the dossier next to ``spec_path`` and return event.json's content."""

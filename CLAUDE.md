@@ -103,6 +103,19 @@ that reintroduces the hallucination surface the design specifically avoids.
     events as validated or expert-confirmed.
   - Build with `scripts/build_event.py`; never edit `clean/`, `regressed/` or `event.json` by
     hand — change `spec.json` and rebuild.
+- **Traces** (2.4, decided 2026-10-04): the regression is *bundled with a model turn* — at the
+  planned turn the model makes its own change, then the regression is placed in the code it
+  produced (`graphgate.harness.injection`). A trace's turn count, instructions and injection turn
+  depend only on `(plan_seed, event_id)`, so every replication of an event follows the same plan.
+  - Dataset traces (`data/traces/`) come only from events accepted in
+    `data/validation_signoff.json` on the current dossier. `--pilot` traces
+    (`runs/pilot-traces/`) test the tool and are never reported as dataset results.
+  - The `injection` field of a trace (schema v5) is ground truth. Never show it to the
+    code-generation model or to any gate condition.
+  - An injection that cannot be placed is recorded as failed and ends the replication. Never
+    fall back to overwriting the model's file with the regressed version.
+  - Do not change `data/refinement_prompts.txt` or the plan seed once dataset traces exist: the
+    manifest marks every trace recorded under another plan (`matches_plan: false`).
 - **Bounded retrieval**: default 2-hop neighborhood around changed symbols. Hop depth is an
   ablation variable (1/2/3), not something to "improve" beyond the plan.
 - **Deployment targets**: CI pre-merge gate and agent-framework middleware (e.g., a LangGraph
@@ -214,5 +227,8 @@ selected repos (`data/fix_pairs.json`), each reviewed by two independent reviewe
 is finished (31 passed the adversarial check, 2 excluded, 1 rebuilt and awaiting a re-check —
 `data/validation_ai_review.json`). **Next: the owner's sign-off** on the sign-off page (0 of 34
 decided as of 2026-10-04), then record the decisions in `data/validation_signoff.json` and close
-2.3. A progress paper (`paper/`) and a dashboard (`scripts/build_dashboard.py`) exist for the
-guide's review; both read their numbers from the data files.
+2.3. **Step 2.4 tool built** (`scripts/synthesize_traces.py`, trace schema v5) but nothing has
+been recorded live: the owner runs a pilot (`--pilot`, 2–3 events) and, after the sign-off, the
+dataset run. Then 2.5 (turn labels) and 2.6 (leakage control). A progress paper (`paper/`) and a
+dashboard (`scripts/build_dashboard.py`) exist for the guide's review; both read their numbers
+from the data files.
