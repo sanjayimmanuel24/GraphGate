@@ -39,6 +39,23 @@ def test_replay_refuses_to_write_onto_its_source(
     assert source.read_bytes() == before
 
 
+def test_replay_refuses_an_output_file_that_already_exists(
+    snapshot_dir, tmp_path, file_block, record_live
+):
+    """Replaying twice into one file used to append, leaving a file three
+    times the source's size whose hash could never match it."""
+    source = record_live(
+        snapshot_dir, tmp_path / "source.jsonl", ["a"], [file_block("v = 2")]
+    )
+    out = tmp_path / "replayed.jsonl"
+    assert main(["--replay", str(source), "--out", str(out)]) == 0
+
+    with pytest.raises(SystemExit, match="already exists"):
+        main(["--replay", str(source), "--out", str(out)])
+
+    assert out.read_bytes() == source.read_bytes()  # the first replay is untouched
+
+
 def test_live_run_requires_its_own_flags(tmp_path):
     with pytest.raises(SystemExit, match="--snapshot, --prompts, --trace-id"):
         main(["--out", str(tmp_path / "t.jsonl")])

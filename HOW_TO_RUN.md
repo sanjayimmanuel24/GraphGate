@@ -27,9 +27,16 @@ python -m pip install -e ".[dev]"
 python -m pytest -q
 ```
 
-Expected: `242 passed`.
+Expected: every test passes (`379 passed` as of 2026-10-05).
 
 ## 4. Replay a recorded LLM refinement run (no API key, no cost)
+
+First remove the output of any earlier replay. The harness refuses to replay into a file that already
+exists, because appending to it would give a file that cannot match the original:
+
+```powershell
+Remove-Item runs/replay-demo.jsonl -ErrorAction SilentlyContinue
+```
 
 ```powershell
 graphgate-harness --replay docs/evidence/2026-09-27-smoke/smoke-05-opus48.jsonl --out runs/replay-demo.jsonl
@@ -39,11 +46,10 @@ This re-runs a three-turn, three-replication refinement session recorded against
 without calling the model. To show it reproduces the original byte for byte, compare the hashes:
 
 ```powershell
-Get-FileHash docs/evidence/2026-09-27-smoke/smoke-05-opus48.jsonl, runs/replay-demo.jsonl
+Get-FileHash docs/evidence/2026-09-27-smoke/smoke-05-opus48.jsonl, runs/replay-demo.jsonl | Format-List Hash, Path
 ```
 
-Both lines show the same hash. Delete `runs/replay-demo.jsonl` before running step 4 again, because
-the harness appends to an existing file.
+Both entries show the same hash.
 
 ## 5. Show a regression event from the dataset
 
@@ -112,6 +118,10 @@ What was recorded, per replication, is in `runs/pilot-traces/manifest.json`.
 Check that a recorded trace replays byte-for-byte:
 
 ```powershell
+Remove-Item runs/pilot-replay.jsonl -ErrorAction SilentlyContinue
+```
+
+```powershell
 graphgate-harness --replay runs/pilot-traces/lollms-m45c.jsonl --out runs/pilot-replay.jsonl
 ```
 
@@ -119,8 +129,17 @@ graphgate-harness --replay runs/pilot-traces/lollms-m45c.jsonl --out runs/pilot-
 fc.exe /b runs\pilot-traces\lollms-m45c.jsonl runs\pilot-replay.jsonl
 ```
 
+Label every turn of the recorded traces (step 2.5). This reads the traces and makes no API call:
+
+```powershell
+python scripts/label_traces.py --traces-dir runs/pilot-traces
+```
+
+It writes `<event>.labels.json` next to each trace and prints how many turns are clean, how many hold the
+regression, and how many were `carried` because the model rewrote the regression's code.
+
 The dataset run (no `--pilot`) records only events accepted on the sign-off page and writes to
-`data/traces/`.
+`data/traces/`; label it with `python scripts/label_traces.py`.
 
 Steps 5 and 7 use the repository clones in `data/interim/repos` and Microsoft Word respectively. Both are
 already on this machine. On another machine, steps 3, 4 and 6 work straight from the project files.

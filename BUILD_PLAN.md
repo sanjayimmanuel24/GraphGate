@@ -185,6 +185,34 @@ the regression is then placed in the code it produced, so that turn's diff holds
 **2.5** Label every turn `{clean, local_regression, cross_file_regression}` and store alongside
 the trace.
 
+*As built (2026-10-04; tool finished, no real trace labelled yet). `graphgate.dataset.labels`,
+run by `scripts/label_traces.py`, writes `<event_id>.labels.json` next to each trace.*
+- *A label describes the code **after** the turn: is the event's regression in it. The turn that
+  brings it in is marked `introduced`. Both are needed by §7.2: recall and false positives need
+  to know which turns are clean, iterations-to-detection needs to know how long the regression
+  survived. The regression's label comes from the event's scope (2.3).*
+- *The label is read off the recorded code, not assumed from the plan. The regression is the set
+  of units (functions, assignments, imports) that differ between the event's clean and regressed
+  files. After each turn they are compared with both versions, ignoring comments, docstrings and
+  layout: all match the regressed version → regression; all match the clean version → clean.*
+- *If the model has rewritten one of those units, neither matches. The label is then carried from
+  the previous turn and the turn is marked `carried`. Whether a rewritten regression still holds
+  is a security judgement the tool does not make.*
+- *The same check runs before the injection, so a turn where the model itself edits the guard is
+  marked `carried` too instead of being counted as verified clean.*
+- *Cross-checks: the turn the trace records as injected must hold the regressed code, or labelling
+  stops; labels store the trace's hash and are refused for any other version of it. The rule
+  tells clean from regressed on all 33 built events.*
+
+*Open:*
+- *How many turns come out `carried` is unknown until the pilot. If it is many, they need a
+  review pass (same pattern as 2.3: AI-prepared, owner decides) or a rule for leaving them out.*
+- *Scope of the claim: labels cover the event's regression only. A weakness the model introduces
+  by itself elsewhere is not labelled (the §6.2 holdout covers natural regressions), and a match
+  means the regressed code is unchanged, not that nothing else on the flow compensates.*
+- *How a BLOCK on a later turn of a surviving regression is scored (late detection, not a false
+  positive) is fixed in M1.3 when the gate conditions are scored; the labels support either.*
+
 **2.6** Leakage control (proposal §6.3): verify that each injected vulnerable pattern does not
 already appear elsewhere in its repository; where duplicates exist, exclude them from the graph's
 retrieval scope during evaluation. Log every exclusion — this has to be reportable.

@@ -206,6 +206,13 @@ def _run_replay(args: argparse.Namespace) -> int:
             "--out must differ from --replay: the writer appends, so replaying "
             "onto the source would corrupt it. Write elsewhere and diff the two."
         )
+    if args.out.exists() and args.out.stat().st_size:
+        # Appending a replay to an earlier one gives a file that can never
+        # match its source, and the mismatch reads as a failed replay.
+        raise SystemExit(
+            f"{args.out} already exists and the writer appends, so the result "
+            "would not match the source. Delete it or choose another --out."
+        )
 
     client = ReplayClient.from_trace(args.replay, verify_hash=not args.no_verify_hash)
     config = RunConfig(

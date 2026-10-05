@@ -116,6 +116,17 @@ that reintroduces the hallucination surface the design specifically avoids.
     fall back to overwriting the model's file with the regressed version.
   - Do not change `data/refinement_prompts.txt` or the plan seed once dataset traces exist: the
     manifest marks every trace recorded under another plan (`matches_plan: false`).
+- **Turn labels** (2.5, 2026-10-04): `graphgate.dataset.labels` labels the code *after* each turn
+  — `clean`, `local_regression` or `cross_file_regression` — and marks the turn that brings the
+  regression in as `introduced`. Labels are read off the recorded code: the units that differ
+  between the event's clean and regressed files are compared with both versions, ignoring
+  comments, docstrings and layout.
+  - Where the model has rewritten one of those units, the label is carried from the previous
+    turn and the turn is marked `carried`. Never count a `carried` turn as verified ground
+    truth; report how many there are and how they were handled.
+  - Labels cover the event's regression only, not weaknesses the model introduces by itself.
+  - Do not change the rule after seeing gate results. Labels are regenerated from the traces
+    (`scripts/label_traces.py`); never edit a `.labels.json` by hand.
 - **Bounded retrieval**: default 2-hop neighborhood around changed symbols. Hop depth is an
   ablation variable (1/2/3), not something to "improve" beyond the plan.
 - **Deployment targets**: CI pre-merge gate and agent-framework middleware (e.g., a LangGraph
@@ -227,8 +238,10 @@ selected repos (`data/fix_pairs.json`), each reviewed by two independent reviewe
 is finished (31 passed the adversarial check, 2 excluded, 1 rebuilt and awaiting a re-check —
 `data/validation_ai_review.json`). **Next: the owner's sign-off** on the sign-off page (0 of 34
 decided as of 2026-10-04), then record the decisions in `data/validation_signoff.json` and close
-2.3. **Step 2.4 tool built** (`scripts/synthesize_traces.py`, trace schema v5) but nothing has
-been recorded live: the owner runs a pilot (`--pilot`, 2–3 events) and, after the sign-off, the
-dataset run. Then 2.5 (turn labels) and 2.6 (leakage control). A progress paper (`paper/`) and a
+2.3. **Steps 2.4 and 2.5 tools built** (`scripts/synthesize_traces.py`, trace schema v5;
+`scripts/label_traces.py`) but nothing has been recorded live: the owner runs a pilot
+(`--pilot`, 3 events) and, after the sign-off, the dataset run; labelling follows each. The
+pilot also shows how many turns come out `carried`. **Next to build: 2.6 (leakage control).** A
+progress paper (`paper/`) and a
 dashboard (`scripts/build_dashboard.py`) exist for the guide's review; both read their numbers
 from the data files.
