@@ -280,6 +280,21 @@ the controlled design is the contribution. Do not tune toward a positive result.
   - Build a graph for an event's repository with `link(..., exclude=...)` and the event's
     leakage exclusions (see "Leakage control").
 
+- **Condition runner** (3.4, 2026-10-08): `scripts/run_conditions.py` over labelled traces;
+  `graphgate.experiment.runner` writes one row per (trace, seed, condition, iteration) and
+  `graphgate.experiment.metrics` computes every measure from those rows alone.
+  - How a BLOCK is scored in a replay is fixed in the runner's docstring: each turn is judged as
+    recorded, a BLOCK changes nothing downstream, and a regression is caught from the first
+    BLOCK on a turn where it is present. Do not change the rule after a condition has been run.
+  - Report recall at introduction as the main recall figure: the introducing turn is always read
+    off the code, later turns are mostly carried.
+  - Give false blocks in every reading the summary holds, and say which one a claim uses.
+  - Dataset results go to `data/results/`, pilot results to `runs/conditions-pilot/`; the
+    summary says which it is. Never quote a pilot figure as a result.
+  - `--no-triage` (B-untriaged, C-untriaged) is the "rules without LLM triage" ablation, not a
+    substitute for B or C.
+  - A new condition is a gate with `decide(change, replication)`; it gets the `Change` only.
+
 - **Refusals** — decided 2026-09-27: *record and report*. The code-generation model's safety
   classifiers can decline a request (HTTP 200, `stop_reason: "refusal"`); the first live smoke
   run hit one. Refusals concentrate on exactly the security-relevant turns this study measures,
@@ -342,6 +357,13 @@ change, the fix, the rules fire on 4 of 30. It is not a gate result, and the rul
 and the settings were not changed after it. Never change them to raise that number; report the
 22 misses by cause (BUILD_PLAN M2.1). Next for the graph: how Condition C sees code cut from a
 slice (5.2).
+
+**Runner built (2026-10-08):** step 3.4's runner and measures, and Condition C's gate (5.2, in
+part), are built and tested (603 tests); a tool test on the three pilot traces ran without
+triage (BUILD_PLAN 3.4). No condition has been run on dataset traces. Before that run: record
+the traces, set up the analysers and rules in the notebook, and settle the open points listed
+under 3.4 and M2.1 in BUILD_PLAN (which false-positive reading the 15% limit uses; how C sees
+code cut from a slice).
 
 **Model switch, in progress (2026-10-08).** The experiment model is `qwen2.5-coder:14b`
 (Q4_K_M, Apache-2.0, 32,768-token context, Ollama 0.40.0), run by the owner in a Kaggle GPU

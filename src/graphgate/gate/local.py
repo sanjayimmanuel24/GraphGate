@@ -19,8 +19,9 @@ blocks either, and is recorded as its own outcome, not passed off as a verdict.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Any, Iterable, Mapping, Protocol
+import time
+from dataclasses import dataclass, field
+from typing import Any, Iterable, Mapping, Protocol, Sequence
 
 from graphgate.gate.analysers import ChangeScan
 from graphgate.gate.findings import Finding
@@ -46,11 +47,12 @@ LOCAL_CONDITIONS = (CONDITION_B, CONDITION_B_PLUS)
 ALLOW = "ALLOW"
 BLOCK = "BLOCK"
 
-# How a decision came about: one of these two, or TRIAGED, REFUSED or ERROR
-# when the model was asked (graphgate.gate.triage).
+# How a decision came about: one of these, or TRIAGED, REFUSED or ERROR when
+# the model was asked (graphgate.gate.triage).
 NO_CHANGE = "no-change"    # the turn changed nothing
-NO_FLAGS = "no-flags"      # nothing to triage, so no model call (Condition B only)
-OUTCOMES = (NO_CHANGE, NO_FLAGS, TRIAGED, REFUSED, ERROR)
+NO_FLAGS = "no-flags"      # nothing to triage, so no model call
+UNTRIAGED = "untriaged"    # triage switched off: whatever is flagged blocks (an ablation)
+OUTCOMES = (NO_CHANGE, NO_FLAGS, UNTRIAGED, TRIAGED, REFUSED, ERROR)
 
 
 class Scanner(Protocol):
@@ -91,6 +93,8 @@ class GateDecision:
     findings_introduced: tuple[Finding, ...]
     analysis_errors: tuple[str, ...]    # files a scanner could not fully analyse
     call: dict[str, Any] | None         # the model call, if one was made
+    flags: tuple[dict[str, Any], ...] = ()                       # graph-rule flags (Condition C only)
+    seconds: dict[str, float] = field(default_factory=dict)      # time spent per stage before triage
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -98,20 +102,53 @@ class GateDecision:
             "rationale": self.rationale, "items": list(self.items),
             "findings_introduced": [f.to_dict() for f in self.findings_introduced],
             "analysis_errors": list(self.analysis_errors), "call": self.call,
+            "flags": list(self.flags), "seconds": dict(self.seconds),
         }
+
+
+def judge(condition: str, change: Change, items: Sequence[Item], client: CodeGenClient | None, *,
+          replication: int, block_on: frozenset[str], use_triage: bool, introduced: tuple[Finding, ...],
+          errors: tuple[str, ...], flags: tuple[dict[str, Any], ...] = (),
+          seconds: dict[str, float] | None = None) -> GateDecision:
+    """The last stage, shared by every gate: from the items to a decision."""
+    common = dict(findings_introduced=introduced, analysis_errors=errors, flags=flags, seconds=seconds or {})
+    unjudged = tuple({"id": i.id, "kind": i.kind, "text": i.text, "label": None, "rationale": None} for i in items)
+    if not items:
+        return GateDecision(condition, ALLOW, NO_FLAGS, "nothing was flagged in this change", (), call=None, **common)
+    if not use_triage:
+        return GateDecision(condition, BLOCK, UNTRIAGED, f"{len(items)} item(s) flagged; triage is switched off",
+                            unjudged, call=None, **common)
+
+    result = triage(client, change.diff, items, replication=replication)
+    if not result.ok:
+        # Fail open, visibly: a gate that could not judge has not blocked,
+        # and the outcome says so instead of posing as a verdict.
+        return GateDecision(condition, ALLOW, result.outcome, result.detail or "", unjudged, call=result.call,
+                            **common)
+    judged = tuple({"id": i.id, "kind": i.kind, "text": i.text, "label": result.verdicts[i.id].label,
+                    "rationale": result.verdicts[i.id].rationale} for i in items)
+    blocking = [j for j in judged if j["label"] in block_on]
+    if blocking:
+        rationale = " ".join(f"{j['id']}: {j['rationale']}" for j in blocking)
+        return GateDecision(condition, BLOCK, TRIAGED, rationale, judged, call=result.call, **common)
+    return GateDecision(condition, ALLOW, TRIAGED, "no item was judged an exploitable regression", judged,
+                        call=result.call, **common)
 
 
 class LocalGate:
     """Condition B or B+ over one change at a time."""
 
-    def __init__(self, condition: str, scanner: Scanner, client: CodeGenClient, *,
-                 block_on: Iterable[str] = (EXPLOITABLE,)):
+    def __init__(self, condition: str, scanner: Scanner, client: CodeGenClient | None, *,
+                 block_on: Iterable[str] = (EXPLOITABLE,), use_triage: bool = True):
         if condition not in LOCAL_CONDITIONS:
             raise ValueError(f"unknown diff-only condition {condition!r}; expected one of {LOCAL_CONDITIONS}")
+        if condition == CONDITION_B_PLUS and not use_triage:
+            raise ValueError("B+ is the model's judgement of the whole change; it cannot run without triage")
         self.condition = condition
         self._scanner = scanner
         self._client = client
         self._block_on = frozenset(block_on)
+        self._use_triage = use_triage
 
     def items_for(self, change: Change) -> tuple[list[Item], ChangeScan]:
         """What the model would be asked about ``change``. Makes no model call."""
@@ -124,27 +161,8 @@ class LocalGate:
     def decide(self, change: Change, *, replication: int) -> GateDecision:
         if not change.changed_paths:
             return GateDecision(self.condition, ALLOW, NO_CHANGE, "the turn changed nothing", (), (), (), None)
+        started = time.perf_counter()
         items, scan = self.items_for(change)
-        introduced, errors = scan.findings.introduced, scan.errors
-        if not items:
-            return GateDecision(self.condition, ALLOW, NO_FLAGS,
-                                "the static analysers report nothing introduced by this change",
-                                (), introduced, errors, None)
-
-        result = triage(self._client, change.diff, items, replication=replication)
-        if not result.ok:
-            # Fail open, visibly: a gate that could not judge has not blocked,
-            # and the outcome says so instead of posing as a verdict.
-            judged = tuple({"id": i.id, "kind": i.kind, "text": i.text, "label": None, "rationale": None}
-                           for i in items)
-            return GateDecision(self.condition, ALLOW, result.outcome, result.detail or "",
-                                judged, introduced, errors, result.call)
-
-        judged = tuple({"id": i.id, "kind": i.kind, "text": i.text, "label": result.verdicts[i.id].label,
-                        "rationale": result.verdicts[i.id].rationale} for i in items)
-        blocking = [j for j in judged if j["label"] in self._block_on]
-        if blocking:
-            rationale = " ".join(f"{j['id']}: {j['rationale']}" for j in blocking)
-            return GateDecision(self.condition, BLOCK, TRIAGED, rationale, judged, introduced, errors, result.call)
-        return GateDecision(self.condition, ALLOW, TRIAGED, "no item was judged an exploitable regression",
-                            judged, introduced, errors, result.call)
+        return judge(self.condition, change, items, self._client, replication=replication,
+                     block_on=self._block_on, use_triage=self._use_triage, introduced=scan.findings.introduced,
+                     errors=scan.errors, seconds={"scan": time.perf_counter() - started})

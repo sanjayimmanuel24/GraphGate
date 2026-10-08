@@ -243,3 +243,26 @@ lets the fixes through. This is a pilot of the triage step, not the study's resu
 
 Steps 5 and 7 use the repository clones in `data/interim/repos` and Microsoft Word respectively. Both are
 already on this machine. On another machine, steps 3, 4 and 6 work straight from the project files.
+
+## 13. The conditions over recorded traces (step 3.4)
+
+Traces must be labelled first (`python scripts/label_traces.py`, see section 9).
+
+Without a model, on the pilot traces (about four minutes: each turn's scan is timed on its own):
+
+```powershell
+python scripts/run_conditions.py --traces runs/pilot-traces --no-triage
+```
+
+This runs A, B and C with triage switched off, so whatever is flagged blocks. It writes
+`turns.csv`, `decisions.jsonl`, `summary.json` and `degradation.png` to `runs/conditions-pilot/`.
+Add `--time-scans 0` to skip the timing and finish in seconds.
+
+With triage, where the model server runs (the notebook):
+
+```bash
+python scripts/run_conditions.py --provider openai-compatible --base-url http://localhost:11434/v1 --model qwen2.5-coder-14b-ctx32768
+```
+
+Dataset traces (`data/traces/`) give `data/results/`. Pilot figures are a test of the tools and
+are never quoted as results.

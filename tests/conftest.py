@@ -109,6 +109,8 @@ class StubScanner:
     how often a change was scanned.
     """
 
+    config = "stub-scanner"      # the real scanner's is its versions and rule set
+
     def __init__(self, errors=()):
         self.calls = 0
         self.errors = tuple(errors)

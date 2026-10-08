@@ -401,6 +401,51 @@ Emit one tidy CSV keyed by `(trace_id, seed, condition, iteration)` so every met
 iterations-to-detection and false-positive numbers for each condition. This is your fallback
 publishable project if nothing else gets built — treat this exit check seriously.
 
+*As built (2026-10-08): the runner and the measures exist and are tested; the exit check is not
+met, because the dataset traces are not recorded yet and Pysa (S1) is not set up.*
+- *`graphgate.experiment.runner` replays every labelled trace under each condition and writes one
+  row per (trace, seed, condition, iteration). `graphgate.experiment.metrics` computes every
+  measure from those rows alone. `scripts/run_conditions.py` writes `turns.csv`,
+  `decisions.jsonl` (every decision in full), `summary.json` and `degradation.png`: to
+  `data/results/` for dataset traces, to the ignored `runs/conditions-pilot/` for pilot traces.*
+- *Conditions: A (no gate), B, B+ and C. `--no-triage` runs B and C with no model, so that
+  whatever is flagged blocks: the proposal's "rules without LLM triage" ablation, reported as
+  B-untriaged and C-untriaged. S1 is added when Pysa runs (3.3).*
+- ***What a BLOCK means in a replay, fixed before any condition was run.** A trace was recorded
+  with no gate, so each turn is judged as recorded and a BLOCK changes nothing downstream. A turn
+  is `introducing` (it brings the regression in), `persisting` (the regression was already there
+  and still is), `clean`, or `no-change` (the model declined or the turn failed). A regression is
+  caught from the first BLOCK on an introducing or persisting turn and survives until then. A
+  BLOCK on a clean turn is a false block. What the model would have written after a block, with
+  the rationale in its next prompt, is not simulated.*
+- *Measures: the degradation curve (a trace that has ended keeps its final state, so the count
+  does not fall as shorter traces run out); recall at introduction, overall and by scope and
+  class, which is the measure least touched by carried labels; iterations to detection; false
+  blocks; time per stage and tokens; per-trace recall for the paired tests (6.3).*
+- *False blocks are given in every reading, because the proposal's "fraction of BLOCK decisions on
+  clean turns" has two: blocked clean turns over clean turns, and blocks on clean turns over all
+  blocks (one minus precision). Clean turns with a carried label are counted apart. A third,
+  stricter figure covers every turn that introduces nothing: a BLOCK on a persisting turn is
+  credited as a late catch, as iterations-to-detection asks, although that turn's own change is
+  not the regression.*
+- *Latency: decisions use one batched scan of all file versions; the scan of each turn is also
+  timed on its own with a fresh scanner (`--time-scans`), and that figure is what the added time
+  per iteration is built from.*
+
+*Tool test on the three pilot traces, not a result (`--no-triage`, 21 turns, this laptop): a
+turn's scan alone takes a median of 8.9 s, the graph stage 0.01 s. Without triage, C blocks 2 of
+the 3 regressions on arrival and 6 of the 18 turns that introduce nothing; B blocks 1 and 0. The
+model's ordinary edits trip the graph rules often, which is what triage is there to filter.*
+
+*Open, to settle before the dataset run:*
+- *Which reading of the false-positive rate the registered limit of about 15% applies to. The
+  paper currently says "of clean turns".*
+- *Whether the credit for a late catch stays as it is, or the stricter figure becomes the
+  headline. Both are in the summary either way.*
+- *The run needs the analysers and the pinned Semgrep rules where the model is, so the notebook
+  has to install `requirements-analysers.txt` and fetch the rules before it can run B, B+ or C
+  with triage.*
+
 ---
 
 ## Phase M2.1 — Graph layer + ΔG engine (Weeks 9–12)
@@ -519,6 +564,24 @@ weakened in one file, vulnerable call site in another).
 
 **5.2** Build Condition C: the graph-augmented gate. Wire the ΔG engine's flagged deltas + their
 supporting subgraphs into the LLM triage step.
+
+*As built in part (2026-10-08): `graphgate.gate.graph_gate.GraphGate`, tested against a stand-in
+model. Not run for results.*
+- *Three stages for one change: the scanners as in B, the graphs on both sides of the change and
+  R1 to R4, then triage of the findings and the flags together. The system prompt is the one
+  every condition uses; a test checks it.*
+- *Flags are grouped before they become items: R1 by sanitizer, R2 and R4 by sink, R3 by
+  function. Up to 8 groups are shown. Every flag is kept in the decision with the item that
+  stands for it, or none, so a flag that was not shown is visible in the record.*
+- *The supporting subgraph the model sees with a group: the route from source to sink in words,
+  and the code of the functions on it, within 3,000 characters per group. For R1 and R3, which
+  flag a function and not a path, a path through that function (or through what it guards) is
+  looked up, so the sink behind it is shown even when it is in a file the diff does not touch.*
+- *The graph covers the files the gate is given: for a trace, the slice. The open question below
+  stands.*
+- *Open: how Condition C sees code cut from a slice (see M2.1, "Open"). The leakage exclusions go
+  in through the gate's `exclude`; nothing passes them yet, because nothing outside the slice is
+  loaded.*
 
 **5.3** Collect the real-session holdout set: 10–20 genuine multi-turn refinement sessions with
 manual two-pass review of naturally occurring regressions (disagreements adjudicated). Keep this
