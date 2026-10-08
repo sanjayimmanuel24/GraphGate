@@ -10,6 +10,9 @@ dist/
 .venv/
 venv/
 env/
+# Semgrep and Bandit live in their own environment (BUILD_PLAN 3.1), apart from
+# the project's pinned packages. Recreate it from requirements-analysers.txt.
+.venv-tools/
 .python-version.local
 
 # Testing / tooling caches

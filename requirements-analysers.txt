@@ -1,0 +1,13 @@
+# The static analysers behind the gate's first stage (BUILD_PLAN 3.1).
+#
+# They live in their own environment, apart from the project's pinned packages:
+#
+#     python -m venv .venv-tools
+#     .venv-tools\Scripts\python -m pip install -r requirements-analysers.txt     (Windows)
+#     .venv-tools/bin/python -m pip install -r requirements-analysers.txt          (Linux, macOS)
+#
+# Findings depend on these two versions and on the pinned rule set
+# (data/semgrep_rules.json); both are recorded with every scan. The exact
+# environment the results were produced in is requirements-analysers.lock.txt.
+semgrep==1.179.0
+bandit==1.9.4

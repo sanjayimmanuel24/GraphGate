@@ -1,0 +1,1788 @@
+{
+  "schema_version": 1,
+  "note": "Each validated event's regression taken as one change (clean slice to regressed slice), the code graph of both built, and rules R1 to R4 applied. A first look, not a gate result: no model turn and no triage is involved, the graphs cover the slice and not the repository, and the false-alarm rate on harmless changes is not measured here. 'fix_rules' is the control: the same rules on the reverse change.",
+  "primary_setting": "graphgate",
+  "settings": {
+    "graphgate": {
+      "public_api_sources": true,
+      "structural_guards": true,
+      "source_kinds": null
+    },
+    "public-api-sources-only": {
+      "public_api_sources": true,
+      "structural_guards": false,
+      "source_kinds": null
+    },
+    "structural-guards-only": {
+      "public_api_sources": false,
+      "structural_guards": true,
+      "source_kinds": null
+    },
+    "as-proposed": {
+      "public_api_sources": false,
+      "structural_guards": false,
+      "source_kinds": null
+    }
+  },
+  "hops": 2,
+  "summary": {
+    "settings": {
+      "graphgate": {
+        "events": 30,
+        "flagged": 8,
+        "by_scope": {
+          "cross_file": {
+            "events": 24,
+            "flagged": 5
+          },
+          "local": {
+            "events": 6,
+            "flagged": 3
+          }
+        },
+        "by_class_and_scope": {
+          "command/cross_file": {
+            "events": 1,
+            "flagged": 0
+          },
+          "os-command/cross_file": {
+            "events": 6,
+            "flagged": 0
+          },
+          "path-traversal/cross_file": {
+            "events": 13,
+            "flagged": 3
+          },
+          "path-traversal/local": {
+            "events": 5,
+            "flagged": 2
+          },
+          "sql/cross_file": {
+            "events": 4,
+            "flagged": 2
+          },
+          "sql/local": {
+            "events": 1,
+            "flagged": 1
+          }
+        }
+      },
+      "public-api-sources-only": {
+        "events": 30,
+        "flagged": 7,
+        "by_scope": {
+          "cross_file": {
+            "events": 24,
+            "flagged": 4
+          },
+          "local": {
+            "events": 6,
+            "flagged": 3
+          }
+        },
+        "by_class_and_scope": {
+          "command/cross_file": {
+            "events": 1,
+            "flagged": 0
+          },
+          "os-command/cross_file": {
+            "events": 6,
+            "flagged": 0
+          },
+          "path-traversal/cross_file": {
+            "events": 13,
+            "flagged": 2
+          },
+          "path-traversal/local": {
+            "events": 5,
+            "flagged": 2
+          },
+          "sql/cross_file": {
+            "events": 4,
+            "flagged": 2
+          },
+          "sql/local": {
+            "events": 1,
+            "flagged": 1
+          }
+        }
+      },
+      "structural-guards-only": {
+        "events": 30,
+        "flagged": 8,
+        "by_scope": {
+          "cross_file": {
+            "events": 24,
+            "flagged": 5
+          },
+          "local": {
+            "events": 6,
+            "flagged": 3
+          }
+        },
+        "by_class_and_scope": {
+          "command/cross_file": {
+            "events": 1,
+            "flagged": 0
+          },
+          "os-command/cross_file": {
+            "events": 6,
+            "flagged": 0
+          },
+          "path-traversal/cross_file": {
+            "events": 13,
+            "flagged": 3
+          },
+          "path-traversal/local": {
+            "events": 5,
+            "flagged": 2
+          },
+          "sql/cross_file": {
+            "events": 4,
+            "flagged": 2
+          },
+          "sql/local": {
+            "events": 1,
+            "flagged": 1
+          }
+        }
+      },
+      "as-proposed": {
+        "events": 30,
+        "flagged": 7,
+        "by_scope": {
+          "cross_file": {
+            "events": 24,
+            "flagged": 4
+          },
+          "local": {
+            "events": 6,
+            "flagged": 3
+          }
+        },
+        "by_class_and_scope": {
+          "command/cross_file": {
+            "events": 1,
+            "flagged": 0
+          },
+          "os-command/cross_file": {
+            "events": 6,
+            "flagged": 0
+          },
+          "path-traversal/cross_file": {
+            "events": 13,
+            "flagged": 2
+          },
+          "path-traversal/local": {
+            "events": 5,
+            "flagged": 2
+          },
+          "sql/cross_file": {
+            "events": 4,
+            "flagged": 2
+          },
+          "sql/local": {
+            "events": 1,
+            "flagged": 1
+          }
+        }
+      }
+    },
+    "control_fix_flagged": {
+      "graphgate": 4,
+      "public-api-sources-only": 2,
+      "structural-guards-only": 2,
+      "as-proposed": 0
+    },
+    "by_rule": {
+      "R1": 7,
+      "R2": 2,
+      "R3": 5,
+      "R4": 1
+    },
+    "control_fix_by_rule": {
+      "R1": 0,
+      "R2": 2,
+      "R3": 2,
+      "R4": 0
+    },
+    "by_depth": {
+      "1": 7,
+      "2": 8,
+      "3": 9,
+      "None": 9
+    },
+    "slice_graphs": {
+      "without_a_sink": 5,
+      "without_a_source_to_sink_path": 8,
+      "regression_changes_an_edge": 27
+    }
+  },
+  "events": {
+    "gitpython-2f96": {
+      "vulnerability_class": "os-command",
+      "scope": "cross_file",
+      "settings": {
+        "graphgate": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        },
+        "public-api-sources-only": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        },
+        "structural-guards-only": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        },
+        "as-proposed": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        }
+      },
+      "changed_symbols": [
+        "git/cmd.py::Git.check_unsafe_options"
+      ],
+      "unknown_calls": 38,
+      "calls": 86,
+      "by_depth": {
+        "1": [],
+        "2": [],
+        "3": [
+          "R3"
+        ],
+        "None": [
+          "R3"
+        ]
+      },
+      "flag_summaries": [],
+      "graph": {
+        "sinks": 1,
+        "source_sink_pairs": 7,
+        "edges_changed": true
+      }
+    },
+    "gitpython-3f7w": {
+      "vulnerability_class": "path-traversal",
+      "scope": "cross_file",
+      "settings": {
+        "graphgate": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        },
+        "public-api-sources-only": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        },
+        "structural-guards-only": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        },
+        "as-proposed": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        }
+      },
+      "changed_symbols": [
+        "git/index/base.py::IndexFile",
+        "git/index/base.py::IndexFile.checkout"
+      ],
+      "unknown_calls": 80,
+      "calls": 124,
+      "by_depth": {
+        "1": [],
+        "2": [],
+        "3": [],
+        "None": []
+      },
+      "flag_summaries": [],
+      "graph": {
+        "sinks": 1,
+        "source_sink_pairs": 8,
+        "edges_changed": true
+      }
+    },
+    "gitpython-6p8h": {
+      "vulnerability_class": "os-command",
+      "scope": "cross_file",
+      "settings": {
+        "graphgate": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        },
+        "public-api-sources-only": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        },
+        "structural-guards-only": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        },
+        "as-proposed": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        }
+      },
+      "changed_symbols": [
+        "git/repo/base.py::Repo"
+      ],
+      "unknown_calls": 58,
+      "calls": 118,
+      "by_depth": {
+        "1": [],
+        "2": [],
+        "3": [],
+        "None": []
+      },
+      "flag_summaries": [],
+      "graph": {
+        "sinks": 1,
+        "source_sink_pairs": 8,
+        "edges_changed": false
+      }
+    },
+    "gitpython-7545": {
+      "vulnerability_class": "path-traversal",
+      "scope": "local",
+      "settings": {
+        "graphgate": {
+          "rules": [
+            "R1",
+            "R2",
+            "R3",
+            "R4"
+          ],
+          "flags": 10,
+          "fix_rules": []
+        },
+        "public-api-sources-only": {
+          "rules": [
+            "R1",
+            "R2",
+            "R3",
+            "R4"
+          ],
+          "flags": 10,
+          "fix_rules": []
+        },
+        "structural-guards-only": {
+          "rules": [
+            "R1"
+          ],
+          "flags": 1,
+          "fix_rules": []
+        },
+        "as-proposed": {
+          "rules": [
+            "R1"
+          ],
+          "flags": 1,
+          "fix_rules": []
+        }
+      },
+      "changed_symbols": [
+        "git/refs/symbolic.py::SymbolicReference._create",
+        "git/refs/symbolic.py::SymbolicReference._get_validated_path",
+        "git/refs/symbolic.py::SymbolicReference._get_validated_ref_path",
+        "git/refs/symbolic.py::SymbolicReference.delete",
+        "git/refs/symbolic.py::SymbolicReference.set_reference"
+      ],
+      "unknown_calls": 33,
+      "calls": 102,
+      "by_depth": {
+        "1": [
+          "R1",
+          "R2",
+          "R3"
+        ],
+        "2": [
+          "R1",
+          "R2",
+          "R3",
+          "R4"
+        ],
+        "3": [
+          "R1",
+          "R2",
+          "R3",
+          "R4"
+        ],
+        "None": [
+          "R1",
+          "R2",
+          "R3",
+          "R4"
+        ]
+      },
+      "flag_summaries": [
+        "R1: sanitizer git/refs/symbolic.py::SymbolicReference._get_validated_ref_path is gone while 3 caller(s) remain",
+        "R2: new path from git/refs/symbolic.py::SymbolicReference.__init__#repo to sink@git/refs/symbolic.py::SymbolicReference._create::builtins.open",
+        "R2: new path from git/refs/symbolic.py::SymbolicReference.create#path to sink@git/refs/symbolic.py::SymbolicReference._create::builtins.open",
+        "R2: new path from git/refs/symbolic.py::SymbolicReference.create#repo to sink@git/refs/symbolic.py::SymbolicReference._create::builtins.open",
+        "R2: new path from git/refs/symbolic.py::SymbolicReference.delete#path to sink@git/refs/symbolic.py::SymbolicReference._create::builtins.open",
+        "R2: new path from git/refs/symbolic.py::SymbolicReference.delete#repo to sink@git/refs/symbolic.py::SymbolicReference._create::builtins.open",
+        "R2: new path from git/refs/symbolic.py::SymbolicReference.to_full_path#path to sink@git/refs/symbolic.py::SymbolicReference._create::builtins.open",
+        "R3: git/refs/symbolic.py::SymbolicReference._create no longer applies git/refs/symbolic.py::SymbolicReference._get_validated_ref_path",
+        "R3: git/refs/symbolic.py::SymbolicReference.delete no longer applies git/refs/symbolic.py::SymbolicReference._get_validated_ref_path",
+        "R4: path from git/refs/symbolic.py::SymbolicReference.create#repo to sink@git/refs/symbolic.py::SymbolicReference._get_ref_info_helper::builtins.open shortened from 6 to 4 hop(s)"
+      ],
+      "graph": {
+        "sinks": 5,
+        "source_sink_pairs": 17,
+        "edges_changed": true
+      }
+    },
+    "gitpython-8mcc": {
+      "vulnerability_class": "path-traversal",
+      "scope": "cross_file",
+      "settings": {
+        "graphgate": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        },
+        "public-api-sources-only": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        },
+        "structural-guards-only": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        },
+        "as-proposed": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        }
+      },
+      "changed_symbols": [
+        "git/repo/base.py::Repo"
+      ],
+      "unknown_calls": 60,
+      "calls": 114,
+      "by_depth": {
+        "1": [],
+        "2": [],
+        "3": [],
+        "None": []
+      },
+      "flag_summaries": [],
+      "graph": {
+        "sinks": 1,
+        "source_sink_pairs": 8,
+        "edges_changed": false
+      }
+    },
+    "gitpython-956x": {
+      "vulnerability_class": "command",
+      "scope": "cross_file",
+      "settings": {
+        "graphgate": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": [
+            "R2"
+          ]
+        },
+        "public-api-sources-only": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": [
+            "R2"
+          ]
+        },
+        "structural-guards-only": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        },
+        "as-proposed": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        }
+      },
+      "changed_symbols": [
+        "git/cmd.py::Git",
+        "git/cmd.py::Git._option_candidates",
+        "git/cmd.py::Git._unpack_args",
+        "git/repo/base.py::Repo",
+        "git/repo/base.py::Repo.archive"
+      ],
+      "unknown_calls": 36,
+      "calls": 75,
+      "by_depth": {
+        "1": [],
+        "2": [],
+        "3": [],
+        "None": []
+      },
+      "flag_summaries": [],
+      "graph": {
+        "sinks": 1,
+        "source_sink_pairs": 10,
+        "edges_changed": true
+      }
+    },
+    "gitpython-cwvm": {
+      "vulnerability_class": "path-traversal",
+      "scope": "cross_file",
+      "settings": {
+        "graphgate": {
+          "rules": [
+            "R1",
+            "R3"
+          ],
+          "flags": 2,
+          "fix_rules": [
+            "R3"
+          ]
+        },
+        "public-api-sources-only": {
+          "rules": [
+            "R1",
+            "R3"
+          ],
+          "flags": 2,
+          "fix_rules": []
+        },
+        "structural-guards-only": {
+          "rules": [
+            "R1",
+            "R3"
+          ],
+          "flags": 2,
+          "fix_rules": [
+            "R3"
+          ]
+        },
+        "as-proposed": {
+          "rules": [
+            "R1",
+            "R3"
+          ],
+          "flags": 2,
+          "fix_rules": []
+        }
+      },
+      "changed_symbols": [
+        "git/refs/symbolic.py::SymbolicReference._check_ref_name_valid",
+        "git/refs/symbolic.py::SymbolicReference._get_ref_info_helper"
+      ],
+      "unknown_calls": 22,
+      "calls": 89,
+      "by_depth": {
+        "1": [
+          "R1",
+          "R3"
+        ],
+        "2": [
+          "R1",
+          "R3"
+        ],
+        "3": [
+          "R1",
+          "R3"
+        ],
+        "None": [
+          "R1",
+          "R3"
+        ]
+      },
+      "flag_summaries": [
+        "R1: sanitizer git/refs/symbolic.py::SymbolicReference._check_ref_name_valid is gone while 1 caller(s) remain",
+        "R3: git/refs/symbolic.py::SymbolicReference._get_ref_info_helper no longer applies git/refs/symbolic.py::SymbolicReference._check_ref_name_valid"
+      ],
+      "graph": {
+        "sinks": 2,
+        "source_sink_pairs": 5,
+        "edges_changed": true
+      }
+    },
+    "gitpython-hmq2": {
+      "vulnerability_class": "path-traversal",
+      "scope": "local",
+      "settings": {
+        "graphgate": {
+          "rules": [
+            "R1"
+          ],
+          "flags": 1,
+          "fix_rules": []
+        },
+        "public-api-sources-only": {
+          "rules": [
+            "R1"
+          ],
+          "flags": 1,
+          "fix_rules": []
+        },
+        "structural-guards-only": {
+          "rules": [
+            "R1"
+          ],
+          "flags": 1,
+          "fix_rules": []
+        },
+        "as-proposed": {
+          "rules": [
+            "R1"
+          ],
+          "flags": 1,
+          "fix_rules": []
+        }
+      },
+      "changed_symbols": [
+        "git/objects/submodule/base.py::<module>",
+        "git/objects/submodule/base.py::Submodule._module_abspath",
+        "git/objects/submodule/base.py::Submodule._validated_name",
+        "git/objects/submodule/base.py::Submodule.update"
+      ],
+      "unknown_calls": 56,
+      "calls": 95,
+      "by_depth": {
+        "1": [
+          "R1"
+        ],
+        "2": [
+          "R1"
+        ],
+        "3": [
+          "R1"
+        ],
+        "None": [
+          "R1"
+        ]
+      },
+      "flag_summaries": [
+        "R1: sanitizer git/objects/submodule/base.py::Submodule._validated_name is gone while 2 caller(s) remain"
+      ],
+      "graph": {
+        "sinks": 4,
+        "source_sink_pairs": 0,
+        "edges_changed": true
+      }
+    },
+    "gitpython-pr76": {
+      "vulnerability_class": "os-command",
+      "scope": "cross_file",
+      "settings": {
+        "graphgate": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        },
+        "public-api-sources-only": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        },
+        "structural-guards-only": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        },
+        "as-proposed": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        }
+      },
+      "changed_symbols": [
+        "git/repo/base.py::Repo._clone"
+      ],
+      "unknown_calls": 35,
+      "calls": 83,
+      "by_depth": {
+        "1": [],
+        "2": [],
+        "3": [],
+        "None": []
+      },
+      "flag_summaries": [],
+      "graph": {
+        "sinks": 1,
+        "source_sink_pairs": 5,
+        "edges_changed": true
+      }
+    },
+    "gitpython-r9mr": {
+      "vulnerability_class": "os-command",
+      "scope": "cross_file",
+      "settings": {
+        "graphgate": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        },
+        "public-api-sources-only": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        },
+        "structural-guards-only": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        },
+        "as-proposed": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        }
+      },
+      "changed_symbols": [
+        "git/cmd.py::Git._option_candidates"
+      ],
+      "unknown_calls": 55,
+      "calls": 112,
+      "by_depth": {
+        "1": [],
+        "2": [],
+        "3": [],
+        "None": []
+      },
+      "flag_summaries": [],
+      "graph": {
+        "sinks": 1,
+        "source_sink_pairs": 8,
+        "edges_changed": true
+      }
+    },
+    "gitpython-rpm5": {
+      "vulnerability_class": "os-command",
+      "scope": "cross_file",
+      "settings": {
+        "graphgate": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": [
+            "R2"
+          ]
+        },
+        "public-api-sources-only": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": [
+            "R2"
+          ]
+        },
+        "structural-guards-only": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        },
+        "as-proposed": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        }
+      },
+      "changed_symbols": [
+        "git/cmd.py::Git._canonicalize_option_name",
+        "git/cmd.py::Git.check_unsafe_options"
+      ],
+      "unknown_calls": 20,
+      "calls": 49,
+      "by_depth": {
+        "1": [],
+        "2": [],
+        "3": [],
+        "None": []
+      },
+      "flag_summaries": [],
+      "graph": {
+        "sinks": 1,
+        "source_sink_pairs": 7,
+        "edges_changed": true
+      }
+    },
+    "gitpython-v396": {
+      "vulnerability_class": "os-command",
+      "scope": "cross_file",
+      "settings": {
+        "graphgate": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        },
+        "public-api-sources-only": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        },
+        "structural-guards-only": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        },
+        "as-proposed": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        }
+      },
+      "changed_symbols": [
+        "git/cmd.py::Git.check_unsafe_options"
+      ],
+      "unknown_calls": 43,
+      "calls": 93,
+      "by_depth": {
+        "1": [],
+        "2": [],
+        "3": [],
+        "None": []
+      },
+      "flag_summaries": [],
+      "graph": {
+        "sinks": 1,
+        "source_sink_pairs": 7,
+        "edges_changed": true
+      }
+    },
+    "lollms-3x47": {
+      "vulnerability_class": "path-traversal",
+      "scope": "cross_file",
+      "settings": {
+        "graphgate": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        },
+        "public-api-sources-only": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        },
+        "structural-guards-only": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        },
+        "as-proposed": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        }
+      },
+      "changed_symbols": [
+        "lollms/security.py::sanitize_path_from_endpoint"
+      ],
+      "unknown_calls": 5,
+      "calls": 14,
+      "by_depth": {
+        "1": [],
+        "2": [],
+        "3": [],
+        "None": []
+      },
+      "flag_summaries": [],
+      "graph": {
+        "sinks": 0,
+        "source_sink_pairs": 0,
+        "edges_changed": true
+      }
+    },
+    "lollms-7pgr": {
+      "vulnerability_class": "path-traversal",
+      "scope": "local",
+      "settings": {
+        "graphgate": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        },
+        "public-api-sources-only": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        },
+        "structural-guards-only": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        },
+        "as-proposed": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        }
+      },
+      "changed_symbols": [
+        "lollms/server/endpoints/lollms_file_system.py::<module>",
+        "lollms/server/endpoints/lollms_file_system.py::vectorize_folder.process"
+      ],
+      "unknown_calls": 23,
+      "calls": 56,
+      "by_depth": {
+        "1": [],
+        "2": [],
+        "3": [],
+        "None": []
+      },
+      "flag_summaries": [],
+      "graph": {
+        "sinks": 0,
+        "source_sink_pairs": 0,
+        "edges_changed": true
+      }
+    },
+    "lollms-8mrm": {
+      "vulnerability_class": "path-traversal",
+      "scope": "cross_file",
+      "settings": {
+        "graphgate": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        },
+        "public-api-sources-only": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        },
+        "structural-guards-only": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        },
+        "as-proposed": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        }
+      },
+      "changed_symbols": [
+        "lollms/server/endpoints/lollms_configuration_infos.py::apply_settings"
+      ],
+      "unknown_calls": 31,
+      "calls": 50,
+      "by_depth": {
+        "1": [],
+        "2": [],
+        "3": [],
+        "None": []
+      },
+      "flag_summaries": [],
+      "graph": {
+        "sinks": 1,
+        "source_sink_pairs": 1,
+        "edges_changed": false
+      }
+    },
+    "lollms-m45c": {
+      "vulnerability_class": "path-traversal",
+      "scope": "local",
+      "settings": {
+        "graphgate": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        },
+        "public-api-sources-only": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        },
+        "structural-guards-only": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        },
+        "as-proposed": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        }
+      },
+      "changed_symbols": [
+        "lollms/server/endpoints/lollms_personalities_infos.py::<module>",
+        "lollms/server/endpoints/lollms_personalities_infos.py::set_personality_config"
+      ],
+      "unknown_calls": 7,
+      "calls": 11,
+      "by_depth": {
+        "1": [],
+        "2": [],
+        "3": [],
+        "None": []
+      },
+      "flag_summaries": [],
+      "graph": {
+        "sinks": 1,
+        "source_sink_pairs": 0,
+        "edges_changed": true
+      }
+    },
+    "lollms-p8h7": {
+      "vulnerability_class": "path-traversal",
+      "scope": "cross_file",
+      "settings": {
+        "graphgate": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        },
+        "public-api-sources-only": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        },
+        "structural-guards-only": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        },
+        "as-proposed": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        }
+      },
+      "changed_symbols": [
+        "lollms/security.py::sanitize_path_from_endpoint"
+      ],
+      "unknown_calls": 10,
+      "calls": 29,
+      "by_depth": {
+        "1": [],
+        "2": [],
+        "3": [],
+        "None": []
+      },
+      "flag_summaries": [],
+      "graph": {
+        "sinks": 0,
+        "source_sink_pairs": 0,
+        "edges_changed": true
+      }
+    },
+    "lollms-pwc9": {
+      "vulnerability_class": "path-traversal",
+      "scope": "cross_file",
+      "settings": {
+        "graphgate": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        },
+        "public-api-sources-only": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        },
+        "structural-guards-only": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        },
+        "as-proposed": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        }
+      },
+      "changed_symbols": [
+        "lollms/server/endpoints/lollms_binding_infos.py::<module>",
+        "lollms/server/endpoints/lollms_binding_infos.py::reinstall_binding",
+        "lollms/server/endpoints/lollms_binding_infos.py::unInstall_binding"
+      ],
+      "unknown_calls": 18,
+      "calls": 47,
+      "by_depth": {
+        "1": [],
+        "2": [],
+        "3": [],
+        "None": []
+      },
+      "flag_summaries": [],
+      "graph": {
+        "sinks": 0,
+        "source_sink_pairs": 0,
+        "edges_changed": true
+      }
+    },
+    "mako-2h4p": {
+      "vulnerability_class": "path-traversal",
+      "scope": "cross_file",
+      "settings": {
+        "graphgate": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        },
+        "public-api-sources-only": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        },
+        "structural-guards-only": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        },
+        "as-proposed": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        }
+      },
+      "changed_symbols": [
+        "mako/lookup.py::TemplateLookup.get_template",
+        "mako/template.py::Template.__init__"
+      ],
+      "unknown_calls": 30,
+      "calls": 70,
+      "by_depth": {
+        "1": [],
+        "2": [],
+        "3": [],
+        "None": []
+      },
+      "flag_summaries": [],
+      "graph": {
+        "sinks": 1,
+        "source_sink_pairs": 26,
+        "edges_changed": true
+      }
+    },
+    "mako-v92g": {
+      "vulnerability_class": "path-traversal",
+      "scope": "cross_file",
+      "settings": {
+        "graphgate": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        },
+        "public-api-sources-only": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        },
+        "structural-guards-only": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        },
+        "as-proposed": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        }
+      },
+      "changed_symbols": [
+        "mako/template.py::Template.__init__"
+      ],
+      "unknown_calls": 29,
+      "calls": 65,
+      "by_depth": {
+        "1": [],
+        "2": [],
+        "3": [],
+        "None": []
+      },
+      "flag_summaries": [],
+      "graph": {
+        "sinks": 1,
+        "source_sink_pairs": 26,
+        "edges_changed": true
+      }
+    },
+    "nicegui-hxp3": {
+      "vulnerability_class": "path-traversal",
+      "scope": "cross_file",
+      "settings": {
+        "graphgate": {
+          "rules": [
+            "R3"
+          ],
+          "flags": 1,
+          "fix_rules": [
+            "R3"
+          ]
+        },
+        "public-api-sources-only": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        },
+        "structural-guards-only": {
+          "rules": [
+            "R3"
+          ],
+          "flags": 1,
+          "fix_rules": [
+            "R3"
+          ]
+        },
+        "as-proposed": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        }
+      },
+      "changed_symbols": [
+        "nicegui/app/app.py::App.add_media_files.read_item"
+      ],
+      "unknown_calls": 11,
+      "calls": 31,
+      "by_depth": {
+        "1": [],
+        "2": [
+          "R3"
+        ],
+        "3": [
+          "R3"
+        ],
+        "None": [
+          "R3"
+        ]
+      },
+      "flag_summaries": [
+        "R3: nicegui/app/app.py::App.add_media_files.read_item no longer applies guard@nicegui/app/app.py::App.add_media_files.read_item::a6e523ff2a15"
+      ],
+      "graph": {
+        "sinks": 1,
+        "source_sink_pairs": 2,
+        "edges_changed": true
+      }
+    },
+    "nicegui-mwc7": {
+      "vulnerability_class": "path-traversal",
+      "scope": "local",
+      "settings": {
+        "graphgate": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        },
+        "public-api-sources-only": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        },
+        "structural-guards-only": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        },
+        "as-proposed": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        }
+      },
+      "changed_symbols": [
+        "nicegui/nicegui.py::_get_resource"
+      ],
+      "unknown_calls": 29,
+      "calls": 46,
+      "by_depth": {
+        "1": [],
+        "2": [],
+        "3": [],
+        "None": []
+      },
+      "flag_summaries": [],
+      "graph": {
+        "sinks": 0,
+        "source_sink_pairs": 0,
+        "edges_changed": true
+      }
+    },
+    "nicegui-w8wv": {
+      "vulnerability_class": "path-traversal",
+      "scope": "cross_file",
+      "settings": {
+        "graphgate": {
+          "rules": [
+            "R1"
+          ],
+          "flags": 1,
+          "fix_rules": []
+        },
+        "public-api-sources-only": {
+          "rules": [
+            "R1"
+          ],
+          "flags": 1,
+          "fix_rules": []
+        },
+        "structural-guards-only": {
+          "rules": [
+            "R1"
+          ],
+          "flags": 1,
+          "fix_rules": []
+        },
+        "as-proposed": {
+          "rules": [
+            "R1"
+          ],
+          "flags": 1,
+          "fix_rules": []
+        }
+      },
+      "changed_symbols": [
+        "nicegui/elements/upload_files.py::<module>",
+        "nicegui/elements/upload_files.py::_sanitize_filename",
+        "nicegui/elements/upload_files.py::create_file_upload"
+      ],
+      "unknown_calls": 41,
+      "calls": 98,
+      "by_depth": {
+        "1": [
+          "R1"
+        ],
+        "2": [
+          "R1"
+        ],
+        "3": [
+          "R1"
+        ],
+        "None": [
+          "R1"
+        ]
+      },
+      "flag_summaries": [
+        "R1: sanitizer nicegui/elements/upload_files.py::_sanitize_filename is gone while 1 caller(s) remain"
+      ],
+      "graph": {
+        "sinks": 2,
+        "source_sink_pairs": 1,
+        "edges_changed": true
+      }
+    },
+    "ormar-xxh2": {
+      "vulnerability_class": "sql",
+      "scope": "cross_file",
+      "settings": {
+        "graphgate": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        },
+        "public-api-sources-only": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        },
+        "structural-guards-only": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        },
+        "as-proposed": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        }
+      },
+      "changed_symbols": [
+        "ormar/queryset/queryset.py::QuerySet._query_aggr_function"
+      ],
+      "unknown_calls": 20,
+      "calls": 51,
+      "by_depth": {
+        "1": [],
+        "2": [],
+        "3": [],
+        "None": []
+      },
+      "flag_summaries": [],
+      "graph": {
+        "sinks": 1,
+        "source_sink_pairs": 5,
+        "edges_changed": true
+      }
+    },
+    "piccolo-xq59": {
+      "vulnerability_class": "sql",
+      "scope": "cross_file",
+      "settings": {
+        "graphgate": {
+          "rules": [
+            "R1",
+            "R3"
+          ],
+          "flags": 4,
+          "fix_rules": []
+        },
+        "public-api-sources-only": {
+          "rules": [
+            "R1",
+            "R3"
+          ],
+          "flags": 4,
+          "fix_rules": []
+        },
+        "structural-guards-only": {
+          "rules": [
+            "R1"
+          ],
+          "flags": 1,
+          "fix_rules": []
+        },
+        "as-proposed": {
+          "rules": [
+            "R1"
+          ],
+          "flags": 1,
+          "fix_rules": []
+        }
+      },
+      "changed_symbols": [
+        "piccolo/engine/base.py::<module>",
+        "piccolo/engine/base.py::validate_savepoint_name",
+        "piccolo/engine/postgres.py::<module>",
+        "piccolo/engine/postgres.py::PostgresTransaction.savepoint",
+        "piccolo/engine/postgres.py::Savepoint.release",
+        "piccolo/engine/postgres.py::Savepoint.rollback_to"
+      ],
+      "unknown_calls": 31,
+      "calls": 53,
+      "by_depth": {
+        "1": [
+          "R1",
+          "R3"
+        ],
+        "2": [
+          "R1",
+          "R3"
+        ],
+        "3": [
+          "R1",
+          "R3"
+        ],
+        "None": [
+          "R1",
+          "R3"
+        ]
+      },
+      "flag_summaries": [
+        "R1: sanitizer piccolo/engine/base.py::validate_savepoint_name is gone while 3 caller(s) remain",
+        "R3: piccolo/engine/postgres.py::PostgresTransaction.savepoint no longer applies piccolo/engine/base.py::validate_savepoint_name",
+        "R3: piccolo/engine/postgres.py::Savepoint.release no longer applies piccolo/engine/base.py::validate_savepoint_name",
+        "R3: piccolo/engine/postgres.py::Savepoint.rollback_to no longer applies piccolo/engine/base.py::validate_savepoint_name"
+      ],
+      "graph": {
+        "sinks": 3,
+        "source_sink_pairs": 7,
+        "edges_changed": true
+      }
+    },
+    "pycsw-hg4c": {
+      "vulnerability_class": "sql",
+      "scope": "cross_file",
+      "settings": {
+        "graphgate": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        },
+        "public-api-sources-only": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        },
+        "structural-guards-only": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        },
+        "as-proposed": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        }
+      },
+      "changed_symbols": [
+        "pycsw/ogc/csw/cql.py::<module>",
+        "pycsw/ogc/csw/cql.py::_parse_condition",
+        "pycsw/ogc/csw/cql.py::cql2fes1",
+        "pycsw/ogc/csw/csw2.py::<module>",
+        "pycsw/ogc/csw/csw2.py::Csw2.getrecords"
+      ],
+      "unknown_calls": 122,
+      "calls": 194,
+      "by_depth": {
+        "1": [],
+        "2": [],
+        "3": [],
+        "None": []
+      },
+      "flag_summaries": [],
+      "graph": {
+        "sinks": 2,
+        "source_sink_pairs": 1,
+        "edges_changed": true
+      }
+    },
+    "tortoise-orm-9j2c": {
+      "vulnerability_class": "sql",
+      "scope": "cross_file",
+      "settings": {
+        "graphgate": {
+          "rules": [
+            "R1"
+          ],
+          "flags": 2,
+          "fix_rules": []
+        },
+        "public-api-sources-only": {
+          "rules": [
+            "R1"
+          ],
+          "flags": 2,
+          "fix_rules": []
+        },
+        "structural-guards-only": {
+          "rules": [
+            "R1"
+          ],
+          "flags": 2,
+          "fix_rules": []
+        },
+        "as-proposed": {
+          "rules": [
+            "R1"
+          ],
+          "flags": 2,
+          "fix_rules": []
+        }
+      },
+      "changed_symbols": [
+        "tortoise/backends/mysql/executor.py::<module>",
+        "tortoise/backends/mysql/executor.py::StrWrapper",
+        "tortoise/backends/mysql/executor.py::StrWrapper.get_value_sql",
+        "tortoise/backends/mysql/executor.py::escape_like",
+        "tortoise/backends/mysql/executor.py::mysql_contains",
+        "tortoise/backends/mysql/executor.py::mysql_ends_with",
+        "tortoise/backends/mysql/executor.py::mysql_insensitive_contains",
+        "tortoise/backends/mysql/executor.py::mysql_insensitive_ends_with",
+        "tortoise/backends/mysql/executor.py::mysql_insensitive_exact",
+        "tortoise/backends/mysql/executor.py::mysql_insensitive_starts_with",
+        "tortoise/backends/mysql/executor.py::mysql_starts_with",
+        "tortoise/filters.py::<module>",
+        "tortoise/filters.py::Like",
+        "tortoise/filters.py::Like.__init__",
+        "tortoise/filters.py::Like.get_sql",
+        "tortoise/filters.py::contains",
+        "tortoise/filters.py::ends_with",
+        "tortoise/filters.py::escape_like",
+        "tortoise/filters.py::insensitive_contains",
+        "tortoise/filters.py::insensitive_ends_with",
+        "tortoise/filters.py::insensitive_exact",
+        "tortoise/filters.py::insensitive_starts_with",
+        "tortoise/filters.py::starts_with"
+      ],
+      "unknown_calls": 68,
+      "calls": 136,
+      "by_depth": {
+        "1": [
+          "R1"
+        ],
+        "2": [
+          "R1"
+        ],
+        "3": [
+          "R1"
+        ],
+        "None": [
+          "R1"
+        ]
+      },
+      "flag_summaries": [
+        "R1: sanitizer tortoise/backends/mysql/executor.py::escape_like is gone while 6 caller(s) remain",
+        "R1: sanitizer tortoise/filters.py::escape_like is gone while 6 caller(s) remain"
+      ],
+      "graph": {
+        "sinks": 1,
+        "source_sink_pairs": 1,
+        "edges_changed": true
+      }
+    },
+    "wsgidav-p6gw": {
+      "vulnerability_class": "sql",
+      "scope": "local",
+      "settings": {
+        "graphgate": {
+          "rules": [
+            "R1",
+            "R2",
+            "R3"
+          ],
+          "flags": 8,
+          "fix_rules": []
+        },
+        "public-api-sources-only": {
+          "rules": [
+            "R1",
+            "R2",
+            "R3"
+          ],
+          "flags": 8,
+          "fix_rules": []
+        },
+        "structural-guards-only": {
+          "rules": [
+            "R1"
+          ],
+          "flags": 1,
+          "fix_rules": []
+        },
+        "as-proposed": {
+          "rules": [
+            "R1"
+          ],
+          "flags": 1,
+          "fix_rules": []
+        }
+      },
+      "changed_symbols": [
+        "wsgidav/samples/mysql_dav_provider.py::MySQLBrowserProvider._exists_record_by_primary_key",
+        "wsgidav/samples/mysql_dav_provider.py::_escape_id"
+      ],
+      "unknown_calls": 23,
+      "calls": 32,
+      "by_depth": {
+        "1": [
+          "R1"
+        ],
+        "2": [
+          "R1",
+          "R2",
+          "R3"
+        ],
+        "3": [
+          "R1",
+          "R2",
+          "R3"
+        ],
+        "None": [
+          "R1",
+          "R2",
+          "R3"
+        ]
+      },
+      "flag_summaries": [
+        "R1: sanitizer wsgidav/samples/mysql_dav_provider.py::_escape_id is gone while 1 caller(s) remain",
+        "R2: new path from wsgidav/samples/mysql_dav_provider.py::MySQLBrowserProvider.__init__#db to sink@wsgidav/samples/mysql_dav_provider.py::MySQLBrowserProvider._exists_record_by_primary_key::.execute",
+        "R2: new path from wsgidav/samples/mysql_dav_provider.py::MySQLBrowserProvider.__init__#host to sink@wsgidav/samples/mysql_dav_provider.py::MySQLBrowserProvider._exists_record_by_primary_key::.execute",
+        "R2: new path from wsgidav/samples/mysql_dav_provider.py::MySQLBrowserProvider.__init__#passwd to sink@wsgidav/samples/mysql_dav_provider.py::MySQLBrowserProvider._exists_record_by_primary_key::.execute",
+        "R2: new path from wsgidav/samples/mysql_dav_provider.py::MySQLBrowserProvider.__init__#user to sink@wsgidav/samples/mysql_dav_provider.py::MySQLBrowserProvider._exists_record_by_primary_key::.execute",
+        "R2: new path from wsgidav/samples/mysql_dav_provider.py::MySQLBrowserProvider.exists#path to sink@wsgidav/samples/mysql_dav_provider.py::MySQLBrowserProvider._exists_record_by_primary_key::.execute",
+        "R2: new path from wsgidav/samples/mysql_dav_provider.py::MySQLBrowserProvider.get_resource_inst#path to sink@wsgidav/samples/mysql_dav_provider.py::MySQLBrowserProvider._exists_record_by_primary_key::.execute",
+        "R3: wsgidav/samples/mysql_dav_provider.py::MySQLBrowserProvider._exists_record_by_primary_key no longer applies wsgidav/samples/mysql_dav_provider.py::_escape_id"
+      ],
+      "graph": {
+        "sinks": 2,
+        "source_sink_pairs": 0,
+        "edges_changed": true
+      }
+    },
+    "wsgidav-wxq4": {
+      "vulnerability_class": "path-traversal",
+      "scope": "cross_file",
+      "settings": {
+        "graphgate": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        },
+        "public-api-sources-only": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        },
+        "structural-guards-only": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        },
+        "as-proposed": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        }
+      },
+      "changed_symbols": [
+        "wsgidav/fs_dav_provider.py::FilesystemProvider._loc_to_file_path"
+      ],
+      "unknown_calls": 64,
+      "calls": 94,
+      "by_depth": {
+        "1": [],
+        "2": [],
+        "3": [],
+        "None": []
+      },
+      "flag_summaries": [],
+      "graph": {
+        "sinks": 1,
+        "source_sink_pairs": 4,
+        "edges_changed": true
+      }
+    },
+    "xml2rfc-cfmv": {
+      "vulnerability_class": "path-traversal",
+      "scope": "cross_file",
+      "settings": {
+        "graphgate": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        },
+        "public-api-sources-only": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        },
+        "structural-guards-only": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        },
+        "as-proposed": {
+          "rules": [],
+          "flags": 0,
+          "fix_rules": []
+        }
+      },
+      "changed_symbols": [
+        "xml2rfc/utils.py::strip_link_attachments",
+        "xml2rfc/writers/base.py::<module>",
+        "xml2rfc/writers/base.py::BaseV3Writer.validate"
+      ],
+      "unknown_calls": 159,
+      "calls": 231,
+      "by_depth": {
+        "1": [],
+        "2": [],
+        "3": [],
+        "None": []
+      },
+      "flag_summaries": [],
+      "graph": {
+        "sinks": 2,
+        "source_sink_pairs": 3,
+        "edges_changed": true
+      }
+    }
+  }
+}

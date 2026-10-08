@@ -1,0 +1,1964 @@
+{
+  "schema_version": 1,
+  "method": {
+    "similarity": "share of code tokens in common, in order (difflib.SequenceMatcher.ratio); comments, docstrings and layout removed; identifiers as written",
+    "threshold": 0.8,
+    "min_tokens": 30,
+    "scope": "Python files at the event's clean commit, outside the slice's own files"
+  },
+  "summary": {
+    "events": 30,
+    "events_with_exclusions": 20,
+    "events_with_near_duplicates": 1,
+    "near_duplicates": 3,
+    "fix_tests_excluded": 32,
+    "fix_sources_left_in_scope": 11,
+    "exclusions": 35,
+    "regression_units": 74,
+    "regression_units_not_compared": 9
+  },
+  "events": {
+    "gitpython-2f96": {
+      "repo": "gitpython-developers/gitpython",
+      "commit": "181e8ede7543dbbdcee92756cea260f675316c63",
+      "scanned": {
+        "files": 89,
+        "units": 1552
+      },
+      "regression_units": [
+        {
+          "path": "git/cmd.py",
+          "symbol": "Git.check_unsafe_options",
+          "kind": "def",
+          "tokens": {
+            "clean": 152,
+            "regressed": 74
+          },
+          "compared": true,
+          "nearest": {
+            "similarity": 0.383,
+            "unit": "git/refs/symbolic.py::SymbolicReference.dereference_recursive",
+            "version": "regressed"
+          }
+        }
+      ],
+      "near_duplicates": [],
+      "fix_files": [
+        {
+          "path": "test/test_clone.py",
+          "status": "M",
+          "kind": "test",
+          "excluded": true
+        },
+        {
+          "path": "test/test_git.py",
+          "status": "M",
+          "kind": "test",
+          "excluded": true
+        }
+      ],
+      "exclusions": [
+        {
+          "path": "test/test_clone.py",
+          "symbol": null,
+          "reason": "test-changed-by-fix"
+        },
+        {
+          "path": "test/test_git.py",
+          "symbol": null,
+          "reason": "test-changed-by-fix"
+        }
+      ]
+    },
+    "gitpython-3f7w": {
+      "repo": "gitpython-developers/gitpython",
+      "commit": "3af0c2516c5e18c829da30338614688f6b69b49c",
+      "scanned": {
+        "files": 140,
+        "units": 2230
+      },
+      "regression_units": [
+        {
+          "path": "git/index/base.py",
+          "symbol": "IndexFile.unsafe_git_checkout_index_options",
+          "kind": "assign",
+          "tokens": {
+            "clean": 5
+          },
+          "compared": false,
+          "note": "under 30 tokens: too short to tell a copy from a coincidence"
+        },
+        {
+          "path": "git/index/base.py",
+          "symbol": "IndexFile.checkout",
+          "kind": "def",
+          "tokens": {
+            "clean": 718,
+            "regressed": 686
+          },
+          "compared": true,
+          "nearest": {
+            "similarity": 0.25,
+            "unit": "git/diff.py::Diffable.diff",
+            "version": "clean"
+          }
+        }
+      ],
+      "near_duplicates": [],
+      "fix_files": [
+        {
+          "path": "git/refs/tag.py",
+          "status": "M",
+          "kind": "source",
+          "excluded": false
+        },
+        {
+          "path": "test/test_index.py",
+          "status": "M",
+          "kind": "test",
+          "excluded": true
+        },
+        {
+          "path": "test/test_refs.py",
+          "status": "M",
+          "kind": "test",
+          "excluded": true
+        }
+      ],
+      "exclusions": [
+        {
+          "path": "test/test_index.py",
+          "symbol": null,
+          "reason": "test-changed-by-fix"
+        },
+        {
+          "path": "test/test_refs.py",
+          "symbol": null,
+          "reason": "test-changed-by-fix"
+        }
+      ]
+    },
+    "gitpython-6p8h": {
+      "repo": "gitpython-developers/gitpython",
+      "commit": "ffcb5359e87619f4fe4a70a4aff5f08c5580ba97",
+      "scanned": {
+        "files": 89,
+        "units": 1589
+      },
+      "regression_units": [
+        {
+          "path": "git/repo/base.py",
+          "symbol": "Repo.unsafe_git_clone_options",
+          "kind": "assign",
+          "tokens": {
+            "clean": 13,
+            "regressed": 11
+          },
+          "compared": false,
+          "note": "under 30 tokens: too short to tell a copy from a coincidence"
+        }
+      ],
+      "near_duplicates": [],
+      "fix_files": [
+        {
+          "path": "test/test_clone.py",
+          "status": "M",
+          "kind": "test",
+          "excluded": true
+        }
+      ],
+      "exclusions": [
+        {
+          "path": "test/test_clone.py",
+          "symbol": null,
+          "reason": "test-changed-by-fix"
+        }
+      ]
+    },
+    "gitpython-7545": {
+      "repo": "gitpython-developers/gitpython",
+      "commit": "25ba54dd3fb374b8fade7de4be1ac2ac84722190",
+      "scanned": {
+        "files": 88,
+        "units": 1625
+      },
+      "regression_units": [
+        {
+          "path": "git/refs/symbolic.py",
+          "symbol": "SymbolicReference._create",
+          "kind": "def",
+          "tokens": {
+            "clean": 194,
+            "regressed": 204
+          },
+          "compared": true,
+          "nearest": {
+            "similarity": 0.318,
+            "unit": "git/refs/reference.py::Reference.set_object",
+            "version": "clean"
+          }
+        },
+        {
+          "path": "git/refs/symbolic.py",
+          "symbol": "SymbolicReference._get_validated_path",
+          "kind": "def",
+          "tokens": {
+            "clean": 116
+          },
+          "compared": true,
+          "nearest": {
+            "similarity": 0.387,
+            "unit": "setup.py::sdist.make_release_tree",
+            "version": "clean"
+          }
+        },
+        {
+          "path": "git/refs/symbolic.py",
+          "symbol": "SymbolicReference._get_validated_ref_path",
+          "kind": "def",
+          "tokens": {
+            "clean": 46
+          },
+          "compared": true,
+          "nearest": {
+            "similarity": 0.483,
+            "unit": "git/remote.py::Remote.add",
+            "version": "clean"
+          }
+        },
+        {
+          "path": "git/refs/symbolic.py",
+          "symbol": "SymbolicReference.delete",
+          "kind": "def",
+          "tokens": {
+            "clean": 228,
+            "regressed": 232
+          },
+          "compared": true,
+          "nearest": {
+            "similarity": 0.297,
+            "unit": "setup.py::_stamp_version",
+            "version": "clean"
+          }
+        },
+        {
+          "path": "git/refs/symbolic.py",
+          "symbol": "SymbolicReference.set_reference",
+          "kind": "def",
+          "tokens": {
+            "clean": 263,
+            "regressed": 254
+          },
+          "compared": true,
+          "nearest": {
+            "similarity": 0.361,
+            "unit": "git/refs/reference.py::Reference.set_object",
+            "version": "regressed"
+          }
+        }
+      ],
+      "near_duplicates": [],
+      "fix_files": [
+        {
+          "path": "git/refs/log.py",
+          "status": "M",
+          "kind": "source",
+          "excluded": false
+        },
+        {
+          "path": "git/refs/remote.py",
+          "status": "M",
+          "kind": "source",
+          "excluded": false
+        },
+        {
+          "path": "test/test_refs.py",
+          "status": "M",
+          "kind": "test",
+          "excluded": true
+        }
+      ],
+      "exclusions": [
+        {
+          "path": "test/test_refs.py",
+          "symbol": null,
+          "reason": "test-changed-by-fix"
+        }
+      ]
+    },
+    "gitpython-8mcc": {
+      "repo": "gitpython-developers/gitpython",
+      "commit": "b68afff45af0f49e79a3e2d2162018986b37ad5d",
+      "scanned": {
+        "files": 141,
+        "units": 2226
+      },
+      "regression_units": [
+        {
+          "path": "git/repo/base.py",
+          "symbol": "Repo.unsafe_git_clone_options",
+          "kind": "assign",
+          "tokens": {
+            "clean": 17,
+            "regressed": 15
+          },
+          "compared": false,
+          "note": "under 30 tokens: too short to tell a copy from a coincidence"
+        }
+      ],
+      "near_duplicates": [],
+      "fix_files": [
+        {
+          "path": "git/objects/submodule/base.py",
+          "status": "M",
+          "kind": "source",
+          "excluded": false
+        },
+        {
+          "path": "test/test_clone.py",
+          "status": "M",
+          "kind": "test",
+          "excluded": true
+        },
+        {
+          "path": "test/test_submodule.py",
+          "status": "M",
+          "kind": "test",
+          "excluded": true
+        }
+      ],
+      "exclusions": [
+        {
+          "path": "test/test_clone.py",
+          "symbol": null,
+          "reason": "test-changed-by-fix"
+        },
+        {
+          "path": "test/test_submodule.py",
+          "symbol": null,
+          "reason": "test-changed-by-fix"
+        }
+      ]
+    },
+    "gitpython-956x": {
+      "repo": "gitpython-developers/gitpython",
+      "commit": "701ce32fe5ba8cb622c0e0342a376a6beb47d738",
+      "scanned": {
+        "files": 89,
+        "units": 1571
+      },
+      "regression_units": [
+        {
+          "path": "git/cmd.py",
+          "symbol": "Git.unsafe_git_ls_remote_options",
+          "kind": "assign",
+          "tokens": {
+            "clean": 5
+          },
+          "compared": false,
+          "note": "under 30 tokens: too short to tell a copy from a coincidence"
+        },
+        {
+          "path": "git/cmd.py",
+          "symbol": "Git._option_candidates",
+          "kind": "def",
+          "tokens": {
+            "clean": 164
+          },
+          "compared": true,
+          "nearest": {
+            "similarity": 0.275,
+            "unit": "git/config.py::GitConfigParser.write",
+            "version": "clean"
+          }
+        },
+        {
+          "path": "git/cmd.py",
+          "symbol": "Git._unpack_args",
+          "kind": "def",
+          "tokens": {
+            "clean": 65,
+            "regressed": 65
+          },
+          "compared": true,
+          "nearest": {
+            "similarity": 0.452,
+            "unit": "git/objects/fun.py::traverse_tree_recursive",
+            "version": "regressed"
+          }
+        },
+        {
+          "path": "git/repo/base.py",
+          "symbol": "Repo.unsafe_git_archive_options",
+          "kind": "assign",
+          "tokens": {
+            "clean": 9
+          },
+          "compared": false,
+          "note": "under 30 tokens: too short to tell a copy from a coincidence"
+        },
+        {
+          "path": "git/repo/base.py",
+          "symbol": "Repo.unsafe_git_revision_options",
+          "kind": "assign",
+          "tokens": {
+            "clean": 7
+          },
+          "compared": false,
+          "note": "under 30 tokens: too short to tell a copy from a coincidence"
+        },
+        {
+          "path": "git/repo/base.py",
+          "symbol": "Repo.archive",
+          "kind": "def",
+          "tokens": {
+            "clean": 206,
+            "regressed": 142
+          },
+          "compared": true,
+          "nearest": {
+            "similarity": 0.492,
+            "unit": "git/remote.py::Remote.push",
+            "version": "clean"
+          }
+        }
+      ],
+      "near_duplicates": [],
+      "fix_files": [
+        {
+          "path": "git/objects/commit.py",
+          "status": "M",
+          "kind": "source",
+          "excluded": false
+        },
+        {
+          "path": "git/remote.py",
+          "status": "M",
+          "kind": "source",
+          "excluded": false
+        },
+        {
+          "path": "test/test_clone.py",
+          "status": "M",
+          "kind": "test",
+          "excluded": true
+        },
+        {
+          "path": "test/test_commit.py",
+          "status": "M",
+          "kind": "test",
+          "excluded": true
+        },
+        {
+          "path": "test/test_git.py",
+          "status": "M",
+          "kind": "test",
+          "excluded": true
+        },
+        {
+          "path": "test/test_remote.py",
+          "status": "M",
+          "kind": "test",
+          "excluded": true
+        },
+        {
+          "path": "test/test_repo.py",
+          "status": "M",
+          "kind": "test",
+          "excluded": true
+        }
+      ],
+      "exclusions": [
+        {
+          "path": "test/test_clone.py",
+          "symbol": null,
+          "reason": "test-changed-by-fix"
+        },
+        {
+          "path": "test/test_commit.py",
+          "symbol": null,
+          "reason": "test-changed-by-fix"
+        },
+        {
+          "path": "test/test_git.py",
+          "symbol": null,
+          "reason": "test-changed-by-fix"
+        },
+        {
+          "path": "test/test_remote.py",
+          "symbol": null,
+          "reason": "test-changed-by-fix"
+        },
+        {
+          "path": "test/test_repo.py",
+          "symbol": null,
+          "reason": "test-changed-by-fix"
+        }
+      ]
+    },
+    "gitpython-cwvm": {
+      "repo": "gitpython-developers/gitpython",
+      "commit": "e98f57b81f792f0f5e18d33ee658ae395f9aa3c4",
+      "scanned": {
+        "files": 71,
+        "units": 1254
+      },
+      "regression_units": [
+        {
+          "path": "git/refs/symbolic.py",
+          "symbol": "SymbolicReference._check_ref_name_valid",
+          "kind": "def",
+          "tokens": {
+            "clean": 275
+          },
+          "compared": true,
+          "nearest": {
+            "similarity": 0.187,
+            "unit": "git/objects/submodule/base.py::Submodule.__init__",
+            "version": "clean"
+          }
+        },
+        {
+          "path": "git/refs/symbolic.py",
+          "symbol": "SymbolicReference._get_ref_info_helper",
+          "kind": "def",
+          "tokens": {
+            "clean": 215,
+            "regressed": 225
+          },
+          "compared": true,
+          "nearest": {
+            "similarity": 0.348,
+            "unit": "git/cmd.py::Git._parse_object_header",
+            "version": "clean"
+          }
+        }
+      ],
+      "near_duplicates": [],
+      "fix_files": [
+        {
+          "path": "test/test_refs.py",
+          "status": "M",
+          "kind": "test",
+          "excluded": true
+        }
+      ],
+      "exclusions": [
+        {
+          "path": "test/test_refs.py",
+          "symbol": null,
+          "reason": "test-changed-by-fix"
+        }
+      ]
+    },
+    "gitpython-hmq2": {
+      "repo": "gitpython-developers/gitpython",
+      "commit": "e4b8e7d026ca6abb4cf604f8e77093432ce23c06",
+      "scanned": {
+        "files": 141,
+        "units": 2307
+      },
+      "regression_units": [
+        {
+          "path": "git/objects/submodule/base.py",
+          "symbol": "Submodule._module_abspath",
+          "kind": "def",
+          "tokens": {
+            "clean": 70,
+            "regressed": 65
+          },
+          "compared": true,
+          "nearest": {
+            "similarity": 0.532,
+            "unit": "git/refs/symbolic.py::SymbolicReference._get_validated_reflog_path",
+            "version": "regressed"
+          }
+        },
+        {
+          "path": "git/objects/submodule/base.py",
+          "symbol": "Submodule._validated_name",
+          "kind": "def",
+          "tokens": {
+            "clean": 66
+          },
+          "compared": true,
+          "nearest": {
+            "similarity": 0.417,
+            "unit": "git/cmd.py::Git.__getattr__",
+            "version": "clean"
+          }
+        },
+        {
+          "path": "git/objects/submodule/base.py",
+          "symbol": "Submodule.update",
+          "kind": "def",
+          "tokens": {
+            "clean": 1128,
+            "regressed": 1120
+          },
+          "compared": true,
+          "nearest": {
+            "similarity": 0.292,
+            "unit": "git/objects/submodule/root.py::RootModule.update",
+            "version": "clean"
+          }
+        }
+      ],
+      "near_duplicates": [],
+      "fix_files": [
+        {
+          "path": "test/test_submodule.py",
+          "status": "M",
+          "kind": "test",
+          "excluded": true
+        }
+      ],
+      "exclusions": [
+        {
+          "path": "test/test_submodule.py",
+          "symbol": null,
+          "reason": "test-changed-by-fix"
+        }
+      ]
+    },
+    "gitpython-pr76": {
+      "repo": "gitpython-developers/gitpython",
+      "commit": "ca965ecc81853bca7675261729143f54e5bf4cdd",
+      "scanned": {
+        "files": 70,
+        "units": 1223
+      },
+      "regression_units": [
+        {
+          "path": "git/repo/base.py",
+          "symbol": "Repo._clone",
+          "kind": "def",
+          "tokens": {
+            "clean": 431,
+            "regressed": 406
+          },
+          "compared": true,
+          "nearest": {
+            "similarity": 0.399,
+            "unit": "git/remote.py::Remote.push",
+            "version": "clean"
+          }
+        }
+      ],
+      "near_duplicates": [],
+      "fix_files": [
+        {
+          "path": "test/test_repo.py",
+          "status": "M",
+          "kind": "test",
+          "excluded": true
+        }
+      ],
+      "exclusions": [
+        {
+          "path": "test/test_repo.py",
+          "symbol": null,
+          "reason": "test-changed-by-fix"
+        }
+      ]
+    },
+    "gitpython-r9mr": {
+      "repo": "gitpython-developers/gitpython",
+      "commit": "e8d0fbf774d1f6baa3b481adfe48bd262e43b453",
+      "scanned": {
+        "files": 89,
+        "units": 1589
+      },
+      "regression_units": [
+        {
+          "path": "git/cmd.py",
+          "symbol": "Git._option_candidates",
+          "kind": "def",
+          "tokens": {
+            "clean": 223,
+            "regressed": 164
+          },
+          "compared": true,
+          "nearest": {
+            "similarity": 0.275,
+            "unit": "git/config.py::GitConfigParser.write",
+            "version": "regressed"
+          }
+        }
+      ],
+      "near_duplicates": [],
+      "fix_files": [
+        {
+          "path": "test/test_git.py",
+          "status": "M",
+          "kind": "test",
+          "excluded": true
+        }
+      ],
+      "exclusions": [
+        {
+          "path": "test/test_git.py",
+          "symbol": null,
+          "reason": "test-changed-by-fix"
+        }
+      ]
+    },
+    "gitpython-rpm5": {
+      "repo": "gitpython-developers/gitpython",
+      "commit": "142195888e713542189533a52cdfc333f05c3af6",
+      "scanned": {
+        "files": 87,
+        "units": 1510
+      },
+      "regression_units": [
+        {
+          "path": "git/cmd.py",
+          "symbol": "Git._canonicalize_option_name",
+          "kind": "def",
+          "tokens": {
+            "clean": 47
+          },
+          "compared": true,
+          "nearest": {
+            "similarity": 0.529,
+            "unit": "git/objects/commit.py::Commit.summary",
+            "version": "clean"
+          }
+        },
+        {
+          "path": "git/cmd.py",
+          "symbol": "Git.check_unsafe_options",
+          "kind": "def",
+          "tokens": {
+            "clean": 74,
+            "regressed": 77
+          },
+          "compared": true,
+          "nearest": {
+            "similarity": 0.358,
+            "unit": "git/util.py::Actor.__init__",
+            "version": "clean"
+          }
+        }
+      ],
+      "near_duplicates": [],
+      "fix_files": [
+        {
+          "path": "test/test_clone.py",
+          "status": "M",
+          "kind": "test",
+          "excluded": true
+        },
+        {
+          "path": "test/test_git.py",
+          "status": "M",
+          "kind": "test",
+          "excluded": true
+        },
+        {
+          "path": "test/test_remote.py",
+          "status": "M",
+          "kind": "test",
+          "excluded": true
+        }
+      ],
+      "exclusions": [
+        {
+          "path": "test/test_clone.py",
+          "symbol": null,
+          "reason": "test-changed-by-fix"
+        },
+        {
+          "path": "test/test_git.py",
+          "symbol": null,
+          "reason": "test-changed-by-fix"
+        },
+        {
+          "path": "test/test_remote.py",
+          "symbol": null,
+          "reason": "test-changed-by-fix"
+        }
+      ]
+    },
+    "gitpython-v396": {
+      "repo": "gitpython-developers/gitpython",
+      "commit": "56806080c1348749b07daa4a2024ce47b3cad285",
+      "scanned": {
+        "files": 89,
+        "units": 1554
+      },
+      "regression_units": [
+        {
+          "path": "git/cmd.py",
+          "symbol": "Git.check_unsafe_options",
+          "kind": "def",
+          "tokens": {
+            "clean": 282,
+            "regressed": 152
+          },
+          "compared": true,
+          "nearest": {
+            "similarity": 0.242,
+            "unit": "git/refs/symbolic.py::SymbolicReference.dereference_recursive",
+            "version": "regressed"
+          }
+        }
+      ],
+      "near_duplicates": [],
+      "fix_files": [
+        {
+          "path": "test/test_clone.py",
+          "status": "M",
+          "kind": "test",
+          "excluded": true
+        },
+        {
+          "path": "test/test_git.py",
+          "status": "M",
+          "kind": "test",
+          "excluded": true
+        },
+        {
+          "path": "test/test_remote.py",
+          "status": "M",
+          "kind": "test",
+          "excluded": true
+        }
+      ],
+      "exclusions": [
+        {
+          "path": "test/test_clone.py",
+          "symbol": null,
+          "reason": "test-changed-by-fix"
+        },
+        {
+          "path": "test/test_git.py",
+          "symbol": null,
+          "reason": "test-changed-by-fix"
+        },
+        {
+          "path": "test/test_remote.py",
+          "symbol": null,
+          "reason": "test-changed-by-fix"
+        }
+      ]
+    },
+    "lollms-3x47": {
+      "repo": "parisneo/lollms_legacy",
+      "commit": "f4424cfc3d6dfb3ad5ac17dd46801efe784933e9",
+      "scanned": {
+        "files": 62,
+        "units": 1117
+      },
+      "regression_units": [
+        {
+          "path": "lollms/security.py",
+          "symbol": "sanitize_path_from_endpoint",
+          "kind": "def",
+          "tokens": {
+            "clean": 98,
+            "regressed": 75
+          },
+          "compared": true,
+          "nearest": {
+            "similarity": 0.33,
+            "unit": "lollms/utilities.py::discussion_path_2_url",
+            "version": "regressed"
+          }
+        }
+      ],
+      "near_duplicates": [],
+      "fix_files": [],
+      "exclusions": []
+    },
+    "lollms-7pgr": {
+      "repo": "parisneo/lollms_legacy",
+      "commit": "aeace796d861e922133b769710019608a6363264",
+      "scanned": {
+        "files": 130,
+        "units": 1621
+      },
+      "regression_units": [
+        {
+          "path": "lollms/server/endpoints/lollms_file_system.py",
+          "symbol": "vectorize_folder",
+          "kind": "def",
+          "tokens": {
+            "clean": 483,
+            "regressed": 478
+          },
+          "compared": true,
+          "nearest": {
+            "similarity": 0.393,
+            "unit": "lollms/app.py::LollmsApplication.load_rag_dbs",
+            "version": "regressed"
+          }
+        }
+      ],
+      "near_duplicates": [],
+      "fix_files": [],
+      "exclusions": []
+    },
+    "lollms-8mrm": {
+      "repo": "parisneo/lollms_legacy",
+      "commit": "26a3ff35acf152b49e1087d5698ad4864c7b6092",
+      "scanned": {
+        "files": 128,
+        "units": 1537
+      },
+      "regression_units": [
+        {
+          "path": "lollms/server/endpoints/lollms_configuration_infos.py",
+          "symbol": "apply_settings",
+          "kind": "def",
+          "tokens": {
+            "clean": 416,
+            "regressed": 414
+          },
+          "compared": true,
+          "nearest": {
+            "similarity": 0.339,
+            "unit": "lollms/server/endpoints/lollms_tts.py::set_voice",
+            "version": "regressed"
+          }
+        }
+      ],
+      "near_duplicates": [],
+      "fix_files": [],
+      "exclusions": []
+    },
+    "lollms-m45c": {
+      "repo": "parisneo/lollms_legacy",
+      "commit": "eda3af5f5c4ea9b2f3569f72f8d05989e29367fc",
+      "scanned": {
+        "files": 82,
+        "units": 1324
+      },
+      "regression_units": [
+        {
+          "path": "lollms/server/endpoints/lollms_personalities_infos.py",
+          "symbol": "set_personality_config",
+          "kind": "def",
+          "tokens": {
+            "clean": 173,
+            "regressed": 154
+          },
+          "compared": true,
+          "nearest": {
+            "similarity": 0.577,
+            "unit": "lollms/server/endpoints/lollms_extensions_infos.py::mount_extension",
+            "version": "regressed"
+          }
+        }
+      ],
+      "near_duplicates": [],
+      "fix_files": [
+        {
+          "path": "lollms/security.py",
+          "status": "M",
+          "kind": "source",
+          "excluded": false
+        },
+        {
+          "path": "lollms/utilities.py",
+          "status": "M",
+          "kind": "source",
+          "excluded": false
+        }
+      ],
+      "exclusions": []
+    },
+    "lollms-p8h7": {
+      "repo": "parisneo/lollms_legacy",
+      "commit": "95ad36eeffc6a6be3e3f35ed35a384d768f0ecf6",
+      "scanned": {
+        "files": 63,
+        "units": 1136
+      },
+      "regression_units": [
+        {
+          "path": "lollms/security.py",
+          "symbol": "sanitize_path_from_endpoint",
+          "kind": "def",
+          "tokens": {
+            "clean": 139,
+            "regressed": 135
+          },
+          "compared": true,
+          "nearest": {
+            "similarity": 0.301,
+            "unit": "lollms/server/endpoints/lollms_user.py::upload_avatar",
+            "version": "clean"
+          }
+        }
+      ],
+      "near_duplicates": [],
+      "fix_files": [],
+      "exclusions": []
+    },
+    "lollms-pwc9": {
+      "repo": "parisneo/lollms_legacy",
+      "commit": "7ebe08da7e0026b155af4f7be1d6417bc64cf02f",
+      "scanned": {
+        "files": 59,
+        "units": 980
+      },
+      "regression_units": [
+        {
+          "path": "lollms/server/endpoints/lollms_binding_infos.py",
+          "symbol": "reinstall_binding",
+          "kind": "def",
+          "tokens": {
+            "clean": 208,
+            "regressed": 205
+          },
+          "compared": true,
+          "nearest": {
+            "similarity": 0.423,
+            "unit": "lollms/server/endpoints/lollms_personalities_infos.py::reinstall_personality",
+            "version": "regressed"
+          }
+        },
+        {
+          "path": "lollms/server/endpoints/lollms_binding_infos.py",
+          "symbol": "unInstall_binding",
+          "kind": "def",
+          "tokens": {
+            "clean": 261,
+            "regressed": 258
+          },
+          "compared": true,
+          "nearest": {
+            "similarity": 0.388,
+            "unit": "lollms/server/endpoints/lollms_personalities_infos.py::reinstall_personality",
+            "version": "regressed"
+          }
+        }
+      ],
+      "near_duplicates": [],
+      "fix_files": [
+        {
+          "path": "lollms/server/endpoints/lollms_extensions_infos.py",
+          "status": "M",
+          "kind": "source",
+          "excluded": false
+        }
+      ],
+      "exclusions": []
+    },
+    "mako-2h4p": {
+      "repo": "sqlalchemy/mako",
+      "commit": "72e10c573ca0fbcbddd4455abca8ce92a61780d7",
+      "scanned": {
+        "files": 68,
+        "units": 1177
+      },
+      "regression_units": [
+        {
+          "path": "mako/lookup.py",
+          "symbol": "TemplateLookup.get_template",
+          "kind": "def",
+          "tokens": {
+            "clean": 132,
+            "regressed": 125
+          },
+          "compared": true,
+          "nearest": {
+            "similarity": 0.349,
+            "unit": "mako/ext/autohandler.py::_file_exists",
+            "version": "regressed"
+          }
+        },
+        {
+          "path": "mako/template.py",
+          "symbol": "Template.__init__",
+          "kind": "def",
+          "tokens": {
+            "clean": 517,
+            "regressed": 510
+          },
+          "compared": true,
+          "nearest": {
+            "similarity": 0.22,
+            "unit": "mako/runtime.py::TemplateNamespace.__init__",
+            "version": "regressed"
+          }
+        }
+      ],
+      "near_duplicates": [],
+      "fix_files": [
+        {
+          "path": "test/test_lookup.py",
+          "status": "M",
+          "kind": "test",
+          "excluded": true
+        }
+      ],
+      "exclusions": [
+        {
+          "path": "test/test_lookup.py",
+          "symbol": null,
+          "reason": "test-changed-by-fix"
+        }
+      ]
+    },
+    "mako-v92g": {
+      "repo": "sqlalchemy/mako",
+      "commit": "e05ac61989a7fb9dd7dcde6cfd72dc48328719a3",
+      "scanned": {
+        "files": 68,
+        "units": 1176
+      },
+      "regression_units": [
+        {
+          "path": "mako/template.py",
+          "symbol": "Template.__init__",
+          "kind": "def",
+          "tokens": {
+            "clean": 510,
+            "regressed": 520
+          },
+          "compared": true,
+          "nearest": {
+            "similarity": 0.22,
+            "unit": "mako/runtime.py::TemplateNamespace.__init__",
+            "version": "clean"
+          }
+        }
+      ],
+      "near_duplicates": [],
+      "fix_files": [
+        {
+          "path": "test/test_lookup.py",
+          "status": "M",
+          "kind": "test",
+          "excluded": true
+        }
+      ],
+      "exclusions": [
+        {
+          "path": "test/test_lookup.py",
+          "symbol": null,
+          "reason": "test-changed-by-fix"
+        }
+      ]
+    },
+    "nicegui-hxp3": {
+      "repo": "zauberzeug/nicegui",
+      "commit": "a1b89e2a24e1911a40389ace2153a37f4eea92a9",
+      "scanned": {
+        "files": 580,
+        "units": 3227
+      },
+      "regression_units": [
+        {
+          "path": "nicegui/app/app.py",
+          "symbol": "App.add_media_files",
+          "kind": "def",
+          "tokens": {
+            "clean": 114,
+            "regressed": 93
+          },
+          "compared": true,
+          "nearest": {
+            "similarity": 0.378,
+            "unit": "nicegui/nicegui.py::_get_dynamic_resource",
+            "version": "regressed"
+          }
+        }
+      ],
+      "near_duplicates": [],
+      "fix_files": [
+        {
+          "path": "tests/test_serving_files.py",
+          "status": "M",
+          "kind": "test",
+          "excluded": true
+        }
+      ],
+      "exclusions": [
+        {
+          "path": "tests/test_serving_files.py",
+          "symbol": null,
+          "reason": "test-changed-by-fix"
+        }
+      ]
+    },
+    "nicegui-mwc7": {
+      "repo": "zauberzeug/nicegui",
+      "commit": "ed12eb14f2a6c48b388a05c04b3c5a107ea9d330",
+      "scanned": {
+        "files": 608,
+        "units": 2448
+      },
+      "regression_units": [
+        {
+          "path": "nicegui/nicegui.py",
+          "symbol": "_get_resource",
+          "kind": "def",
+          "tokens": {
+            "clean": 136,
+            "regressed": 97
+          },
+          "compared": true,
+          "nearest": {
+            "similarity": 0.368,
+            "unit": "nicegui/app/app.py::App.add_media_files",
+            "version": "regressed"
+          }
+        }
+      ],
+      "near_duplicates": [],
+      "fix_files": [],
+      "exclusions": []
+    },
+    "nicegui-w8wv": {
+      "repo": "zauberzeug/nicegui",
+      "commit": "d38a702e3af2da5b0708f689be8d71413fc77056",
+      "scanned": {
+        "files": 617,
+        "units": 3426
+      },
+      "regression_units": [
+        {
+          "path": "nicegui/elements/upload_files.py",
+          "symbol": "_sanitize_filename",
+          "kind": "def",
+          "tokens": {
+            "clean": 36
+          },
+          "compared": true,
+          "nearest": {
+            "similarity": 0.396,
+            "unit": "nicegui/style.py::Style.parse",
+            "version": "clean"
+          }
+        },
+        {
+          "path": "nicegui/elements/upload_files.py",
+          "symbol": "create_file_upload",
+          "kind": "def",
+          "tokens": {
+            "clean": 219,
+            "regressed": 223
+          },
+          "compared": true,
+          "nearest": {
+            "similarity": 0.219,
+            "unit": "nicegui/nicegui.py::prune_tab_storage",
+            "version": "clean"
+          }
+        }
+      ],
+      "near_duplicates": [],
+      "fix_files": [
+        {
+          "path": "tests/test_upload.py",
+          "status": "M",
+          "kind": "test",
+          "excluded": true
+        }
+      ],
+      "exclusions": [
+        {
+          "path": "tests/test_upload.py",
+          "symbol": null,
+          "reason": "test-changed-by-fix"
+        }
+      ]
+    },
+    "ormar-xxh2": {
+      "repo": "collerek/ormar",
+      "commit": "a03bae14fe01358d3eaf7e319fcd5db2e4956b16",
+      "scanned": {
+        "files": 301,
+        "units": 4055
+      },
+      "regression_units": [
+        {
+          "path": "ormar/queryset/queryset.py",
+          "symbol": "QuerySet._query_aggr_function",
+          "kind": "def",
+          "tokens": {
+            "clean": 194,
+            "regressed": 168
+          },
+          "compared": true,
+          "nearest": {
+            "similarity": 0.306,
+            "unit": "ormar/models/model.py::Model._execute_query",
+            "version": "regressed"
+          }
+        }
+      ],
+      "near_duplicates": [],
+      "fix_files": [
+        {
+          "path": "tests/test_vulnerabilities/__init__.py",
+          "status": "A",
+          "kind": "test",
+          "excluded": true
+        },
+        {
+          "path": "tests/test_vulnerabilities/test_aggregated_functions.py",
+          "status": "A",
+          "kind": "test",
+          "excluded": true
+        }
+      ],
+      "exclusions": [
+        {
+          "path": "tests/test_vulnerabilities/__init__.py",
+          "symbol": null,
+          "reason": "test-changed-by-fix"
+        },
+        {
+          "path": "tests/test_vulnerabilities/test_aggregated_functions.py",
+          "symbol": null,
+          "reason": "test-changed-by-fix"
+        }
+      ]
+    },
+    "piccolo-xq59": {
+      "repo": "piccolo-orm/piccolo",
+      "commit": "82679eb8cd1449cf31d87c9914a072e70168b6eb",
+      "scanned": {
+        "files": 349,
+        "units": 3114
+      },
+      "regression_units": [
+        {
+          "path": "piccolo/engine/base.py",
+          "symbol": "VALID_SAVEPOINT_CHARACTERS",
+          "kind": "assign",
+          "tokens": {
+            "clean": 26
+          },
+          "compared": false,
+          "note": "under 30 tokens: too short to tell a copy from a coincidence"
+        },
+        {
+          "path": "piccolo/engine/base.py",
+          "symbol": "validate_savepoint_name",
+          "kind": "def",
+          "tokens": {
+            "clean": 35
+          },
+          "compared": true,
+          "nearest": {
+            "similarity": 0.512,
+            "unit": "piccolo/apps/migrations/auto/serialisation.py::Import.__post_init__",
+            "version": "clean"
+          }
+        },
+        {
+          "path": "piccolo/engine/postgres.py",
+          "symbol": "PostgresTransaction.savepoint",
+          "kind": "def",
+          "tokens": {
+            "clean": 63,
+            "regressed": 59
+          },
+          "compared": true,
+          "nearest": {
+            "similarity": 1.0,
+            "unit": "piccolo/engine/sqlite.py::SQLiteTransaction.savepoint",
+            "version": "clean"
+          }
+        },
+        {
+          "path": "piccolo/engine/postgres.py",
+          "symbol": "Savepoint.release",
+          "kind": "def",
+          "tokens": {
+            "clean": 31,
+            "regressed": 25
+          },
+          "compared": true,
+          "nearest": {
+            "similarity": 1.0,
+            "unit": "piccolo/engine/sqlite.py::Savepoint.release",
+            "version": "clean"
+          }
+        },
+        {
+          "path": "piccolo/engine/postgres.py",
+          "symbol": "Savepoint.rollback_to",
+          "kind": "def",
+          "tokens": {
+            "clean": 31,
+            "regressed": 25
+          },
+          "compared": true,
+          "nearest": {
+            "similarity": 1.0,
+            "unit": "piccolo/engine/sqlite.py::Savepoint.rollback_to",
+            "version": "clean"
+          }
+        }
+      ],
+      "near_duplicates": [
+        {
+          "path": "piccolo/engine/sqlite.py",
+          "symbol": "SQLiteTransaction.savepoint",
+          "kind": "def",
+          "similarity": 1.0,
+          "of": "piccolo/engine/postgres.py::PostgresTransaction.savepoint",
+          "version": "clean"
+        },
+        {
+          "path": "piccolo/engine/sqlite.py",
+          "symbol": "Savepoint.release",
+          "kind": "def",
+          "similarity": 1.0,
+          "of": "piccolo/engine/postgres.py::Savepoint.release",
+          "version": "clean"
+        },
+        {
+          "path": "piccolo/engine/sqlite.py",
+          "symbol": "Savepoint.rollback_to",
+          "kind": "def",
+          "similarity": 1.0,
+          "of": "piccolo/engine/postgres.py::Savepoint.rollback_to",
+          "version": "clean"
+        }
+      ],
+      "fix_files": [
+        {
+          "path": "piccolo/engine/sqlite.py",
+          "status": "M",
+          "kind": "source",
+          "excluded": false
+        },
+        {
+          "path": "tests/engine/test_transaction.py",
+          "status": "M",
+          "kind": "test",
+          "excluded": true
+        }
+      ],
+      "exclusions": [
+        {
+          "path": "tests/engine/test_transaction.py",
+          "symbol": null,
+          "reason": "test-changed-by-fix"
+        },
+        {
+          "path": "piccolo/engine/sqlite.py",
+          "symbol": "SQLiteTransaction.savepoint",
+          "reason": "near-duplicate"
+        },
+        {
+          "path": "piccolo/engine/sqlite.py",
+          "symbol": "Savepoint.release",
+          "reason": "near-duplicate"
+        },
+        {
+          "path": "piccolo/engine/sqlite.py",
+          "symbol": "Savepoint.rollback_to",
+          "reason": "near-duplicate"
+        }
+      ]
+    },
+    "pycsw-hg4c": {
+      "repo": "geopython/pycsw",
+      "commit": "d83df944b1fc0f266444c31852c7730f0f41db87",
+      "scanned": {
+        "files": 45,
+        "units": 287
+      },
+      "regression_units": [
+        {
+          "path": "pycsw/ogc/csw/cql.py",
+          "symbol": "LOGGER",
+          "kind": "assign",
+          "tokens": {
+            "clean": 8
+          },
+          "compared": false,
+          "note": "under 30 tokens: too short to tell a copy from a coincidence"
+        },
+        {
+          "path": "pycsw/ogc/csw/cql.py",
+          "symbol": "_parse_condition",
+          "kind": "def",
+          "tokens": {
+            "clean": 87
+          },
+          "compared": true,
+          "nearest": {
+            "similarity": 0.333,
+            "unit": "pycsw/oaipmh.py::OAIPMH._transform_element",
+            "version": "clean"
+          }
+        },
+        {
+          "path": "pycsw/ogc/csw/cql.py",
+          "symbol": "cql2fes1",
+          "kind": "def",
+          "tokens": {
+            "clean": 303
+          },
+          "compared": true,
+          "nearest": {
+            "similarity": 0.411,
+            "unit": "pycsw/plugins/profiles/apiso/apiso.py::write_extent",
+            "version": "clean"
+          }
+        },
+        {
+          "path": "pycsw/ogc/csw/csw2.py",
+          "symbol": "Csw2.getrecords",
+          "kind": "def",
+          "tokens": {
+            "clean": 3051,
+            "regressed": 2929
+          },
+          "compared": true,
+          "nearest": {
+            "similarity": 0.562,
+            "unit": "pycsw/ogc/csw/csw3.py::Csw3.getrecords",
+            "version": "clean"
+          }
+        }
+      ],
+      "near_duplicates": [],
+      "fix_files": [
+        {
+          "path": "pycsw/ogc/csw/csw3.py",
+          "status": "M",
+          "kind": "source",
+          "excluded": false
+        }
+      ],
+      "exclusions": []
+    },
+    "tortoise-orm-9j2c": {
+      "repo": "tortoise/tortoise-orm",
+      "commit": "91c364053e0ddf77edc5442914c6f049512678b3",
+      "scanned": {
+        "files": 170,
+        "units": 1978
+      },
+      "regression_units": [
+        {
+          "path": "tortoise/backends/mysql/executor.py",
+          "symbol": "StrWrapper.get_value_sql",
+          "kind": "def",
+          "tokens": {
+            "clean": 40
+          },
+          "compared": true,
+          "nearest": {
+            "similarity": 0.405,
+            "unit": "tortoise/fields/data.py::UUIDField.__init__",
+            "version": "clean"
+          }
+        },
+        {
+          "path": "tortoise/backends/mysql/executor.py",
+          "symbol": "escape_like",
+          "kind": "def",
+          "tokens": {
+            "clean": 33
+          },
+          "compared": true,
+          "nearest": {
+            "similarity": 0.384,
+            "unit": "tests/schema/test_generate_schema.py::TestGenerateSchema.get_sql",
+            "version": "clean"
+          }
+        },
+        {
+          "path": "tortoise/backends/mysql/executor.py",
+          "symbol": "mysql_contains",
+          "kind": "def",
+          "tokens": {
+            "clean": 46,
+            "regressed": 36
+          },
+          "compared": true,
+          "nearest": {
+            "similarity": 0.435,
+            "unit": "tortoise/backends/mysql/schema_generator.py::MySQLSchemaGenerator._column_comment_generator",
+            "version": "regressed"
+          }
+        },
+        {
+          "path": "tortoise/backends/mysql/executor.py",
+          "symbol": "mysql_ends_with",
+          "kind": "def",
+          "tokens": {
+            "clean": 45,
+            "regressed": 35
+          },
+          "compared": true,
+          "nearest": {
+            "similarity": 0.441,
+            "unit": "tortoise/backends/mysql/schema_generator.py::MySQLSchemaGenerator._column_comment_generator",
+            "version": "regressed"
+          }
+        },
+        {
+          "path": "tortoise/backends/mysql/executor.py",
+          "symbol": "mysql_insensitive_contains",
+          "kind": "def",
+          "tokens": {
+            "clean": 56,
+            "regressed": 46
+          },
+          "compared": true,
+          "nearest": {
+            "similarity": 0.38,
+            "unit": "tortoise/backends/mysql/schema_generator.py::MySQLSchemaGenerator._column_comment_generator",
+            "version": "regressed"
+          }
+        },
+        {
+          "path": "tortoise/backends/mysql/executor.py",
+          "symbol": "mysql_insensitive_ends_with",
+          "kind": "def",
+          "tokens": {
+            "clean": 55,
+            "regressed": 45
+          },
+          "compared": true,
+          "nearest": {
+            "similarity": 0.385,
+            "unit": "tortoise/backends/mysql/schema_generator.py::MySQLSchemaGenerator._column_comment_generator",
+            "version": "regressed"
+          }
+        },
+        {
+          "path": "tortoise/backends/mysql/executor.py",
+          "symbol": "mysql_insensitive_exact",
+          "kind": "def",
+          "tokens": {
+            "clean": 43,
+            "regressed": 44
+          },
+          "compared": true,
+          "nearest": {
+            "similarity": 0.39,
+            "unit": "tortoise/backends/mysql/schema_generator.py::MySQLSchemaGenerator._column_comment_generator",
+            "version": "regressed"
+          }
+        },
+        {
+          "path": "tortoise/backends/mysql/executor.py",
+          "symbol": "mysql_insensitive_starts_with",
+          "kind": "def",
+          "tokens": {
+            "clean": 55,
+            "regressed": 45
+          },
+          "compared": true,
+          "nearest": {
+            "similarity": 0.385,
+            "unit": "tortoise/backends/mysql/schema_generator.py::MySQLSchemaGenerator._column_comment_generator",
+            "version": "regressed"
+          }
+        },
+        {
+          "path": "tortoise/backends/mysql/executor.py",
+          "symbol": "mysql_starts_with",
+          "kind": "def",
+          "tokens": {
+            "clean": 45,
+            "regressed": 35
+          },
+          "compared": true,
+          "nearest": {
+            "similarity": 0.441,
+            "unit": "tortoise/backends/mysql/schema_generator.py::MySQLSchemaGenerator._column_comment_generator",
+            "version": "regressed"
+          }
+        },
+        {
+          "path": "tortoise/filters.py",
+          "symbol": "Like.__init__",
+          "kind": "def",
+          "tokens": {
+            "clean": 41
+          },
+          "compared": true,
+          "nearest": {
+            "similarity": 0.541,
+            "unit": "tortoise/fields/relational.py::ManyToManyRelation.__init__",
+            "version": "clean"
+          }
+        },
+        {
+          "path": "tortoise/filters.py",
+          "symbol": "Like.get_sql",
+          "kind": "def",
+          "tokens": {
+            "clean": 91
+          },
+          "compared": true,
+          "nearest": {
+            "similarity": 0.268,
+            "unit": "tests/fields/subclass_fields.py::EnumField.__init__",
+            "version": "clean"
+          }
+        },
+        {
+          "path": "tortoise/filters.py",
+          "symbol": "contains",
+          "kind": "def",
+          "tokens": {
+            "clean": 35,
+            "regressed": 27
+          },
+          "compared": true,
+          "nearest": {
+            "similarity": 0.412,
+            "unit": "tortoise/backends/mysql/schema_generator.py::MySQLSchemaGenerator._column_comment_generator",
+            "version": "clean"
+          }
+        },
+        {
+          "path": "tortoise/filters.py",
+          "symbol": "ends_with",
+          "kind": "def",
+          "tokens": {
+            "clean": 34,
+            "regressed": 26
+          },
+          "compared": true,
+          "nearest": {
+            "similarity": 0.418,
+            "unit": "tortoise/backends/mysql/schema_generator.py::MySQLSchemaGenerator._column_comment_generator",
+            "version": "clean"
+          }
+        },
+        {
+          "path": "tortoise/filters.py",
+          "symbol": "escape_like",
+          "kind": "def",
+          "tokens": {
+            "clean": 33
+          },
+          "compared": true,
+          "nearest": {
+            "similarity": 0.384,
+            "unit": "tests/schema/test_generate_schema.py::TestGenerateSchema.get_sql",
+            "version": "clean"
+          }
+        },
+        {
+          "path": "tortoise/filters.py",
+          "symbol": "insensitive_contains",
+          "kind": "def",
+          "tokens": {
+            "clean": 41,
+            "regressed": 33
+          },
+          "compared": true,
+          "nearest": {
+            "similarity": 0.424,
+            "unit": "tortoise/backends/mysql/schema_generator.py::MySQLSchemaGenerator._column_comment_generator",
+            "version": "regressed"
+          }
+        },
+        {
+          "path": "tortoise/filters.py",
+          "symbol": "insensitive_ends_with",
+          "kind": "def",
+          "tokens": {
+            "clean": 40,
+            "regressed": 32
+          },
+          "compared": true,
+          "nearest": {
+            "similarity": 0.431,
+            "unit": "tortoise/backends/mysql/schema_generator.py::MySQLSchemaGenerator._column_comment_generator",
+            "version": "regressed"
+          }
+        },
+        {
+          "path": "tortoise/filters.py",
+          "symbol": "insensitive_exact",
+          "kind": "def",
+          "tokens": {
+            "clean": 30,
+            "regressed": 31
+          },
+          "compared": true,
+          "nearest": {
+            "similarity": 0.438,
+            "unit": "tortoise/backends/mysql/schema_generator.py::MySQLSchemaGenerator._column_comment_generator",
+            "version": "regressed"
+          }
+        },
+        {
+          "path": "tortoise/filters.py",
+          "symbol": "insensitive_starts_with",
+          "kind": "def",
+          "tokens": {
+            "clean": 40,
+            "regressed": 32
+          },
+          "compared": true,
+          "nearest": {
+            "similarity": 0.431,
+            "unit": "tortoise/backends/mysql/schema_generator.py::MySQLSchemaGenerator._column_comment_generator",
+            "version": "regressed"
+          }
+        },
+        {
+          "path": "tortoise/filters.py",
+          "symbol": "starts_with",
+          "kind": "def",
+          "tokens": {
+            "clean": 34,
+            "regressed": 26
+          },
+          "compared": true,
+          "nearest": {
+            "similarity": 0.418,
+            "unit": "tortoise/backends/mysql/schema_generator.py::MySQLSchemaGenerator._column_comment_generator",
+            "version": "clean"
+          }
+        }
+      ],
+      "near_duplicates": [],
+      "fix_files": [
+        {
+          "path": "tests/test_fuzz.py",
+          "status": "A",
+          "kind": "test",
+          "excluded": true
+        }
+      ],
+      "exclusions": [
+        {
+          "path": "tests/test_fuzz.py",
+          "symbol": null,
+          "reason": "test-changed-by-fix"
+        }
+      ]
+    },
+    "wsgidav-p6gw": {
+      "repo": "mar10/wsgidav",
+      "commit": "6f35776c9188f130ab044ce557015d51aaa83500",
+      "scanned": {
+        "files": 62,
+        "units": 970
+      },
+      "regression_units": [
+        {
+          "path": "wsgidav/samples/mysql_dav_provider.py",
+          "symbol": "MySQLBrowserProvider._exists_record_by_primary_key",
+          "kind": "def",
+          "tokens": {
+            "clean": 156,
+            "regressed": 189
+          },
+          "compared": true,
+          "nearest": {
+            "similarity": 0.324,
+            "unit": "wsgidav/lock_man/lock_storage_redis.py::LockStorageRedis.delete",
+            "version": "clean"
+          }
+        },
+        {
+          "path": "wsgidav/samples/mysql_dav_provider.py",
+          "symbol": "_escape_id",
+          "kind": "def",
+          "tokens": {
+            "clean": 15
+          },
+          "compared": false,
+          "note": "under 30 tokens: too short to tell a copy from a coincidence"
+        }
+      ],
+      "near_duplicates": [],
+      "fix_files": [],
+      "exclusions": []
+    },
+    "wsgidav-wxq4": {
+      "repo": "mar10/wsgidav",
+      "commit": "f894ed8656d7bdd7438ab8148c5a02546cb15183",
+      "scanned": {
+        "files": 61,
+        "units": 934
+      },
+      "regression_units": [
+        {
+          "path": "wsgidav/fs_dav_provider.py",
+          "symbol": "FilesystemProvider._loc_to_file_path",
+          "kind": "def",
+          "tokens": {
+            "clean": 153,
+            "regressed": 121
+          },
+          "compared": true,
+          "nearest": {
+            "similarity": 0.396,
+            "unit": "wsgidav/dav_provider.py::_DAVResource.__init__",
+            "version": "regressed"
+          }
+        }
+      ],
+      "near_duplicates": [],
+      "fix_files": [],
+      "exclusions": []
+    },
+    "xml2rfc-cfmv": {
+      "repo": "ietf-tools/xml2rfc",
+      "commit": "f2b245bc0aeeac0667c8f74e976c466c5991f0e4",
+      "scanned": {
+        "files": 36,
+        "units": 615
+      },
+      "regression_units": [
+        {
+          "path": "xml2rfc/utils.py",
+          "symbol": "strip_link_attachments",
+          "kind": "def",
+          "tokens": {
+            "clean": 40
+          },
+          "compared": true,
+          "nearest": {
+            "similarity": 0.338,
+            "unit": "test.py::PdfWriterTests.setUp",
+            "version": "clean"
+          }
+        },
+        {
+          "path": "xml2rfc/writers/base.py",
+          "symbol": "BaseV3Writer.validate",
+          "kind": "def",
+          "tokens": {
+            "clean": 293,
+            "regressed": 287
+          },
+          "compared": true,
+          "nearest": {
+            "similarity": 0.223,
+            "unit": "xml2rfc/parser.py::CachingResolver.resolve",
+            "version": "clean"
+          }
+        }
+      ],
+      "near_duplicates": [],
+      "fix_files": [
+        {
+          "path": "test.py",
+          "status": "M",
+          "kind": "test",
+          "excluded": true
+        }
+      ],
+      "exclusions": [
+        {
+          "path": "test.py",
+          "symbol": null,
+          "reason": "test-changed-by-fix"
+        }
+      ]
+    }
+  }
+}

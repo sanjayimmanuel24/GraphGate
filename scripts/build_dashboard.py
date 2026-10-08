@@ -32,20 +32,47 @@ MILESTONES = [
         ("1.3", "Deterministic replay", "done"), ("1.4", "Response caching", "done")]),
     ("M1.2", "Dataset v1", [
         ("2.1", "Seed repository selection", "done"), ("2.2", "Fix commits to vulnerable/fixed pairs", "done"),
-        ("2.3", "Validation of events", "active"), ("2.4", "Trace synthesis", "todo"),
-        ("2.5", "Turn labels", "todo"), ("2.6", "Leakage control", "todo")]),
-    ("M1.3", "Local gate (B) and Pysa baseline (S1)", [("3.1-3.4", "Gate B, Pysa, A/B/S1 run", "todo")]),
-    ("M2.1", "Graph layer and difference engine", [("4.1-4.5", "Graph builder, rules R1-R4", "todo")]),
+        ("2.3", "Validation of events", "done"),
+        ("2.4", "Trace synthesis (pilot recorded on the open model, dataset recording in progress)", "active"),
+        ("2.5", "Turn labels (pilot labelled, waits for dataset traces)", "active"),
+        ("2.6", "Leakage control", "done")]),
+    ("M1.3", "Local gate (B) and Pysa baseline (S1)", [
+        ("3.1", "Semgrep and Bandit on a diff", "done"), ("3.2", "LLM triage, gates B and B+ (built, not yet run against the model)", "active"),
+        ("3.3", "Pysa baseline", "todo"), ("3.4", "A / B / S1 run and metrics", "todo")]),
+    ("M2.1", "Graph layer and difference engine", [
+        ("4.1-4.5", "Graph builder and rules R1-R4 (built and tested; first look on the 30 regressions done)",
+         "done")]),
     ("M2.2", "Dataset v2, Condition C, holdout", [("5.1-5.4", "Cross-file variants, gate C, holdouts", "todo")]),
     ("M2.3", "Full study, ablations, writing", [("6.1-6.5", "Study, statistics, paper", "todo")]),
 ]
 
-SMOKE = [  # docs/MODEL_CHOICE.md, from the archived traces in docs/evidence/2026-09-27-smoke/
-    ("claude-opus-5", "none", "every run", "0", "declined"),
-    ("claude-opus-5-5", "5 of 7", "2", "1 of 3", "declined"),
-    ("claude-opus-4-8", "18 of 18", "0", "6 of 6", "chosen"),
-    ("claude-haiku-4-5", "18 of 18", "0", "6 of 6", "ablation"),
-]
+
+
+def model_facts() -> list[tuple[str, str]]:
+    """The experiment's model and what its runs showed (data/open_model_runs.json)."""
+    runs = load("data/open_model_runs.json")
+    if not runs:
+        return [("Model", "open-weight model, not run yet")]
+    model, pilot, session = runs["model"], runs["pilot"], runs.get("first_dataset_session")
+    facts = [
+        ("Model", f'{model["family"]} ({model["parameters"]} parameters, {model["quantization"]}, '
+                  f'{model["licence"]})'),
+        ("Used for", "code generation and triage; no commercial model in the experiment"),
+        ("Context window", f'{model["context_tokens"]:,} tokens'),
+        ("Pilot, usable turns", f'{pilot["turns_usable"]} of {pilot["model_calls"]}'),
+        ("Pilot, regression placed", f'{pilot["traces_with_regression"]} of {pilot["events"]} traces'),
+        ("Pilot, labels carried over", f'{pilot["turns_carried"]} of {pilot["turns_labelled"]} turns'),
+        ("Pilot, median time per turn", f'{pilot["median_seconds_per_turn"]} s'),
+        ("Pilot, replay", "byte-identical" if pilot["replays_byte_identical"] else "differs"),
+    ]
+    if session:
+        facts += [
+            ("First dataset session", f'{session["events_finished"]} of {session["events_started"]} '
+                                      f'started events finished in {session["recording_hours"]} h'),
+            ("Failed injections", f'{session["failed_injections"]} of '
+                                  f'{session["replications_under_those_seeds"]} replications'),
+        ]
+    return facts
 
 LOC_MIN, LOC_MAX = 5_000, 50_000
 EXCLUDED_BY_HAND = {"GHSA-j6cv-98jx-mrwr"}
@@ -119,6 +146,7 @@ def gather(run_tests: bool) -> dict:
         "reserve": sum(r["role"] == "reserve" for r in manifest["repos"]),
         "review": review["tally"],
         "events": sorted(events, key=lambda e: e["id"]),
+        "leakage": (load("data/leakage_exclusions.json") or {}).get("summary"),
         "tests": (n_tests, test_state),
     }
 
@@ -175,22 +203,29 @@ STATUS_PILL = {
 def render(d: dict) -> str:
     events = d["events"]
     prepared = [e for e in events if e["ai"] in ("sound", "sound-after-fix")]
-    scope = Counter(e["scope"] for e in prepared)
+    validated = [e for e in events if e["signoff"] == "accept"]
+    # Once the authors have signed off, the charts show what they accepted.
+    decided = any(e["signoff"] for e in events)
+    shown, shown_word = (validated, "validated") if decided else (prepared, "prepared")
+    scope = Counter(e["scope"] for e in shown)
     by_class: dict[str, list[int]] = {c: [0, 0, 0] for c in CLASS_NAMES}
     for e in events:
-        slot = 0 if e["scope"] == "cross_file" and e in prepared else 1 if e["scope"] == "local" and e in prepared else 2
+        slot = 0 if e["scope"] == "cross_file" and e in shown else 1 if e["scope"] == "local" and e in shown else 2
         by_class.setdefault(e["class"], [0, 0, 0])[slot] += 1
     n_tests, test_state = d["tests"]
-    signed = sum(e["signoff"] == "accept" for e in events)
 
     tiles = [
         (f"{n_tests}", f"automated tests {test_state}"),
         (f"{len(d['repos'])} + {d['reserve']}", "seed repositories (selected + reserve)"),
         (f"{d['funnel'][0][1]}", "injection advisories mined"),
         (f"{len(events)}", "candidate regression events"),
-        (f"{len(prepared)}", f"prepared ({scope['cross_file']} cross-file, {scope['local']} local)"),
-        (f"{signed}", "signed off (target 25-30)"),
+        (f"{len(prepared)}", "prepared and passed the AI check"),
+        (f"{len(validated)}", f"validated at sign-off ({scope['cross_file']} cross-file, {scope['local']} local)"
+                              if decided else "signed off (target 25-30)"),
     ]
+    if d["leakage"]:
+        tiles.append((f"{d['leakage']['exclusions']}",
+                      f"leakage exclusions in {d['leakage']['events_with_exclusions']} events"))
     tiles_html = "".join(f'<div class="tile"><b>{esc(v)}</b><span>{esc(l)}</span></div>' for v, l in tiles)
 
     ms_html = []
@@ -220,10 +255,7 @@ def render(d: dict) -> str:
 
     repo_rows = "".join(f'<tr><td class="mono">{esc(r)}</td><td>{esc(l)}</td><td class="num">{n}</td></tr>'
                         for r, l, n in d["repos"])
-    smoke_rows = "".join(f'<tr><td class="mono">{esc(m)}</td><td>{esc(a)}</td><td>{esc(b)}</td><td>{esc(c)}</td>'
-                         f'<td><span class="pill {"ok" if s == "chosen" else "bad" if s == "declined" else "wait"}">'
-                         f'{ {"chosen": "Primary model", "declined": "Declined turns", "ablation": "Ablation model"}[s] }'
-                         f'</span></td></tr>' for m, a, b, c, s in SMOKE)
+    smoke_rows = "".join(f'<tr><td>{esc(k)}</td><td>{esc(v)}</td></tr>' for k, v in model_facts())
     review = d["review"]
     review_html = "".join(f'<div class="kv"><span>{esc(k.replace("-", " "))}</span><b>{v}</b></div>'
                           for k, v in sorted(review.items(), key=lambda kv: -kv[1]))
@@ -234,7 +266,8 @@ def render(d: dict) -> str:
         funnel=bar_svg(d["funnel"]),
         scope=stacked_svg({k: tuple(v) for k, v in by_class.items() if sum(v)}),
         rows="".join(rows), repo_rows=repo_rows, smoke_rows=smoke_rows, review=review_html,
-        class_options=class_options, n_events=len(events))
+        class_options=class_options, n_events=len(events), shown_word=shown_word,
+        other_word="Not accepted" if decided else "Queued or excluded")
 
 
 TEMPLATE = """<title>GraphGate Project Dashboard</title>
@@ -337,7 +370,7 @@ footer {{ color: var(--muted); font-size: 12px; }}
     <section class="card">
       <h2>Events by class and scope</h2>
       {scope}
-      <div class="legend"><span><i style="background:var(--seg-cross)"></i>Cross-file (prepared)</span><span><i style="background:var(--seg-local)"></i>Local (prepared)</span><span><i style="background:var(--seg-other)"></i>Queued or excluded</span></div>
+      <div class="legend"><span><i style="background:var(--seg-cross)"></i>Cross-file ({shown_word})</span><span><i style="background:var(--seg-local)"></i>Local ({shown_word})</span><span><i style="background:var(--seg-other)"></i>{other_word}</span></div>
     </section>
     <section class="card">
       <h2>Fix-link verification (two independent reviewers)</h2>
@@ -361,9 +394,9 @@ footer {{ color: var(--muted); font-size: 12px; }}
 
   <div class="grid">
     <section class="card">
-      <h2>Models (smoke runs on a harmless fixture)</h2>
+      <h2>Model used in the experiments</h2>
       <div class="table-wrap"><table>
-        <thead><tr><th>Model</th><th>Turns completed</th><th>Refused</th><th>Full runs</th><th>Role</th></tr></thead>
+        <thead><tr><th>Item</th><th>Value</th></tr></thead>
         <tbody>{smoke_rows}</tbody>
       </table></div>
     </section>
@@ -376,7 +409,7 @@ footer {{ color: var(--muted); font-size: 12px; }}
     </section>
   </div>
 
-  <footer>Built by <span class="mono">python scripts/build_dashboard.py</span>. Sources: data/seed_repos.json, data/fix_pairs.json, data/fix_review.json, data/validation_ai_review.json, data/events/, docs/MODEL_CHOICE.md.</footer>
+  <footer>Built by <span class="mono">python scripts/build_dashboard.py</span>. Sources: data/seed_repos.json, data/fix_pairs.json, data/fix_review.json, data/validation_ai_review.json, data/validation_signoff.json, data/leakage_exclusions.json, data/events/, docs/MODEL_CHOICE.md.</footer>
 </div>
 
 <script>

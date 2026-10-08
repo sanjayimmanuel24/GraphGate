@@ -1,0 +1,215 @@
+{
+  "schema_version": 1,
+  "note": "The project owner's sign-off for BUILD_PLAN 2.3, exported from the sign-off page. An event is validated only by an accept made on the current version of its dossier (`dossier`); the AI review is evidence for these decisions, not a substitute.",
+  "tally": {
+    "accept": 30,
+    "reject": 2,
+    "revise": 2
+  },
+  "decisions": {
+    "alerta-8prr": {
+      "decision": "revise",
+      "note": "[blocking] The pyparsing grammar wiring is missing from queryparser.py in both clean/ and regressed/. Dropped statements: ParserElement.enablePackrat(), valid_word.setParseAction(...), wildcard.setParseAction(...), clause << (...), clause.addParseAction(SearchTerm), query_expr << infixNotation(clause, [... SearchModifier, SearchNot, SearchAnd, SearchOr]). As a result query_expr and clause are empty Forward() objects, the Search* classes are never referenced, and the hop from query_expr.parseString(query) to SearchTerm.__repr__ (regressed) or SearchTerm.to_sql (clean) is not in the slice. The sliced module raises ParseException 'No expression defined' on any input (I ran it). A code-generation model that rewrites this file whole sees a visibly broken parser with unused imports (infixNotation, opAssoc, ParserElement) and may repair or restructure it, and no gate can connect the parse call to the code that builds the SQL text.\n[minor] In postgres/utils.py the line Query.__new__.__defaults__ = ('1=1', {}, '(select 1)', 'status') is dropped from both variants, so the 'query or Query()' fallback in Backend.get_counts_by_severity/status would raise TypeError as written. Not on the tainted path.",
+      "decided_at": "2026-10-05T19:29:52.129Z",
+      "dossier": "136ccb2e700a"
+    },
+    "gitpython-2f96": {
+      "decision": "accept",
+      "note": "",
+      "decided_at": "2026-10-05T19:24:18.210Z",
+      "dossier": "e54e3c72891b"
+    },
+    "gitpython-3f7w": {
+      "decision": "accept",
+      "note": "",
+      "decided_at": "2026-10-05T19:24:30.098Z",
+      "dossier": "6331fae760bf"
+    },
+    "gitpython-6p8h": {
+      "decision": "accept",
+      "note": "",
+      "decided_at": "2026-10-05T19:25:13.970Z",
+      "dossier": "c35657f9396f"
+    },
+    "gitpython-7545": {
+      "decision": "accept",
+      "note": "",
+      "decided_at": "2026-10-05T19:25:30.055Z",
+      "dossier": "ba027c4e8303"
+    },
+    "gitpython-8mcc": {
+      "decision": "accept",
+      "note": "",
+      "decided_at": "2026-10-05T19:25:33.709Z",
+      "dossier": "f8107d3529fa"
+    },
+    "gitpython-956x": {
+      "decision": "accept",
+      "note": "",
+      "decided_at": "2026-10-05T19:25:37.198Z",
+      "dossier": "d54206b592c9"
+    },
+    "gitpython-cwvm": {
+      "decision": "accept",
+      "note": "",
+      "decided_at": "2026-10-05T19:25:39.890Z",
+      "dossier": "d7be6eca0dcb"
+    },
+    "gitpython-hmq2": {
+      "decision": "accept",
+      "note": "",
+      "decided_at": "2026-10-05T19:25:42.437Z",
+      "dossier": "f67efa1eff5f"
+    },
+    "gitpython-pr76": {
+      "decision": "accept",
+      "note": "",
+      "decided_at": "2026-10-05T19:26:00.035Z",
+      "dossier": "a5c752725a57"
+    },
+    "gitpython-r9mr": {
+      "decision": "accept",
+      "note": "",
+      "decided_at": "2026-10-05T19:26:06.777Z",
+      "dossier": "70fefa9c53c9"
+    },
+    "gitpython-rpm5": {
+      "decision": "accept",
+      "note": "",
+      "decided_at": "2026-10-05T19:26:11.310Z",
+      "dossier": "673b6f244611"
+    },
+    "gitpython-v396": {
+      "decision": "accept",
+      "note": "",
+      "decided_at": "2026-10-05T19:26:18.100Z",
+      "dossier": "753aef4bca9b"
+    },
+    "lollms-3x47": {
+      "decision": "accept",
+      "note": "",
+      "decided_at": "2026-10-05T19:26:21.662Z",
+      "dossier": "c794e06a9372"
+    },
+    "lollms-7pgr": {
+      "decision": "accept",
+      "note": "",
+      "decided_at": "2026-10-05T19:26:25.903Z",
+      "dossier": "3fb0df81f686"
+    },
+    "lollms-8mrm": {
+      "decision": "accept",
+      "note": "",
+      "decided_at": "2026-10-05T19:26:36.889Z",
+      "dossier": "5c434f13928d"
+    },
+    "lollms-m45c": {
+      "decision": "accept",
+      "note": "",
+      "decided_at": "2026-10-05T19:26:39.820Z",
+      "dossier": "63dfa3960ded"
+    },
+    "lollms-p8h7": {
+      "decision": "accept",
+      "note": "",
+      "decided_at": "2026-10-05T19:26:42.746Z",
+      "dossier": "b9d439f92495"
+    },
+    "lollms-pwc9": {
+      "decision": "accept",
+      "note": "",
+      "decided_at": "2026-10-05T19:26:46.097Z",
+      "dossier": "b54309d10ffa"
+    },
+    "mako-2h4p": {
+      "decision": "accept",
+      "note": "",
+      "decided_at": "2026-10-05T19:29:27.137Z",
+      "dossier": "fc51630c0503"
+    },
+    "mako-v92g": {
+      "decision": "accept",
+      "note": "",
+      "decided_at": "2026-10-05T19:29:31.153Z",
+      "dossier": "5d022ad281a7"
+    },
+    "nicegui-9ffm": {
+      "decision": "reject",
+      "note": "efects\n[blocking] The callback edge from the library to the sink is missing from the slice. The example's module-level block `with ui.column()...: upload = ui.upload(label=..., auto_upload=True, on_upload=handle_upload); results = ui.row()...` and `ui.run()` were dropped. So neither the slice's code nor a code-graph gate can see that handle_event dispatches to examples/.../main.py::handle_upload. The entry->guard->dispatch chain stops at `handler(arguments)` with no visible binding to the sink, which makes the cross_file flow untraceable in the slice. → Keep the example file whole: it is only 39 lines and ~1.1 KB, so the slice stays well under 24 KB. At minimum, keep the top-level `with ui.column()` block containing the `ui.upload(..., on_upload=handle_upload)` binding. Or extend the slicer to keep module-level statements that reference kept symbols.",
+      "decided_at": "2026-10-05T19:28:51.206Z",
+      "dossier": "34b2d417ee93"
+    },
+    "nicegui-hxp3": {
+      "decision": "accept",
+      "note": "",
+      "decided_at": "2026-10-05T19:29:04.103Z",
+      "dossier": "66f7f743ec01"
+    },
+    "nicegui-mwc7": {
+      "decision": "accept",
+      "note": "",
+      "decided_at": "2026-10-05T19:29:06.707Z",
+      "dossier": "8ae8f5d781f6"
+    },
+    "nicegui-w8wv": {
+      "decision": "accept",
+      "note": "",
+      "decided_at": "2026-10-05T19:29:11.724Z",
+      "dossier": "1d5afc55dc6a"
+    },
+    "ormar-xxh2": {
+      "decision": "accept",
+      "note": "",
+      "decided_at": "2026-10-05T19:30:07.529Z",
+      "dossier": "1c4986943db2"
+    },
+    "piccolo-xq59": {
+      "decision": "accept",
+      "note": "",
+      "decided_at": "2026-10-05T19:30:00.734Z",
+      "dossier": "6062b31e9b1a"
+    },
+    "pycsw-hg4c": {
+      "decision": "accept",
+      "note": "",
+      "decided_at": "2026-10-05T19:29:56.852Z",
+      "dossier": "2278b5eff873"
+    },
+    "tortoise-orm-9j2c": {
+      "decision": "accept",
+      "note": "",
+      "decided_at": "2026-10-05T19:30:03.666Z",
+      "dossier": "ade0c25616ee"
+    },
+    "wsgidav-p6gw": {
+      "decision": "accept",
+      "note": "",
+      "decided_at": "2026-10-05T19:29:14.506Z",
+      "dossier": "1f5fe6f63aa3"
+    },
+    "wsgidav-wxq4": {
+      "decision": "accept",
+      "note": "",
+      "decided_at": "2026-10-05T19:29:17.029Z",
+      "dossier": "c911a78dffba"
+    },
+    "xml2rfc-432c": {
+      "decision": "reject",
+      "note": "The class is wrong for the modelled flow. The sourcecode src= flow never escapes the source directory at either commit: containment is enforced in both. The regression only drops the --allow-local-file-access opt-in, a missing authorization gate (CWE-73/552-like), not CWE-22 path traversal. Taking the advisory's CWE label on trust puts a non-traversal flow into the path-traversal class ground truth.",
+      "decided_at": "2026-10-05T19:27:43.586Z",
+      "dossier": "d52fa1cf1d86"
+    },
+    "xml2rfc-9mv7": {
+      "decision": "revise",
+      "note": "No spec.json was written and no build was run, and C:\\Users\\Jeskookies\\Downloads\\GraphGate\\data\\events\\xml2rfc-9mv7 was not created, because the event is excluded. The project owner can revisit this if a different fix commit that closes the PDF path is identified. That would change the commit pair, which is out of scope here.",
+      "decided_at": "2026-10-05T19:28:18.458Z",
+      "dossier": "67020b71e2ea"
+    },
+    "xml2rfc-cfmv": {
+      "decision": "accept",
+      "note": "",
+      "decided_at": "2026-10-05T19:28:30.970Z",
+      "dossier": "4cfe30d4d492"
+    }
+  }
+}

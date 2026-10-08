@@ -1,0 +1,458 @@
+{
+  "schema_version": 1,
+  "note": "Graph builder run on the selected seed repositories at the commit of the local clone, test files left out. Structural counts only: no rule was run and no regression was read.",
+  "config": {
+    "public_api_sources": false,
+    "structural_guards": false,
+    "source_kinds": null
+  },
+  "repositories": [
+    {
+      "repo": "gitpython-developers/gitpython",
+      "commit": "73a72c969504bb5a781d8d11dde5ac775ebb17a0",
+      "files": 71,
+      "symbols": 1307,
+      "nodes": 6261,
+      "calls": {
+        "attribute": 613,
+        "builtin": 1077,
+        "import": 1054,
+        "same-module": 244,
+        "unknown": 1823
+      },
+      "calls_total": 4811,
+      "unknown_calls": 1823,
+      "unknown_share": 0.379,
+      "parse_errors": [],
+      "taint_edges": 4363,
+      "sanitize_edges": 116,
+      "sources": {
+        "cli": 5,
+        "env": 16,
+        "file": 31
+      },
+      "sinks": {
+        "command": 3,
+        "path": 72,
+        "sql": 1
+      },
+      "sanitizers": {
+        "library": 5,
+        "validator": 26
+      },
+      "seconds_full_build": 1.24,
+      "seconds_after_one_file_changed": 0.69
+    },
+    {
+      "repo": "parisneo/lollms_legacy",
+      "commit": "f8b01687d9cbefb0fe5bc15584ecf8a1a8f59a7a",
+      "files": 126,
+      "symbols": 1704,
+      "nodes": 8304,
+      "calls": {
+        "attribute": 943,
+        "builtin": 1489,
+        "import": 2670,
+        "same-module": 212,
+        "unknown": 3075
+      },
+      "calls_total": 8389,
+      "unknown_calls": 3075,
+      "unknown_share": 0.367,
+      "parse_errors": [],
+      "taint_edges": 4866,
+      "sanitize_edges": 238,
+      "sources": {
+        "cli": 19,
+        "env": 4,
+        "file": 69,
+        "network": 19,
+        "request": 155,
+        "stdin": 12
+      },
+      "sinks": {
+        "command": 56,
+        "path": 104,
+        "sql": 33
+      },
+      "sanitizers": {
+        "library": 4,
+        "validator": 50
+      },
+      "seconds_full_build": 2.37,
+      "seconds_after_one_file_changed": 1.04
+    },
+    {
+      "repo": "datadog/guarddog",
+      "commit": "1f4a66c064fb2087c224750507f3b65c7633deeb",
+      "files": 83,
+      "symbols": 589,
+      "nodes": 3044,
+      "calls": {
+        "attribute": 288,
+        "builtin": 876,
+        "import": 819,
+        "same-module": 250,
+        "unknown": 1206
+      },
+      "calls_total": 3439,
+      "unknown_calls": 1206,
+      "unknown_share": 0.351,
+      "parse_errors": [],
+      "taint_edges": 1749,
+      "sanitize_edges": 46,
+      "sources": {
+        "cli": 8,
+        "env": 5,
+        "file": 31,
+        "network": 21,
+        "stdin": 1
+      },
+      "sinks": {
+        "command": 8,
+        "path": 88
+      },
+      "sanitizers": {
+        "library": 4,
+        "validator": 22
+      },
+      "seconds_full_build": 0.62,
+      "seconds_after_one_file_changed": 0.32
+    },
+    {
+      "repo": "ietf-tools/xml2rfc",
+      "commit": "9c796f9458c0b8844c7056a4d9894318ed0857e0",
+      "files": 41,
+      "symbols": 967,
+      "nodes": 5221,
+      "calls": {
+        "attribute": 1358,
+        "builtin": 3589,
+        "import": 1046,
+        "same-module": 370,
+        "unknown": 3150
+      },
+      "calls_total": 9513,
+      "unknown_calls": 3150,
+      "unknown_share": 0.331,
+      "parse_errors": [],
+      "taint_edges": 5500,
+      "sanitize_edges": 113,
+      "sources": {
+        "cli": 3,
+        "env": 2,
+        "file": 27,
+        "network": 5
+      },
+      "sinks": {
+        "command": 1,
+        "path": 30
+      },
+      "sanitizers": {
+        "library": 4,
+        "validator": 41
+      },
+      "seconds_full_build": 1.59,
+      "seconds_after_one_file_changed": 0.84
+    },
+    {
+      "repo": "zauberzeug/nicegui",
+      "commit": "255fb9b1812ca50399b4731bf27e086433d78535",
+      "files": 522,
+      "symbols": 3331,
+      "nodes": 11523,
+      "calls": {
+        "attribute": 1211,
+        "builtin": 1199,
+        "import": 4260,
+        "same-module": 587,
+        "unknown": 3507
+      },
+      "calls_total": 10764,
+      "unknown_calls": 3507,
+      "unknown_share": 0.326,
+      "parse_errors": [],
+      "taint_edges": 4501,
+      "sanitize_edges": 77,
+      "sources": {
+        "cli": 7,
+        "env": 11,
+        "file": 1,
+        "network": 2,
+        "request": 35,
+        "stdin": 1
+      },
+      "sinks": {
+        "command": 6,
+        "path": 28,
+        "sql": 1
+      },
+      "sanitizers": {
+        "library": 4,
+        "validator": 43
+      },
+      "seconds_full_build": 1.99,
+      "seconds_after_one_file_changed": 0.99
+    },
+    {
+      "repo": "mar10/wsgidav",
+      "commit": "04ae4eac35f49e9987120fb970147139d8f22088",
+      "files": 50,
+      "symbols": 776,
+      "nodes": 3445,
+      "calls": {
+        "attribute": 466,
+        "builtin": 369,
+        "import": 757,
+        "same-module": 149,
+        "unknown": 1587
+      },
+      "calls_total": 3328,
+      "unknown_calls": 1587,
+      "unknown_share": 0.477,
+      "parse_errors": [],
+      "taint_edges": 2220,
+      "sanitize_edges": 77,
+      "sources": {
+        "cli": 3,
+        "env": 1,
+        "file": 10
+      },
+      "sinks": {
+        "command": 1,
+        "path": 20,
+        "sql": 8
+      },
+      "sanitizers": {
+        "library": 4,
+        "validator": 17
+      },
+      "seconds_full_build": 0.67,
+      "seconds_after_one_file_changed": 0.32
+    },
+    {
+      "repo": "sqlalchemy/mako",
+      "commit": "14889bc0feacd12102ee61f0769677be2fddbc1b",
+      "files": 31,
+      "symbols": 632,
+      "nodes": 2704,
+      "calls": {
+        "attribute": 460,
+        "builtin": 328,
+        "import": 307,
+        "same-module": 114,
+        "unknown": 695
+      },
+      "calls_total": 1904,
+      "unknown_calls": 695,
+      "unknown_share": 0.365,
+      "parse_errors": [],
+      "taint_edges": 2030,
+      "sanitize_edges": 17,
+      "sources": {
+        "cli": 1,
+        "file": 6,
+        "stdin": 1
+      },
+      "sinks": {
+        "path": 9
+      },
+      "sanitizers": {
+        "library": 2,
+        "validator": 10
+      },
+      "seconds_full_build": 0.33,
+      "seconds_after_one_file_changed": 0.2
+    },
+    {
+      "repo": "alerta/alerta",
+      "commit": "4ac0106300cd428b26ad4b373cf4a78f55f6b542",
+      "files": 116,
+      "symbols": 1291,
+      "nodes": 5490,
+      "calls": {
+        "attribute": 582,
+        "builtin": 592,
+        "import": 1406,
+        "same-module": 233,
+        "unknown": 1891
+      },
+      "calls_total": 4704,
+      "unknown_calls": 1891,
+      "unknown_share": 0.402,
+      "parse_errors": [],
+      "taint_edges": 4163,
+      "sanitize_edges": 40,
+      "sources": {
+        "cli": 3,
+        "env": 8,
+        "file": 2,
+        "network": 8,
+        "request": 143
+      },
+      "sinks": {
+        "path": 2,
+        "sql": 14
+      },
+      "sanitizers": {
+        "library": 5,
+        "validator": 17
+      },
+      "seconds_full_build": 0.91,
+      "seconds_after_one_file_changed": 0.46
+    },
+    {
+      "repo": "geopython/pycsw",
+      "commit": "d87813f7f2d5a63728c04345a31a140f199449c8",
+      "files": 63,
+      "symbols": 457,
+      "nodes": 2824,
+      "calls": {
+        "attribute": 385,
+        "builtin": 853,
+        "import": 2301,
+        "same-module": 809,
+        "unknown": 2639
+      },
+      "calls_total": 6987,
+      "unknown_calls": 2639,
+      "unknown_share": 0.378,
+      "parse_errors": [],
+      "taint_edges": 2129,
+      "sanitize_edges": 57,
+      "sources": {
+        "cli": 3,
+        "env": 5,
+        "file": 19,
+        "network": 8,
+        "request": 24
+      },
+      "sinks": {
+        "command": 1,
+        "path": 25,
+        "sql": 12
+      },
+      "sanitizers": {
+        "library": 4,
+        "validator": 14
+      },
+      "seconds_full_build": 1.32,
+      "seconds_after_one_file_changed": 0.6
+    },
+    {
+      "repo": "piccolo-orm/piccolo",
+      "commit": "2556bbf2af69070d9a0d2ea468d7b9cd576fd2d3",
+      "files": 170,
+      "symbols": 1844,
+      "nodes": 6495,
+      "calls": {
+        "attribute": 576,
+        "builtin": 1104,
+        "import": 941,
+        "same-module": 324,
+        "unknown": 1251
+      },
+      "calls_total": 4196,
+      "unknown_calls": 1251,
+      "unknown_share": 0.298,
+      "parse_errors": [],
+      "taint_edges": 4076,
+      "sanitize_edges": 64,
+      "sources": {
+        "cli": 1,
+        "env": 3,
+        "file": 11,
+        "request": 1,
+        "stdin": 13
+      },
+      "sinks": {
+        "command": 1,
+        "path": 20,
+        "sql": 23
+      },
+      "sanitizers": {
+        "library": 3,
+        "validator": 21
+      },
+      "seconds_full_build": 0.89,
+      "seconds_after_one_file_changed": 0.53
+    },
+    {
+      "repo": "tortoise/tortoise-orm",
+      "commit": "1979f27d6a37db991ca5c934e2394faa6c942d52",
+      "files": 265,
+      "symbols": 2632,
+      "nodes": 10145,
+      "calls": {
+        "attribute": 1510,
+        "builtin": 1736,
+        "import": 2004,
+        "same-module": 506,
+        "unknown": 2520
+      },
+      "calls_total": 8276,
+      "unknown_calls": 2520,
+      "unknown_share": 0.304,
+      "parse_errors": [],
+      "taint_edges": 6848,
+      "sanitize_edges": 146,
+      "sources": {
+        "cli": 1,
+        "env": 4,
+        "file": 2,
+        "request": 17
+      },
+      "sinks": {
+        "path": 6,
+        "sql": 34
+      },
+      "sanitizers": {
+        "library": 2,
+        "validator": 69
+      },
+      "seconds_full_build": 1.64,
+      "seconds_after_one_file_changed": 0.93
+    },
+    {
+      "repo": "collerek/ormar",
+      "commit": "199ec9d76145b7797ea05222524abe96b46355d4",
+      "files": 135,
+      "symbols": 1095,
+      "nodes": 4655,
+      "calls": {
+        "attribute": 708,
+        "builtin": 577,
+        "import": 820,
+        "same-module": 186,
+        "unknown": 1120
+      },
+      "calls_total": 3411,
+      "unknown_calls": 1120,
+      "unknown_share": 0.328,
+      "parse_errors": [],
+      "taint_edges": 3762,
+      "sanitize_edges": 49,
+      "sources": {
+        "request": 12
+      },
+      "sinks": {
+        "sql": 16
+      },
+      "sanitizers": {
+        "library": 4,
+        "validator": 44
+      },
+      "seconds_full_build": 0.77,
+      "seconds_after_one_file_changed": 0.39
+    }
+  ],
+  "totals": {
+    "repositories": 12,
+    "files": 1673,
+    "symbols": 16625,
+    "calls": 69722,
+    "unknown_calls": 24464,
+    "unknown_share": 0.351,
+    "files_with_parse_errors": 0
+  }
+}

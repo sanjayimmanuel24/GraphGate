@@ -13,6 +13,8 @@ from pathlib import Path
 import pytest
 
 from graphgate.config import RunConfig
+from graphgate.gate.analysers import ChangeScan
+from graphgate.gate.findings import ChangeFindings, Finding
 from graphgate.harness.driver import RefinementDriver
 from graphgate.harness.replay import ReplayClient
 from graphgate.harness.trace import KIND_TURN, SCHEMA_VERSION, TraceRecord
@@ -44,6 +46,7 @@ class RecordingFakeClient:
         self._tick = 0
         self.calls = 0
         self.prompts_seen: list[str] = []
+        self.replications_seen: list[int] = []
         # Overridable so tests can vary the request and check the key changes.
         self.params = dict(self.PARAMS if params is None else params)
         self.model = self.MODEL if model is None else model
@@ -64,6 +67,7 @@ class RecordingFakeClient:
 
     def complete(self, system: str, user: str, *, replication: int) -> Completion:
         self.prompts_seen.append(user)
+        self.replications_seen.append(replication)
         if not self._responses:
             raise AssertionError("driver requested more turns than expected")
         item = self._responses.popleft()
@@ -96,6 +100,35 @@ class RecordingFakeClient:
             latency_ms=1.5,
             usage={"input_tokens": 5, "output_tokens": 7},
         )
+
+
+class StubScanner:
+    """Stands in for the Semgrep and Bandit wrapper in gate tests.
+
+    Reports one shell finding for every line that calls os.system, and counts
+    how often a change was scanned.
+    """
+
+    def __init__(self, errors=()):
+        self.calls = 0
+        self.errors = tuple(errors)
+
+    def scan(self, versions):
+        """Warming the scanner up front needs nothing here."""
+        list(versions)
+
+    def scan_change(self, before, after, changed_paths):
+        self.calls += 1
+
+        def findings(files):
+            return tuple(
+                Finding(tool="bandit", rule_id="B605", cwes=(78,), severity="high", confidence="high",
+                        path=path, start_line=number, end_line=number,
+                        message="Starting a process with a shell.", code=line)
+                for path in sorted(changed_paths) for number, line in enumerate(files.get(path, "").splitlines(), 1)
+                if "os.system(" in line)
+
+        return ChangeScan(ChangeFindings(before=findings(before), after=findings(after)), self.errors)
 
 
 def _file_block(body: str, path: str = "app.py") -> str:

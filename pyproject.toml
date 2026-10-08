@@ -14,7 +14,8 @@ authors = [{ name = "sanjay", email = "sanjayimmanuel29996@gmail.com" }]
 # Pinned exactly — deterministic replay across the A/B/C conditions depends on a
 # reproducible environment (see CLAUDE.md, "Coding conventions").
 # Later phases add their own pins as they land:
-#   M1.3 — semgrep, bandit, pysa
+#   M1.3 — semgrep and bandit are pinned in requirements-analysers.txt and installed in
+#          their own environment (.venv-tools), not here; pysa is still to come
 #   M2.1 — (tree-sitter already pinned here; it defines the graph layer)
 dependencies = [
     "anthropic==0.120.0",

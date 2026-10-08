@@ -1,8 +1,46 @@
 # Choice of code-generation model
 
-> **Decided 2026-09-27: `claude-opus-4-8`** writes the code in the refinement loop.
-> `claude-haiku-4-5` remains the smaller model for the proposal §9 ablation.
-> This page is the rationale to draw on for the paper's methods section.
+> **Changed 2026-10-07, on the guide's instruction: no commercial model in the experiment.**
+> Code generation and triage run on the open-weight `qwen2.5-coder:14b` (see the next
+> section). Everything below "Earlier decision" is history: it explains the archived
+> smoke evidence and is not the experiment's setup.
+
+## Current choice: an open-weight model
+
+| | |
+|---|---|
+| Model | `qwen2.5-coder:14b`, 14.8B parameters, Q4_K_M quantisation, Apache-2.0 (Hui et al., arXiv:2409.12186) |
+| Served by | Ollama 0.40.0 in a Kaggle notebook (GPU T4 x2), as `qwen2.5-coder-14b-ctx32768` |
+| Context | 32,768 tokens, set in a Modelfile and checked by measurement before recording |
+| Used for | code generation and the triage step, the same model in every condition |
+| Client | `graphgate.llm.openai_compat`, `--provider openai-compatible --base-url http://localhost:11434/v1` |
+
+What the runs showed so far is in `data/open_model_runs.json`
+(`scripts/summarize_open_model_runs.py`):
+
+- **Pilot, 3 events:** 21 of 21 turns returned usable files, the regression was placed in
+  all 3 traces, and the traces replay byte for byte. Median 48 s per turn.
+- **Carried labels:** 14 of the 21 pilot turns had to carry their label from the previous
+  turn, because the model rewrote the functions the regression lives in. Report this
+  count; the turn that brings the regression in is the measurement least affected.
+- **Seeds:** the client sends the replication number as the server's sampling seed. Under
+  seed 1 the reply broke the output format in all 14 events of the first dataset session;
+  seeds 0 and 2 never did. Replications are therefore **0, 2, 3**. The choice was made on
+  format validity alone, before any gate was run; say so in the write-up. The cause is
+  not established (a fixed seed reuses one random stream for every request).
+- **Failed injections:** 4 of 26 replications in that session, where the model had removed
+  or renamed the function the regression goes into. Recorded as failed, not worked around.
+- **Unusable replies** (prose instead of files) are the model's outcome for the turn and
+  stay in the trace; only a call that failed outright holds a trace back for a retry.
+
+Still to fix after the dataset recording: whether a smaller open model serves as the
+proposal §9 ablation model, which depends on the GPU hours left.
+
+## Earlier decision (superseded for new runs)
+
+> Decided 2026-09-27: `claude-opus-4-8` wrote the code in the refinement loop, with
+> `claude-haiku-4-5` as the smaller ablation model. Kept because the archived smoke
+> traces were recorded with these models and still replay.
 
 ## Why this needed deciding
 

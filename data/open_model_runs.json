@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "note": "What the runs with the open-weight model showed so far. Pilot traces test the tools and are not dataset results; the first dataset session is described from its log.",
+  "model": {
+    "served_as": "qwen2.5-coder-14b-ctx32768",
+    "family": "qwen2.5-coder:14b",
+    "parameters": "14.8B",
+    "quantization": "Q4_K_M",
+    "context_tokens": 32768,
+    "licence": "Apache-2.0"
+  },
+  "pilot": {
+    "events": 3,
+    "model_calls": 21,
+    "turns_usable": 21,
+    "traces_with_regression": 3,
+    "turns_labelled": 21,
+    "turns_carried": 14,
+    "median_seconds_per_turn": 48,
+    "replays_byte_identical": true
+  },
+  "first_dataset_session": {
+    "server": "Ollama 0.40.0",
+    "recording_hours": 10.5,
+    "events_started": 14,
+    "events_finished": 13,
+    "replies_breaking_the_format_by_seed": {
+      "1": 14
+    },
+    "seeds_without_format_failures": [
+      "0",
+      "2"
+    ],
+    "replications_under_those_seeds": 26,
+    "failed_injections": 4
+  }
+}

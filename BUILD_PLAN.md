@@ -110,7 +110,7 @@ Strip security-revealing comments from the extracted code — fix commits routin
 like `# fix CVE-2023-…: sanitize input`, and the model sees every file verbatim (CLAUDE.md, "No
 research framing in model-visible code").
 
-*As built so far (2026-10-04; sign-off pending). Three decisions were taken with the owner on
+*As built (closed 2026-10-06 with the owner's sign-off). Three decisions were taken with the owner on
 2026-09-28 and are recorded in CLAUDE.md: events are trimmed slices at real paths; AI agents
 prepare dossiers but only the owner's sign-off validates; local/cross-file follows a
 pre-registered rule.*
@@ -129,11 +129,22 @@ pre-registered rule.*
   the same limitation and still needs an independent re-check
   (`data/validation_followups.json`).*
 - *Sign-off: `scripts/build_signoff_page.py` builds the review page; decisions are stored per
-  event with the dossier version they were made on. 0 of 34 decided so far.*
+  event with the dossier version they were made on. The owner decided all 34 on 2026-10-05, every
+  one on the current dossier: **30 accepted, 2 rejected, 2 sent back for revision**.
+  `scripts/save_signoff.py` writes `data/validation_signoff.json` from the page's exported
+  decisions.*
+- *The 30 validated events (M1 target 25–30): 24 cross-file and 6 local. By class: 18 path
+  traversal (13 cross-file), 7 command (all cross-file), 5 SQL (4 cross-file). They come from 10
+  repositories; GitPython supplies 12 and lollms 6.*
+- *Not accepted: nicegui-9ffm (rejected) and xml2rfc-9mv7 (revise) are the two excluded during
+  preparation. xml2rfc-432c was rejected and alerta-8prr sent back; the notes saved with these two
+  quote first-round check defects that the current dossiers no longer have (432c was re-modelled
+  on the xi:include flow and passed its re-check; 8prr has its grammar wiring back in both
+  variants). Both stay out unless the owner decides again on the page.*
 
-*Open for the sign-off and for 2.4:*
-- *Seven accepted-in-principle events rest on known-incomplete fixes; each dossier extracts a
-  flow the fix does close and says so.*
+*Open after the sign-off:*
+- *Seven of the 30 validated events rest on known-incomplete fixes; each dossier extracts a flow
+  the fix does close and says so.*
 - *In GitPython every command runs through `Git.execute` in `git/cmd.py`, so 10 of its 12 events
   are cross-file by rule even when the visible change is in one method. Report per repository.*
 - *Library events take a caller's argument as their source (`library-api`); the graph's source
@@ -182,6 +193,26 @@ the regression is then placed in the code it produced, so that turn's diff holds
 - *The refusal rule (a refusal ends the replication) is to be revisited here once the pilot shows
   how often it happens.*
 
+*Change of model (2026-10-07). The guide ruled out commercial models, so traces will be recorded
+with an open-weight model in a free cloud GPU notebook, not with Claude:
+`graphgate.llm.openai_compat` (any chat-completions server), `--provider`/`--base-url` on the run
+scripts, `scripts/make_notebook_bundle.py` and `notebooks/record_traces_open_model.ipynb`. Built
+and unit-tested; no open model has been run yet. Open: whether a 14-billion-parameter model
+returns whole files reliably for the larger slices, and whether 603 calls fit the notebook's
+weekly GPU hours; the pilot answers both, and fewer replications or a smaller model are the
+fallbacks. The Opus cost estimates above no longer apply.*
+
+*First notebook runs (2026-10-07/08). Pilot: 3 events, 21 calls, no failures; 14 of 21 turns
+`carried`. First dataset session: 10.5 hours, 13 events finished and a 14th started, about 50
+minutes per event. It kept nothing, for two reasons, both now fixed. (1) The client sent the
+replication number as the sampler seed, and under seed 1 the model's reply broke the output
+format in every event (14 of 14; never under seeds 0 and 2): a fixed seed reuses one random
+stream for every request, and that stream's first draw lands in the tail. Replications are
+therefore 0, 2 and 3. (2) The script discarded any trace containing an error, which was meant
+for failed API calls; an unusable reply is the model's outcome and now stays in the trace. The
+responses of that session are in the cache, so replications 0 and 2 of those events are not
+recorded again. Also seen: 4 of 26 replications lost the regression to a failed injection.*
+
 **2.5** Label every turn `{clean, local_regression, cross_file_regression}` and store alongside
 the trace.
 
@@ -220,6 +251,36 @@ retrieval scope during evaluation. Log every exclusion — this has to be report
 > the seed repository for near-duplicate occurrences and emits an exclusion list consumed by the
 > retrieval layer."*
 
+*As built (2026-10-06). `graphgate.dataset.leakage`, run by `scripts/check_leakage.py`, scans each
+validated event's repository at its clean commit, outside the slice's own files, and writes
+`data/leakage_exclusions.json`. It reads the local clones only: a file a clone lacks is an error,
+never a download.*
+- *Near-duplicates (the proposal's rule). Every function or assignment the regression changes,
+  adds or removes is compared, in its clean and its regressed version, with every function or
+  assignment elsewhere. Similarity is the share of code tokens in common, in order, with
+  comments, docstrings and layout removed; 0.8 or more is a near-duplicate. Both versions are
+  compared because a guarded twin gives the regression away as surely as a vulnerable copy.*
+- *Tests the fix changed (added here; not named in §6.3). They were written to pin down the guard
+  the regression removes, so they describe the answer. Owner may veto this rule; it is one
+  reason code (`test-changed-by-fix`) in the list.*
+- *Result over the 30 validated events: 35 exclusions in 20 events. 3 are near-duplicates, all in
+  piccolo-xq59, whose SQLite engine holds exact copies of the three fixed Postgres functions. 32
+  are test files changed by a fix. Every other regression unit's closest match elsewhere scores
+  0.58 or less, so the threshold separates cleanly.*
+- *Units under 30 tokens are listed as not compared (9 of 74: option lists, a logger, two small
+  helpers). 20 was tried first; a 25-token one-statement method then matched an unrelated one at
+  exactly 0.80, so the minimum was set to 30 before anything was run against a gate.*
+
+*Open:*
+- *11 source files a fix changed outside its slice are listed but left in scope. Six are imported
+  by their slice (in lollms-m45c one defines the sanitizer the slice calls), so hiding them would
+  remove the cross-file context the study is about. The other five are siblings given the same
+  fix (for example pycsw's `csw3.py`, 0.56 similar to the regression). Decide at M2.1 whether
+  siblings stay visible.*
+- *Whether the graph covers test directories at all is an M2.1 decision. If it does not, the
+  test rule is moot and harmless.*
+- *Identifiers are compared as written, so a copy with every name changed is not detected.*
+
 **Exit check:** 25–30 labeled traces on disk, each replayable via the M1.1 harness, with a seed-repo
 license manifest and a leakage-exclusion list alongside them.
 
@@ -229,11 +290,89 @@ license manifest and a leakage-exclusion list alongside them.
 
 **3.1** Wrap Semgrep and Bandit to run on a diff and return structured findings.
 
+*As built (2026-10-06). `graphgate.gate` holds the first stage of every gate condition; two
+choices were made with the owner (tools in their own environment; pinned community rules).*
+- *Tools: Semgrep 1.179.0 and Bandit 1.9.4, installed in `.venv-tools` from
+  `requirements-analysers.txt` and called as external programs. Semgrep brings about 70 packages;
+  kept apart, they cannot change the versions the project pins. Both run natively on Windows.*
+- *Rules: the public community rules (github.com/semgrep/semgrep-rules) at commit `a84ff9cc`
+  (2026-09-22), cut down to the Python rules that declare CWE-22, 77, 78 or 89: 63 rule files (33
+  command, 25 SQL, 5 path traversal, none for CWE-77). Two rules that flag user input in an SQL
+  string are filed upstream under CWE-704 and CWE-915; they are counted as CWE-89 and marked.
+  `scripts/fetch_semgrep_rules.py` downloads and selects; `data/semgrep_rules.json` pins every
+  selected file by hash, and a scan refuses a rule directory that does not match. The rule files
+  stay in the ignored `data/raw` because their licence restricts redistribution.*
+- *Findings: both tools' reports become one record (tool, rule, CWEs, severity, file, lines,
+  code), and only family CWEs are kept; the family is a parameter. Bandit's own CWE mapping
+  decides what is in, which includes broad checks such as B404 (`import subprocess`).*
+- *"On a diff": the files a turn changed are scanned before and after it. A finding is
+  **introduced** when nothing with the same tool, rule, file and code (whitespace aside) was there
+  before, so a finding that only moved is not new.*
+- *Speed: Semgrep takes about ten seconds to start however little it scans, so every new file
+  version goes into one run and results are kept by content, in memory and in
+  `runs/analysis-cache.sqlite`. All file versions of the 30 events take one run of each tool,
+  about 20 seconds.*
+- *Nothing is skipped quietly: Semgrep's default ignore list, which drops `tests/` directories, is
+  replaced; a file a tool did not analyse is an error; a file that does not parse is reported
+  with each tool's message. The tools run offline: metrics and version check off, local rules,
+  settings and log in the scan's own temporary directory.*
+
+*First look, not a gate result (`scripts/scan_events.py`, saved in
+`data/static_first_look.json`): taking each validated event's regression as one change, only **1 of 30** introduces a family finding (wsgidav-p6gw, the local
+SQL event). Elsewhere the tools report the same findings before and after, or none at all. In
+piccolo-xq59 the f-string SQL is flagged either way, because the fix validates the name
+beforehand and leaves the flagged line alone. 18 of the 30 events are path traversal, for which
+the rule set has five framework-specific rules and Bandit has no check.*
+
+*Open:*
+- *For 3.2: whether triage sees every turn's diff or only turns with an introduced finding. With
+  the second, Condition B could catch about one regression in thirty before triage even starts,
+  so this choice largely decides how strong B is. It must be fixed before B is run.*
+- *For 3.3: Pysa has no Windows build, and this machine has neither WSL nor Docker. It needs
+  WSL (the owner installs it; admin rights and a restart) or a Linux runner such as GitHub
+  Actions on the project's repository.*
+
 **3.2** Build the LLM triage step for the local-only gate: given a diff + static-analysis
 findings (no graph context), classify ALLOW / BLOCK and produce a rationale.
 > Prompt: *"Implement Condition B: the local-only gate. Input is a diff + Semgrep/Bandit
 > findings. Output is a structured decision {ALLOW, BLOCK} with a short rationale. Use temperature
 > 0 and cache responses per CLAUDE.md conventions."*
+
+*As built (2026-10-06; tested against a stand-in model, not yet run against the real one).*
+- *Decided with the owner: **two diff-only conditions, reported separately.** B is the planned
+  one: the LLM triages what Semgrep and Bandit flag, and a change with nothing flagged is allowed
+  without a call. **B+** is added: the LLM also judges every change as a whole. The scanners
+  flagged 1 of the 30 regressions (3.1), so B alone would be an almost silent baseline; B+ is the
+  strong diff-only check GraphGate also has to be measured against. B+ is a baseline only: in
+  GraphGate the LLM still triages flags and nothing else. The registered criterion (C against B)
+  is unchanged; C against B+ is reported next to it.*
+- *`graphgate.gate.triage`: the model gets the diff and a numbered list of items, each either
+  flagged code (findings on one piece of code are grouped into one item) or, in B+ only, the
+  change as a whole. It labels each item exploitable-regression, benign-refactor or uncertain,
+  with a rationale, as one JSON object. A reply that misses an item, adds one or uses another
+  label is an error, never a guess.*
+- *One system prompt for every condition, version 1, fixed before any live call and pinned by
+  hash in a test. It says nothing about which context a condition has, so Condition C can use the
+  same text and differ only in what the user message adds.*
+- *`graphgate.gate.local.LocalGate`: BLOCK if any item is an exploitable regression. "uncertain"
+  does not block; the label is recorded, so the stricter reading can be computed afterwards. A
+  refusal, a failed call or an unusable reply never blocks either and is recorded as its own
+  outcome (the gate fails open, visibly).*
+- *What the gate is shown: the diff and the items. Not the refinement instruction: the injected
+  regression has nothing to do with the instruction by construction, so showing it would make
+  the regression stand out for a reason no real change shares. No trace id, event id or label.*
+- *`scripts/triage_events.py` is a pilot on each event's regression and, as a control, its
+  reverse (the fix): 62 calls, roughly $1-3 on Opus 4.8. `--dry-run` and `--show-prompt` send
+  nothing. It is not the study's result; that needs the recorded traces (3.4).*
+
+*Open for 3.4:*
+- *Latency. Semgrep alone takes about ten seconds to start on this machine, which is already at
+  the registered limit (median added latency under about 10 s per iteration), for B and C alike.
+  The runner must time each turn's scan on its own, not read it off the batched run.*
+- *What a BLOCK means when a trace is replayed: later turns were recorded as if the change had
+  been accepted. The labels support either reading; the scoring rule must be fixed before the run.*
+- *If the pilot shows many `error` outcomes from the reply format, fix the protocol and raise the
+  prompt version before any condition is run on traces.*
 
 **3.3** Wrap Pysa as a standalone baseline (S1) that runs independently of the LLM gate, on the
 same diffs.
@@ -285,6 +424,91 @@ hand-crafted minimal graphs before touching any real repo.**
 
 **Exit check:** R1–R4 pass unit tests on synthetic graphs, and the graph builder runs end-to-end
 on at least one real repo without crashing, with unknown-edge counts logged.
+
+*As built (2026-10-08). `graphgate.graph`, steps 4.1 to 4.5 together; 73 tests. The exit check is
+met: the rules pass on hand-built graphs, and the builder ran on all 12 selected seed
+repositories (`scripts/build_graph.py --check`, saved in `data/graph_build_check.json`): 1,673
+files, 16,625 symbols, 69,722 calls, of which 24,464 (35.1%) could not be resolved and are
+unknown edges; no file failed to parse. A full build takes 0.3 to 2.4 seconds per repository and
+under a second after one file changes.*
+- *Two stages. `extract` turns one file into plain facts with tree-sitter and looks at no other
+  file; `link` turns the facts of all files into the graph. Facts are stored per file by content
+  hash (`index`, SQLite), so a turn re-parses only the files it changed (4.4). Linking is redone
+  over all facts each time, because a change in one file can change how a call in another
+  resolves; the stored graph therefore equals a build from scratch, and a test checks it.*
+- *Nodes (4.1): modules, classes, functions and methods, named `path::qualname` as the events
+  name them. Taint does not run between whole functions: each symbol has ports for its
+  parameters, its return value, attributes set through `self` and module-level names, and taint
+  edges join ports. This is finer than "symbols" in the proposal's definition of V and was needed
+  for the rules to mean anything: with one node per function, every caller and callee are joined
+  both ways and a source reaches a sink almost everywhere.*
+- *Calls (4.2): the three rules of CLAUDE.md. "Statically inferable receiver" means `self`, a
+  class name, `super()`, a variable or attribute assigned from one constructor, or an annotated
+  parameter. Everything else is an explicit `unknown::` edge, counted per file.*
+- *Taint (4.3): inside a symbol the origins of every name are solved to a fixed point, ignoring
+  order and branches. A call into code the graph cannot see passes on what went into it. Not
+  followed, as the proposal's limits say: closures, properties, computed attribute names,
+  decorators that replace a function.*
+- *Sources, sinks, sanitizers (4.3): `graphgate.graph.catalog`, seeded from the pinned Semgrep
+  injection rules and the Pysa source and sink families, the injection family only. A project's
+  own validation functions are recognised by a word of their name (sanitize, escape, quote,
+  validate, verify, check, secure, safe, valid). The list was fixed before the rules were run on
+  any event.*
+- *Rules (4.5), `graphgate.graph.delta`, one function each, with the reading of each rule fixed in
+  the module's docstring. R2 and R4 work on (source, sink) pairs and never fire on the same pair:
+  R2 when a pair is newly joined by a sanitizer-free path, R4 when a joined pair's shortest such
+  path loses an edge. R1 fires when a sanitizer node is gone, or when a caller routes a value
+  around it. R3 fires when a sanitize edge is gone from a symbol that is on a source-to-sink path
+  or guards one. The rules see the graphs within 2 symbols of what changed (`hops`, the ablation
+  variable).*
+
+*Two settings widen two definitions of the proposal. **Decided with the owner on 2026-10-08,
+before the rules were run on any event: Condition C uses both** (`link.GRAPHGATE`); all four
+combinations are run and reported side by side as an ablation (`link.SETTINGS`), and the
+registered C-versus-B comparison uses the chosen one only.*
+- *`public_api_sources`: the parameters of a library's public functions count as sources. The
+  proposal lists request parameters, environment, file and network input and command-line
+  arguments. Most seed repositories are libraries; the events accepted at sign-off name a
+  "library-api" entry for them, which none of those source kinds covers.*
+- *`structural_guards`: an `if` that raises or exits, or an `assert`, whose test looks at a value
+  counts as a guard edge. The proposal's E_sanitize is an allowlist of named functions. A
+  validation function that is weakened from inside keeps its name and its callers, so without
+  this the graph before and after is the same.*
+
+*First look, not a gate result (`scripts/delta_events.py`, saved in `data/delta_first_look.json`;
+run on 2026-10-08 after the settings were fixed, and the rules were not changed afterwards):
+taking each validated event's regression as one change on its slice, the rules flag **8 of 30**
+under Condition C's settings (5 of 24 cross-file, 3 of 6 local), against 1 of 30 for the
+scanners. R1 fires on 7 events, R3 on 5, R2 on 2, R4 on 1. The proposal's literal settings flag
+7 (4 cross-file). Depth: 7 at one hop, 8 at two, 9 at three or with no bound.*
+- *Control: on the reverse change, the fix, the rules fire on 4 of 30 (R2 on 2, R3 on 2), and on
+  none under the literal settings. So the two widened settings bought one more regression and
+  four flagged fixes; triage has to tell those apart.*
+- *Why 22 are missed, read off the graphs: 27 of the 30 regressions change at least one edge, so
+  the difference is rarely empty, but the change is usually a test or an expression weakened
+  inside a function, which removes no sanitizer and opens no path. In 8 slice graphs there is no
+  source-to-sink path at all, 5 of them with no sink: the slice cuts the sink function away, or
+  the sink is reached through dynamic dispatch (GitPython's `repo.git.<command>` goes through
+  `__getattr__`, an unknown edge). These are the rule-coverage and dynamic-feature gaps the
+  proposal's error analysis names.*
+- *What it does not say: how often the rules fire on a model's harmless turns. That needs the
+  recorded traces.*
+
+*Open:*
+- *For 5.2: the first look ran on slices. Laying the repository around a slice does not bring
+  back a function that was cut out of a slice file, and for several events that function is the
+  sink. How Condition C sees cut code has to be decided before C is run, and not by looking at
+  which events it would rescue.*
+- *Pysa's stub files were not on this machine when the catalog was written. Check the entries
+  against the pinned stubs when Pysa is set up (3.3).*
+- *The per-repository sanitizer extension the proposal allows (`Catalog.extended`) is unused. It
+  is bound by the repository-level holdout (5.4) and must not be filled from the events.*
+- *35% of calls are unknown edges, mostly methods called on values whose class the code does not
+  state (strings, lists, loggers). A breakdown by form belongs in the error analysis (6.4).*
+- *The ablations "call graph only" and "taint edges only" (6.2) need the path rules to run over
+  call edges; not built.*
+- *For 5.2: the leakage exclusions go in through `link(..., exclude=...)`; nothing calls it for
+  the events yet.*
 
 ---
 

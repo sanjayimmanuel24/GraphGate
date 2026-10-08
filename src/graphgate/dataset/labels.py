@@ -30,6 +30,7 @@ import ast
 import hashlib
 import json
 import textwrap
+import warnings
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -56,21 +57,34 @@ class LabelError(RuntimeError):
     """The trace cannot be labelled, or its labels do not belong to it."""
 
 
-def _normalise(unit: Unit) -> str:
-    """A unit's code with comments, docstrings and layout taken out."""
-    code = textwrap.dedent(unit.text)
+def parse_unit(text: str) -> ast.Module | None:
+    """A unit's syntax tree without its docstrings, or None if it does not parse.
+
+    Comments and layout are gone by construction: the tree does not hold them.
+    """
     try:
-        tree = ast.parse(code)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", SyntaxWarning)  # e.g. '\\d' in an old non-raw string
+            tree = ast.parse(textwrap.dedent(text))
     except SyntaxError:
-        # A class header on its own, or code dedent could not straighten.
-        # Stripped lines are a stricter comparison, never a looser one.
-        return "text:" + "\n".join(line.strip() for line in code.splitlines() if line.strip())
+        return None
     for node in ast.walk(tree):
         body = getattr(node, "body", None)
         if (isinstance(node, (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef))
                 and body and isinstance(body[0], ast.Expr)
                 and isinstance(body[0].value, ast.Constant) and isinstance(body[0].value.value, str)):
             del body[0]
+    return tree
+
+
+def _normalise(unit: Unit) -> str:
+    """A unit's code with comments, docstrings and layout taken out."""
+    tree = parse_unit(unit.text)
+    if tree is None:
+        # A class header on its own, or code dedent could not straighten.
+        # Stripped lines are a stricter comparison, never a looser one.
+        code = textwrap.dedent(unit.text)
+        return "text:" + "\n".join(line.strip() for line in code.splitlines() if line.strip())
     return ast.dump(tree)
 
 

@@ -10,13 +10,18 @@
 % Figures from the project's data; regenerate with: python paper/build.py
 \input{generated/numbers}
 
+% Section headings are fixed by the guide (2026-10-06): Abstract, Introduction,
+% Literature Survey, Methodology, Dataset Description, Implementation and
+% Results, Conclusion and Future Work, References. No other heading is used;
+% topics inside a section are marked by an italic lead-in, not a subsection.
+
 \begin{document}
 
 \input{generated/meta}
 \maketitle
 
 \begin{abstract}
-Developers rarely accept the first answer a code assistant gives them; they ask a large language model (LLM) for one revision after another. A recent controlled study found that critical vulnerabilities grew by 37.6\% after only five such rounds~\cite{shukla2025degradation}. Checks that inspect only the changed lines miss many of these regressions, because the vulnerable data flow often starts or ends in a file the revision never touched. We present GraphGate, a security gate that sits inside the refinement loop, compares the code graphs of consecutive revisions and applies four deterministic rules to their difference, using an LLM only to triage and explain what the rules flag. This paper reports the design and the first milestone: a refinement harness whose traces replay byte for byte, the evidence behind our choice of code-generation model, and a benchmark built from real injection-class fixes. From \nInjAdv{} Python security advisories we selected \nSeedSelected{} permissively licensed projects, verified every fix link with two independent reviewers, and extracted \nEvents{} candidate regression events labelled local or cross-file by a pre-registered rule. We close with the protocol that will compare no gate, a diff-only gate and GraphGate on identical replayed traces.
+Developers rarely accept the first answer a code assistant gives them; they ask a large language model (LLM) for one revision after another. A recent controlled study found that critical vulnerabilities grew by 37.6\% after only five such rounds~\cite{shukla2025degradation}. Checks that inspect only the changed lines miss many of these regressions, because the vulnerable data flow often starts or ends in a file the revision never touched. We present GraphGate, a security gate that sits inside the refinement loop, compares the code graphs of consecutive revisions and applies four deterministic rules to their difference, using an LLM only to triage and explain what the rules flag. This paper reports the design and the first milestone: a refinement harness whose traces replay byte for byte, an experimental setup that runs on an open-weight code model, and a benchmark built from real injection-class fixes. From \nInjAdv{} Python security advisories we selected \nSeedSelected{} permissively licensed projects, verified every fix link with two independent reviewers, and extracted \nEvents{} candidate regression events, labelled local or cross-file by a pre-registered rule, of which \nEventsSignedOff{} were validated at author sign-off. In a first look at these \nStaticEvents{} regressions, pattern scanners run on the change report a new finding for \nStaticCaught{}, and the graph rules flag \nDeltaCaught{}. We close with the experiments that remain and the outcomes we expect from them, stated before they are run.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -34,15 +39,14 @@ GraphGate represents each revision as a code graph of symbols, calls, taint edge
 
 Our research question is whether this cross-file grounding reduces security degradation compared with no gate and with a gate restricted to the diff. Answering it needs a harness whose runs can be replayed exactly, a benchmark of real regressions with trustworthy labels, and a protocol fixed in advance. This paper contributes:
 \begin{itemize}
-\item a gate design based on temporal code-graph differencing, with a deliberately narrow role for the LLM (Section~\ref{sec:design});
-\item a refinement harness with byte-identical replay, the models used and the evidence for choosing them (Section~\ref{sec:infra});
-\item a benchmark pipeline with independent verification of every fix link and a pre-registered local/cross-file rule (Section~\ref{sec:dataset});
-\item a pre-registered evaluation protocol (Section~\ref{sec:eval}).
+\item a gate design based on temporal code-graph differencing, with a deliberately narrow role for the LLM, and an evaluation protocol fixed in advance (Section~\ref{sec:method});
+\item a benchmark of real injection regressions with independently verified fix links and a pre-registered local/cross-file rule (Section~\ref{sec:dataset});
+\item a refinement harness with byte-identical replay, the models used and the evidence for choosing them, and first measurements on the benchmark (Section~\ref{sec:impl}).
 \end{itemize}
-The graph builder and difference rules are designed but not yet implemented, so no detection results are reported; the numbers here describe the parts that are finished.
+The graph layer and its four rules are implemented and unit-tested, and a first look at what they flag is reported. The gate conditions have not yet been run on recorded traces, so no gate result is claimed, and every expected outcome is marked as an expectation.
 
-\section{Related Work}
-\label{sec:related}
+\section{Literature Survey}
+\label{sec:survey}
 
 \textit{Security of generated code.} Pearce et al.~\cite{pearce2022asleep} found that roughly 40\% of programs GitHub Copilot produced for scenarios built on MITRE's dangerous weaknesses~\cite{mitrecwe} were vulnerable. In a user study by Perry et al.~\cite{perry2023insecure}, participants with an AI assistant wrote less secure code while feeling more confident about it, and Khoury et al.~\cite{khoury2023secure} judged only five of 21 ChatGPT programs secure on the first attempt. These studies evaluate single responses. Iteration is usually presented as a way to improve output~\cite{madaan2023selfrefine}, although the gains of self-repair for code are modest and bounded by the quality of the feedback~\cite{olausson2024selfrepair}; Shukla et al.~\cite{shukla2025degradation} showed that it can also erode security, with distinct vulnerability patterns for different prompting strategies.
 
@@ -74,14 +78,12 @@ GraphGate (ours) & In-loop gate & Graph delta around changes & Yes \\
 \end{tabular}
 \end{table}
 
-\section{GraphGate Design}
-\label{sec:design}
+\section{Methodology}
+\label{sec:method}
 
-\subsection{Research Questions}
-The project is organised around four questions. \textbf{RQ1:} does a graph-differencing gate reduce security degradation across refinement iterations, compared with no gate and with an otherwise identical diff-only gate? \textbf{RQ2:} what is its recall on cross-file regressions, and how many iterations pass before one is caught? \textbf{RQ3:} does it outperform mature static taint analysers used alone? \textbf{RQ4:} what does it cost in false alarms, latency and tokens, and which graph components matter?
+\textit{Research questions.} The project is organised around four questions. \textbf{RQ1:} does a graph-differencing gate reduce security degradation across refinement iterations, compared with no gate and with an otherwise identical diff-only gate? \textbf{RQ2:} what is its recall on cross-file regressions, and how many iterations pass before one is caught? \textbf{RQ3:} does it outperform mature static taint analysers used alone? \textbf{RQ4:} what does it cost in false alarms, latency and tokens, and which graph components matter?
 
-\subsection{Overview and Deployment}
-Fig.~\ref{fig:arch} shows the gate. Before a candidate revision is accepted, it runs Semgrep and Bandit on the diff, then the graph-difference engine, then LLM triage of whatever was flagged. A blocked revision is not committed and its rationale joins the next prompt; an allowed revision is committed and its files are re-indexed into the graph. The targets are a pre-merge check in continuous integration and middleware in an agent framework, for example a LangGraph~\cite{langgraph} node between the generation and commit steps. Both tolerate a few seconds of added latency; interactive editor use, with its tighter budget, is out of scope.
+\textit{Gate overview and deployment.} Fig.~\ref{fig:arch} shows the gate. Before a candidate revision is accepted, it runs Semgrep and Bandit on the diff, then the graph-difference engine, then LLM triage of whatever was flagged. A blocked revision is not committed and its rationale joins the next prompt; an allowed revision is committed and its files are re-indexed into the graph. The targets are a pre-merge check in continuous integration and middleware in an agent framework, for example a LangGraph~\cite{langgraph} node between the generation and commit steps. Both tolerate a few seconds of added latency; interactive editor use, with its tighter budget, is out of scope.
 
 \begin{figure}[t]
 \centering
@@ -90,11 +92,9 @@ Fig.~\ref{fig:arch} shows the gate. Before a candidate revision is accepted, it 
 \label{fig:arch}
 \end{figure}
 
-\subsection{Code Graph}
-The graph of revision $t$ is $G(t) = (V, E_{\mathrm{call}}, E_{\mathrm{taint}}, E_{\mathrm{sanitize}})$. Vertices are function, method and module symbols from tree-sitter~\cite{treesitter} syntax trees. Call edges are resolved only for calls within a module, calls through static imports and attribute calls whose receiver class is statically known; any other call becomes an explicit \emph{unknown} edge, so the analysis can report what it could not see. Taint edges link sources (request parameters, environment variables, file and network input, command-line arguments) to uses through assignments and call arguments, flow-insensitively across procedures. Sanitizers are symbols matching an allowlist seeded from Semgrep and Pysa rules. Graphs are held in NetworkX~\cite{hagberg2008networkx} and persisted between iterations.
+\textit{Code graph.} The graph of revision $t$ is $G(t) = (V, E_{\mathrm{call}}, E_{\mathrm{taint}}, E_{\mathrm{sanitize}})$. Vertices are function, method and module symbols from tree-sitter~\cite{treesitter} syntax trees. Call edges are resolved only for calls within a module, calls through static imports and attribute calls whose receiver class is statically known; any other call becomes an explicit \emph{unknown} edge, so the analysis can report what it could not see. Taint edges link sources (request parameters, environment variables, file and network input, command-line arguments) to uses through assignments and call arguments, flow-insensitively across procedures. Sanitizers are symbols matching an allowlist seeded from Semgrep and Pysa rules. Graphs are held in NetworkX~\cite{hagberg2008networkx} and persisted between iterations.
 
-\subsection{Difference Rules and Triage}
-After each revision the engine computes $\Delta G = G(t) - G(t-1)$ within two hops of the changed symbols; the depth is an ablation variable. Four rules are applied to the difference.
+\textit{Difference rules and triage.} After each revision the engine computes $\Delta G = G(t) - G(t-1)$ within two hops of the changed symbols; the depth is an ablation variable. Four rules are applied to the difference.
 \begin{itemize}
 \item \textbf{R1, sanitizer removal:} a sanitizer present before is absent or bypassed while its callers remain.
 \item \textbf{R2, new path:} a source-to-sink path exists that did not exist before.
@@ -103,120 +103,9 @@ After each revision the engine computes $\Delta G = G(t) - G(t-1)$ within two ho
 \end{itemize}
 Each rule is a pure function of two graphs and is unit-tested on hand-built graphs before it runs on real code. The triage LLM receives each flag with its supporting subgraph and labels it an exploitable regression, a benign refactor or uncertain. It is never asked to search the code on its own, which keeps the detector testable and narrows the room for invented findings.
 
-The scope is Python and the injection family: SQL injection (CWE-89), OS command injection (CWE-78), command injection in general (CWE-77) and path traversal (CWE-22)~\cite{mitrecwe}. The graph does not model monkey-patching, reflection or framework-generated routing, so results will describe practical, lightweight differencing rather than a sound analysis, and unknown-edge counts will be reported per repository.
+\textit{Scope.} The scope is Python and the injection family: SQL injection (CWE-89), OS command injection (CWE-78), command injection in general (CWE-77) and path traversal (CWE-22)~\cite{mitrecwe}. The graph does not model monkey-patching, reflection or framework-generated routing, so results will describe practical, lightweight differencing rather than a sound analysis, and unknown-edge counts will be reported per repository.
 
-\section{Experimental Infrastructure}
-\label{sec:infra}
-
-\subsection{Refinement Harness}
-The harness drives a refinement loop over a set of Python files. Each turn sends the model a fixed system prompt, every current file and one instruction; the model returns complete files, and the harness computes a diff and appends a record to a JSON Lines trace holding the prompt and its hash, the requested and the served model identifiers, the parameters, the response, token usage, latency and the diff. Refusals and errors have their own record kinds. Each prompt sequence is run several times, and every run carries a replication number. The code is Python 3.12 with pinned dependencies and \nTests{} automated tests.
-
-\subsection{Reproducibility Without Sampling Controls}
-The original plan specified a temperature of zero and fixed seeds, but current Anthropic models reject sampling parameters and the API has never accepted a seed; a zero temperature would not have guaranteed identical output anyway~\cite{ouyang2025nondeterminism}. Reproducibility therefore rests on a response cache keyed by (prompt hash, replication) and on replay: the gate conditions never call the model but consume recorded traces, so every condition sees the same revisions. Traces recorded against the live API replay byte for byte.
-
-Two pitfalls are worth reporting because they fail silently. Our first cache used the prompt hash alone as its key; because the API takes no seed, all replications send identical requests, so the cache served the first replication's answer to the others and \emph{N} replications collapsed into one. Statistical tests would still have run, over duplicates. Adding the replication number to the key fixed this, and a regression test guards it. Second, the API reports a dated snapshot name (for example \texttt{claude-haiku-4-5-20251001}) that differs from the name requested, which broke the hash check on replay; the harness now records both.
-
-\subsection{Models Used}
-Table~\ref{tab:models} lists the models~\cite{anthropicmodels}. The newest models declined part of the workload on a harmless fixture (a small user-lookup module that already used parameterised queries, refined with three instructions in the style of the base study), and a declined turn ends its replication. We therefore use \texttt{claude-opus-4-8}, which completed all 18 turns, with adaptive thinking, medium effort and at most 16,000 output tokens per turn. The smaller \texttt{claude-haiku-4-5} serves the planned small-model ablation. Model identifiers are command-line options and every trace records them. A refusal is stored as an outcome with its category, is never cached and never triggers a fallback to another model, which would mix models within a condition. Because refusals are likely to rise on genuinely vulnerable code, the refusal rate will be reported beside the degradation curve.
-
-\begin{table}[t]
-\caption{Models used and smoke-run results on a harmless fixture}
-\label{tab:models}
-\centering
-\footnotesize
-\begin{tabular}{|p{2.05cm}|p{2.55cm}|p{2.6cm}|}
-\hline
-\textbf{Model} & \textbf{Role} & \textbf{Smoke runs (3 prompts)} \\
-\hline
-claude-opus-4-8 & Code generation (primary) & 18 of 18 turns, no refusals \\
-\hline
-claude-haiku-4-5 & Small-model ablation & 18 of 18 turns, no refusals \\
-\hline
-claude-opus-5-5 & Evaluated, not used & 2 of 7 turns refused \\
-\hline
-claude-opus-5 & Evaluated, not used & Refused in every run \\
-\hline
-claude-opus-5-5 agents (Claude Code) & Dataset curation assistance & Every label needs author sign-off \\
-\hline
-\end{tabular}
-\end{table}
-
-\section{Benchmark Construction}
-\label{sec:dataset}
-
-Each event is a real fix, inverted: the fixed code is the clean state and the vulnerable code is the regression that will be injected into a refinement trace. The targets are 25 to 30 validated events for the first milestone and 40 to 60, a third or more of them cross-file, for the full study. Table~\ref{tab:funnel} and Fig.~\ref{fig:funnel} trace the pipeline.
-
-\subsection{Advisories and Seed Repositories}
-From the OSV export for PyPI~\cite{osv}, retrieved on \nOsvDate{} and pinned by its hash, we kept reviewed GitHub advisories (only these carry CWE identifiers) with an injection CWE, giving \nInjAdv{} advisories, \nInjAdvWithFix{} of them linking a fix, across \nReposUsable{} repositories. Seed repositories must be MIT, Apache-2.0 or BSD licensed, so that traces can be redistributed, and hold 5,000 to 50,000 lines of Python outside tests and documentation. We selected \nSeedSelected{} (Table~\ref{tab:repos}) and kept \nSeedReserve{} in reserve. Path traversal dominates, so results will be reported per class.
-
-\begin{table}[t]
-\caption{Selected seed repositories}
-\label{tab:repos}
-\centering
-\footnotesize
-\begin{tabular}{|p{3.3cm}|p{1.6cm}|p{1.9cm}|}
-\hline
-\textbf{Repository} & \textbf{Licence} & \textbf{Advisories} \\
-\hline
-\nRepoRows
-\end{tabular}
-\end{table}
-
-\subsection{Fix Pairs and Their Verification}
-The resolver takes the earliest linked commit on the default branch as the fix and its first parent as the vulnerable version, and re-measures size and licence at that commit; this removed one repository whose code was only 1,200 to 4,200 lines at every vulnerable commit. Two independent reviewers then checked each pair, one asked to establish the link and one to refute it, and advisories without a linked fix got a history search. Of \nReviewItems{} items, \nReviewConfirmed{} were confirmed outright. Reading every other case against the history, we corrected \nCorrected{} pairs where both reviewers named the same other commit (one advisory also linked the commit that \emph{introduced} the bug, one linked only backports, two described multi-part fixes) and recovered \nRecovered{} missing fixes. The simple linking rule was thus wrong for about one advisory in eight. Corrections and recoveries are kept in separate files so that every commit not taken from an advisory can be audited.
-
-\begin{table}[t]
-\caption{From advisories to regression events}
-\label{tab:funnel}
-\centering
-\footnotesize
-\begin{tabular}{|p{5.2cm}|p{1.6cm}|}
-\hline
-\textbf{Stage} & \textbf{Count} \\
-\hline
-Injection-class PyPI advisories (reviewed, not withdrawn) & \nInjAdv \\
-\hline
-... with at least one linked fix commit & \nInjAdvWithFix \\
-\hline
-Advisories in the selected seed repositories & \nAdvSelected \\
-\hline
-Candidate vulnerable/fixed pairs after verification & \nCandidatePairs \\
-\hline
-Candidate events (shared fixes merged) & \nEvents \\
-\hline
-Prepared and passed the adversarial check & \nEventsSound \\
-\hline
-Excluded during preparation & \nEventsExcluded \\
-\hline
-Still in preparation (\nSnapshotDate) & \nEventsPending \\
-\hline
-\end{tabular}
-\end{table}
-
-\begin{figure}[t]
-\centering
-\includegraphics[width=\columnwidth]{figures/funnel}
-\caption{Dataset funnel, from advisories to prepared events.}
-\label{fig:funnel}
-\end{figure}
-
-\subsection{Extracting Events}
-The model rewrites whole files, and 16 of the 35 candidate pairs have a file on the vulnerable flow of more than about 14,000 tokens. Each event is therefore a \emph{trimmed slice}: the files on the flow at their real paths, cut down to the functions between the entry point, the guard the fix added and the sink. A clean version is cut at the fix commit and a regressed version at the vulnerable commit. The slicer keeps source text verbatim and reports every referenced name it removed, and comments that describe the vulnerability or the fix are stripped from both versions and logged, because the model sees every file verbatim.
-
-An event is \emph{local} if entry, guard and sink lie in one file, and \emph{cross-file} otherwise; this rule was fixed before any event was built, and the label follows the real sink even when a large sink function is represented by its call site. For each event an LLM analyst builds the slice, an independent LLM checker tries to refute it, and only the authors' sign-off validates it. At the time of writing \nEventsSound{} events had passed the check, \nEventsCross{} of them cross-file (Fig.~\ref{fig:scope}), and \nEventsExcluded{} were excluded. One exclusion is a finding in itself: our analysis indicates that a published fix sanitises a document that the command-line PDF path then discards and re-parses, leaving that path vulnerable. The other reflected a limit of our own tooling: the slicer could not keep a module-level block that connects an upload handler to its sink. The slicer has since been extended to keep such wiring on request, and one event whose parser grammar is assembled at module level was rebuilt with it and awaits a second check. In every prepared event the checker independently arrived at the same class and the same scope label as the analyst.
-
-\begin{figure}[t]
-\centering
-\includegraphics[width=\columnwidth]{figures/scope}
-\caption{Prepared events by vulnerability class and scope.}
-\label{fig:scope}
-\end{figure}
-
-\section{Evaluation Protocol}
-\label{sec:eval}
-
-\subsection{Traces, Conditions and Baselines}
-Each validated event becomes a refinement trace of five to eight turns (improve readability, add a feature, optimise), with the regression injected at a random turn between the second and the sixth and every turn labelled clean, local regression or cross-file regression. Injected patterns that already occur elsewhere in the repository are excluded from the graph's retrieval scope to avoid leakage. All conditions in Table~\ref{tab:conditions} consume the same recorded traces, so only the gate's context and detector vary.
+\textit{Conditions and baselines.} The gate is evaluated on recorded refinement traces (Section~\ref{sec:dataset}). All conditions in Table~\ref{tab:conditions} consume the same traces, so only the gate's context and detector vary. B+ was added once the first measurement (Section~\ref{sec:impl}) showed how rarely the scanners fire: there the LLM also judges every change from its diff, so that C faces a strong diff-only check as well. It is a baseline only; in C the LLM still triages flags and nothing else.
 
 \begin{table}[t]
 \caption{Gate conditions and baselines}
@@ -231,6 +120,8 @@ A & No gate & Baseline degradation \\
 \hline
 B & Semgrep, Bandit and LLM triage on the diff & Conventional check \\
 \hline
+B+ & B, with the LLM judging every diff as a whole & Strong diff-only check \\
+\hline
 C, GraphGate & B plus the graph-difference engine & RQ1, RQ2 \\
 \hline
 S1, S2 & Pysa; CodeQL if licensing allows (no LLM) & RQ3 \\
@@ -238,27 +129,134 @@ S1, S2 & Pysa; CodeQL if licensing allows (no LLM) & RQ3 \\
 \end{tabular}
 \end{table}
 
-\subsection{Metrics, Ablations and Success Criteria}
-We will report the degradation curve, cross-file recall, iterations to detection, the false-positive burden (BLOCK decisions on clean turns), latency, tokens, cost and the refusal rate. Traces are replayed over several replications, and B against C and C against S1 are compared with paired Wilcoxon signed-rank tests~\cite{wilcoxon1945} on per-trace recall, with effect sizes. Ablations remove call or taint edges, vary the hop depth from one to three, drop LLM triage and swap in the smaller model.
+\textit{Metrics, ablations and success criteria.} We will report the degradation curve, cross-file recall, iterations to detection, the false-positive burden (BLOCK decisions on clean turns), latency, tokens, cost and the refusal rate. Traces are replayed over several replications, and C is compared with B, B+ and S1 by paired Wilcoxon signed-rank tests~\cite{wilcoxon1945} on per-trace recall, with effect sizes. Ablations remove call or taint edges, vary the hop depth from one to three, drop LLM triage and swap in the smaller model.
 
 The success criteria were fixed in advance: condition A reproduces the degradation trend of the base study, condition C improves cross-file recall over B significantly and is competitive with S1, and C keeps false positives below about 15\% of clean turns with a median added latency under about 10 seconds. A null result on the cross-file comparison would still be reported, because the controlled design is part of the contribution.
 
-\section{Early Observations}
-\label{sec:obs}
+\section{Dataset Description}
+\label{sec:dataset}
 
-\textit{Frontier models may decline refinement work.} A loop built on such a model loses turns exactly where code is security-relevant, and dropping those turns would understate degradation; refusals must be reported as outcomes. \textit{Caching can erase replications,} as described in Section~\ref{sec:infra}, without any visible failure. \textit{Fix links need checking:} besides the corrected links, our analysis indicates that one published fix did not close the flow it targeted. \textit{A regression-like change already appeared} in a smoke run: asked to ``optimize the database access'', one replication of \texttt{claude-opus-4-8} interpolated a column name into SQL with an f-string. \textit{Scope depends on structure:} in GitPython every command runs through one central function, so its events are cross-file even when the visible change is inside one method, and results will be reported per repository.
+Each event is a real fix, inverted: the fixed code is the clean state and the vulnerable code is the regression that will be injected into a refinement trace. The targets are 25 to 30 validated events for the first milestone and 40 to 60, a third or more of them cross-file, for the full study. Fig.~\ref{fig:funnel} traces the pipeline.
 
-\section{Threats to Validity}
-\label{sec:threats}
+\textit{Advisories and seed repositories.} From the OSV export for PyPI~\cite{osv}, retrieved on \nOsvDate{} and pinned by its hash, we kept reviewed GitHub advisories (only these carry CWE identifiers) with an injection CWE, giving \nInjAdv{} advisories, \nInjAdvWithFix{} of them linking a fix, across \nReposUsable{} repositories. Seed repositories must be MIT, Apache-2.0 or BSD licensed, so that traces can be redistributed, and hold 5,000 to 50,000 lines of Python outside tests and documentation. We selected \nSeedSelected{} (Table~\ref{tab:repos}) and kept \nSeedReserve{} in reserve. Path traversal dominates, so results will be reported per class.
 
-\textit{Construct.} A regression is defined as an inverted real fix, and only the injection family is covered; the local/cross-file label follows one operational rule, which is why it was fixed before the events were built. \textit{Internal.} LLM non-determinism is controlled by replay. LLM agents assisted curation, so every such step has an adversarial check and author sign-off; stripped comments may still leave cues such as identifiers that mention unsafe options. \textit{External.} Injected regressions in synthetic traces may differ from natural ones, so a holdout of real multi-turn sessions, reviewed manually and never used for tuning, is planned. The dataset is dominated by path traversal and one library supplies about a third of the events. \textit{Conclusion.} The number of events is modest; paired non-parametric tests, effect sizes and oversampling of cross-file events keep conclusions conservative. Public advisories may also appear in model training data.
+\begin{table}[t]
+\caption{Selected seed repositories}
+\label{tab:repos}
+\centering
+\footnotesize
+\begin{tabular}{|p{3.3cm}|p{1.6cm}|p{1.9cm}|}
+\hline
+\textbf{Repository} & \textbf{Licence} & \textbf{Advisories} \\
+\hline
+\nRepoRows
+\end{tabular}
+\end{table}
 
-\section{Conclusion}
+\textit{Fix pairs and their verification.} The resolver takes the earliest linked commit on the default branch as the fix and its first parent as the vulnerable version, and re-measures size and licence at that commit; this removed one repository whose code was only 1,200 to 4,200 lines at every vulnerable commit. Two independent reviewers then checked each pair, one asked to establish the link and one to refute it, and advisories without a linked fix got a history search. Of \nReviewItems{} items, \nReviewConfirmed{} were confirmed outright. Reading every other case against the history, we corrected \nCorrected{} pairs where both reviewers named the same other commit (one advisory also linked the commit that \emph{introduced} the bug, one linked only backports, two described multi-part fixes) and recovered \nRecovered{} missing fixes. The simple linking rule was thus wrong for about one advisory in eight.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/funnel}
+\caption{Dataset funnel, from advisories to validated events.}
+\label{fig:funnel}
+\end{figure}
+
+\textit{Event extraction.} The model rewrites whole files, and 16 of the 35 candidate pairs have a file on the vulnerable flow of more than about 14,000 tokens. Each event is therefore a \emph{trimmed slice}: the files on the flow at their real paths, cut down to the functions between the entry point, the guard the fix added and the sink. A clean version is cut at the fix commit and a regressed version at the vulnerable commit. The slicer keeps source text verbatim and reports every referenced name it removed, and comments that describe the vulnerability or the fix are stripped from both versions and logged, because the model sees every file verbatim.
+
+\textit{Scope label and validation.} An event is \emph{local} if entry, guard and sink lie in one file, and \emph{cross-file} otherwise; this rule was fixed before any event was built, and the label follows the real sink even when a large sink function is represented by its call site. For each event an LLM analyst builds the slice, an independent LLM checker tries to refute it, and only the authors' sign-off validates it. \nEventsSound{} events passed the check and the authors accepted \nEventsSignedOff{} of them, \nEventsCross{} cross-file (Fig.~\ref{fig:scope}); the sign-off reviewed the prepared dossiers and did not re-derive them. Of the \nEventsNotAccepted{} events not accepted, one is a finding in itself: our analysis indicates that a published fix sanitises a document that the command-line PDF path then discards and re-parses, leaving that path vulnerable. The checker's final verdict matched the analyst's class and scope label in every prepared event.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/scope}
+\caption{Validated events by vulnerability class and scope.}
+\label{fig:scope}
+\end{figure}
+
+\textit{Traces, labels and leakage control.} Each validated event becomes a refinement trace of five to eight turns (improve readability, add logging, optimise). At a turn between the second and the sixth, fixed by a seeded plan, the regression is merged into the code the model has just produced, and every turn is labelled clean, local regression or cross-file regression from the recorded code. Near-duplicates of the regressed code elsewhere in the repository and tests changed by the fix are kept out of the graph's retrieval scope to avoid leakage; the scan found exact twins in one event and \nLeakTests{} such test files. A three-event pilot has been recorded with the open-weight model of Section~\ref{sec:impl}, and recording of the full set is in progress.
+
+\section{Implementation and Results}
+\label{sec:impl}
+
+\textit{Refinement harness.} The harness drives a refinement loop over a set of Python files. Each turn sends the model a fixed system prompt, every current file and one instruction; the model returns complete files, and the harness computes a diff and appends a record to a JSON Lines trace holding the prompt and its hash, the requested and the served model identifiers, the parameters, the response, token usage, latency and the diff. Refusals and errors have their own record kinds. Each prompt sequence is run several times, and every run carries a replication number. The code is Python 3.12 with pinned dependencies.
+
+\textit{Reproducibility without sampling controls.} Sampling settings do not make a model reproducible: hosted models increasingly reject them, and neither a fixed seed nor a zero temperature guarantees identical output~\cite{ouyang2025nondeterminism}. Reproducibility therefore rests on a response cache keyed by (prompt hash, replication) and on replay: the gate conditions never call the model but consume recorded traces, so every condition sees the same revisions.
+
+Two pitfalls are worth reporting because they fail silently. Our first cache used the prompt hash alone as its key; replications send identical requests, so the cache served the first replication's answer to the others and \emph{N} replications collapsed into one. Adding the replication number to the key fixed this, and a regression test guards it. Second, we passed the replication number to the model server as its sampling seed. Under one seed the reply broke the output format in all \nSeedEvents{} events a session started, and never under two others; that seed was replaced, on format validity alone, before any gate was run.
+
+\textit{Model used.} The experiments run on an open-weight model, so that they do not depend on a commercial service and anyone can repeat them: Qwen2.5-Coder with 14.8 billion parameters~\cite{hui2024qwencoder}, released under Apache-2.0, in 4-bit quantised form with a 32,768-token context, served by Ollama on a free cloud GPU. The same model performs the triage step. A turn the model declines or answers unusably is stored as an outcome and ends its replication; there is no fallback to another model. Hosted models from Anthropic~\cite{anthropicmodels} were used only for early tests of the harness, before the open-weight model was adopted. The model reshapes code freely: most pilot labels had to be carried over from the previous turn, and some regressions could not be placed because their function had been removed or renamed; both are reported and neither is worked around. Table~\ref{tab:status} collects what has been measured so far.
+
+\begin{table}[t]
+\caption{Results obtained so far}
+\label{tab:status}
+\centering
+\footnotesize
+\begin{tabular}{|p{4.3cm}|p{2.9cm}|}
+\hline
+\textbf{Measurement} & \textbf{Result} \\
+\hline
+Automated tests & \nTests{}, all passing \\
+\hline
+Replay of recorded traces & Byte-identical \\
+\hline
+Events accepted at sign-off & \nEventsSignedOff{}, of which \nEventsCross{} cross-file \\
+\hline
+Regressions the pattern scanners flag & \nStaticCaught{} of \nStaticEvents{} \\
+\hline
+Regressions the graph rules flag & \nDeltaCaught{} of \nStaticEvents{} \\
+\hline
+Pilot turns returning usable files & \nPilotUsable{} of \nPilotCalls{} \\
+\hline
+Pilot turn labels carried over & \nPilotCarried{} of \nPilotTurns{} \\
+\hline
+Events recorded in the first session & \nSessionEvents{} of \nEventsSignedOff{}, two replications \\
+\hline
+Regression could not be placed & \nInjFailed{} of \nInjReps{} replications \\
+\hline
+\end{tabular}
+\end{table}
+
+\textit{Static analysis of a change.} The first stage of the gate is implemented. Semgrep \nSemgrepVersion{} and Bandit \nBanditVersion{} scan the files a turn changes, before and after it, and a finding counts only if the change introduces it. Semgrep uses its public community rules, pinned at one commit and restricted to the injection family, \nSemgrepRules{} rule files in all. As a first measurement we took each validated event's regression as a single change. Only \nStaticCaught{} of the \nStaticEvents{} regressions introduces a finding, a local SQL event; for the others the scanners report the same lines before and after, or nothing. No model turn or triage is involved, so this is not yet a result for the diff-only gate. The triage step and both diff-only gates are implemented and tested against a stand-in model.
+
+\textit{Graph layer and a first look.} The graph builder and rules R1 to R4 are implemented, with \nGraphTests{} unit tests. On the \nGraphRepos{} seed repositories the builder resolved all but \nUnknownShare{}\% of \nGraphCalls{} calls, which stay in the graph as unknown edges. Taint edges join the parameters and return values of symbols, not whole functions. Two settings depart from our proposal and were fixed before the rules saw any event: the parameters of a library's public functions count as sources, and a test that raises counts as a guard. Taking each regression as one change on its slice, the rules flag \nDeltaCaught{} of \nStaticEvents{}, \nDeltaCross{} of the \nEventsCross{} cross-file ones, against \nStaticCaught{} for the scanners; the proposal's literal settings flag \nDeltaProposed{}. As a control, the rules also fire on \nDeltaFixes{} of the reverse changes, the fixes. Most misses are checks weakened inside a function, which remove no sanitizer and open no path; in \nNoPath{} slices no source-to-sink path exists, because the sink was cut away or is reached through dynamic dispatch. This is not a gate result: no model turn and no triage is involved, and the rules were not changed after the run.
+
+\textit{Remaining experiments and expected outcomes.} Table~\ref{tab:plan} lists the remaining steps; its last column holds expectations, not measurements. Condition B can block only what the scanners flag, and they flag \nStaticCaught{} of the \nStaticEvents{} raw regressions, a local event, so B's cross-file recall should be close to zero. B+ is shown the diff in which a check disappears and may catch more, at the price of blocking clean turns. In condition A a placed regression should persist unless the model rewrites its function, so A's curve shows how long an injected regression survives; it is the reference for the gates, not an independent replication of the base study's trend. For condition C the first look tempers the hypothesis of a significant gain in cross-file recall over B: on slices the rules see about a fifth of the cross-file regressions, and whether repository context raises that, and whether C beats B+, is open. Latency is the criterion most at risk: Semgrep takes about ten seconds to start and the open model needed a median of \nPilotSeconds{} seconds per turn in the pilot, so the median added latency is expected to exceed ten seconds in this setup.
+
+\begin{table}[t]
+\caption{Remaining steps, what each measures and the expected outcome}
+\label{tab:plan}
+\centering
+\footnotesize
+\begin{tabular}{|p{1.9cm}|p{2.4cm}|p{2.8cm}|}
+\hline
+\textbf{Step} & \textbf{Measures} & \textbf{Expected (not yet measured)} \\
+\hline
+Trace recording and turn labels & \nEventsSignedOff{} events, three replications & In progress; regression placed in most replications \\
+\hline
+Diff-only gates B and B+ & BLOCK or ALLOW per turn & B near zero on cross-file; B+ higher, with false blocks \\
+\hline
+Pysa baseline S1 & Taint flows per revision & Finds flows it has models for; silent on what changed \\
+\hline
+Run of A, B, B+ and S1 & Degradation curve, iterations to detection, false positives, overhead & First complete result; latency above the limit \\
+\hline
+Repository context, cross-file variants, condition C & 15 to 25 added events; GraphGate decisions & Cross-file recall above B, by less than hoped \\
+\hline
+Real-session and repository holdouts & Recall on data never used for tuning & Smaller gain than on synthetic traces \\
+\hline
+Full study, ablations, statistics & Per-class results, Wilcoxon tests, error analysis & Misses traced to unknown edges \\
+\hline
+\end{tabular}
+\end{table}
+
+\textit{Threats to validity.} \emph{Construct:} a regression is defined as an inverted real fix, and only the injection family is covered; the local/cross-file label follows one operational rule, which is why it was fixed before the events were built. \emph{Internal:} LLM non-determinism is controlled by replay. LLM agents assisted curation, so every such step has an adversarial check and author sign-off. A label carried over from an earlier turn is not verified ground truth, and such turns are counted separately. \emph{External:} injected regressions in synthetic traces may differ from natural ones, so a holdout of real multi-turn sessions, reviewed manually and never used for tuning, is planned. The dataset is dominated by path traversal and one library supplies two fifths of the events. \emph{Conclusion:} the number of events is modest, so we use paired non-parametric tests and report effect sizes. Public advisories may also appear in model training data.
+
+\section{Conclusion and Future Work}
 \label{sec:conclusion}
 
-Iterative refinement with LLMs can erode security, and diff-only checks miss regressions whose data flow crosses file boundaries. GraphGate reasons over the difference between code graphs of successive revisions and limits the LLM to triage. We have presented its design, a harness with exact replay, the models used and why, and a verified benchmark pipeline with a pre-registered scope rule. Work continues in two milestones. The first completes the author sign-off of the prepared events, synthesises refinement traces from them, and runs the diff-only gate and Pysa over those traces to obtain an A-versus-B-versus-S1 degradation result, together with iterations to detection and false-positive figures; this is a reportable study on its own. The second builds the graph layer, implements rules R1 to R4 with their unit tests, adds cross-file variants to the dataset and runs condition C with its ablations, followed by evaluation on the real-session holdout. Traces, labels, rules and the harness will be released under a permissive licence once the licence check of every seed repository is complete.
+Iterative refinement with LLMs can erode security, and diff-only checks miss regressions whose data flow crosses file boundaries. GraphGate reasons over the difference between code graphs of successive revisions and limits the LLM to triage. We have presented its design, a harness with exact replay, an open-weight experimental setup, a verified benchmark of \nEventsSignedOff{} regression events with a pre-registered scope rule, and a first look in which the graph rules flag \nDeltaCaught{} of those regressions where pattern scanners flag \nStaticCaught{}.
 
-\section*{Acknowledgment}
+Table~\ref{tab:plan} is the plan for future work: first the comparison of A, B, B+ and S1 on the recorded traces, then repository context for the graph and condition C with its ablations and holdouts. Traces, labels, rules and the harness will be released under a permissive licence after a licence check of every seed repository.
+
 The authors thank the Karunya Institute of Technology and Sciences for its support. In line with IEEE policy, we disclose that Anthropic's Claude, through Claude Code, assisted with implementing the software, with the dataset verification in Section~\ref{sec:dataset}, and with drafting this manuscript; the authors reviewed all of it and take full responsibility for the content.
 
 \bibliographystyle{IEEEtran}

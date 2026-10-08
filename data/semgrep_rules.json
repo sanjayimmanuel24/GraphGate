@@ -1,0 +1,663 @@
+{
+  "schema_version": 1,
+  "source": "https://github.com/semgrep/semgrep-rules",
+  "commit": "a84ff9cc2453ca91d581380de4b8b3f272f6f4be",
+  "licence": "Semgrep Rules License v1.0 (https://semgrep.dev/legal/rules-license); the rule files are not redistributed in this repository",
+  "language_dir": "python",
+  "family_cwes": [
+    22,
+    77,
+    78,
+    89
+  ],
+  "rule_files": 63,
+  "rule_files_by_cwe": {
+    "22": 5,
+    "77": 0,
+    "78": 33,
+    "89": 25
+  },
+  "reclassified": {
+    "python/django/security/injection/tainted-sql-string.yaml": {
+      "counted_as": 89,
+      "reason": "flags user input concatenated into an SQL string; upstream metadata names another CWE"
+    },
+    "python/flask/security/injection/tainted-sql-string.yaml": {
+      "counted_as": 89,
+      "reason": "flags user input concatenated into an SQL string; upstream metadata names another CWE"
+    }
+  },
+  "ruleset_sha256": "563c8e50572630b7fde72d581f3538d4d5e848432b78229896b17e65709d2447",
+  "rules": [
+    {
+      "path": "python/airflow/security/audit/formatted-string-bashoperator.yaml",
+      "sha256": "e6747b1202af9dbe9822d87540c4c55c950c478e38628f12257eaa2cacf489a8",
+      "declared_cwes": [
+        78
+      ],
+      "family_cwes": [
+        78
+      ]
+    },
+    {
+      "path": "python/aws-lambda/security/dangerous-asyncio-create-exec.yaml",
+      "sha256": "e8fcadea3b52c5919f71d84ef5bfeaf04e5c6c79c9308071801abed0094c1b3c",
+      "declared_cwes": [
+        78
+      ],
+      "family_cwes": [
+        78
+      ]
+    },
+    {
+      "path": "python/aws-lambda/security/dangerous-asyncio-exec.yaml",
+      "sha256": "4bfc28fcb7ee869e3c064f43fda622c685862b032f33df8931dd034779fcaa03",
+      "declared_cwes": [
+        78
+      ],
+      "family_cwes": [
+        78
+      ]
+    },
+    {
+      "path": "python/aws-lambda/security/dangerous-asyncio-shell.yaml",
+      "sha256": "14716d804a70c270db0ab280b5fd2d8f98746fa1346d8e766c508903d12efc37",
+      "declared_cwes": [
+        78
+      ],
+      "family_cwes": [
+        78
+      ]
+    },
+    {
+      "path": "python/aws-lambda/security/dangerous-spawn-process.yaml",
+      "sha256": "565b3e4c7fbdaaa1cb36d03245e774c6f1ee8101247f2a51ff90493eb0867f28",
+      "declared_cwes": [
+        78
+      ],
+      "family_cwes": [
+        78
+      ]
+    },
+    {
+      "path": "python/aws-lambda/security/dangerous-subprocess-use.yaml",
+      "sha256": "a676443184e01212736ebcbb89f80f39eabad307f8e077a57910d9d143f29e26",
+      "declared_cwes": [
+        78
+      ],
+      "family_cwes": [
+        78
+      ]
+    },
+    {
+      "path": "python/aws-lambda/security/dangerous-system-call.yaml",
+      "sha256": "a0a120234857a5253a0a3c99352391ff89bdf0c3f5b14b5b24457285cdad7ff0",
+      "declared_cwes": [
+        78
+      ],
+      "family_cwes": [
+        78
+      ]
+    },
+    {
+      "path": "python/aws-lambda/security/mysql-sqli.yaml",
+      "sha256": "51fceaf5274e3a53251c8b34b83769a226731e1d59cf6965b87d45387788e8b3",
+      "declared_cwes": [
+        89
+      ],
+      "family_cwes": [
+        89
+      ]
+    },
+    {
+      "path": "python/aws-lambda/security/psycopg-sqli.yaml",
+      "sha256": "43e79434cf6a3953e2de443b506c751246cf0bc637b54e0b174f40c13e726d3c",
+      "declared_cwes": [
+        89
+      ],
+      "family_cwes": [
+        89
+      ]
+    },
+    {
+      "path": "python/aws-lambda/security/pymssql-sqli.yaml",
+      "sha256": "d5bd71e7f762cbeb41e787f1bdf73efc5d4be183b08de23c159a070bc58d6659",
+      "declared_cwes": [
+        89
+      ],
+      "family_cwes": [
+        89
+      ]
+    },
+    {
+      "path": "python/aws-lambda/security/pymysql-sqli.yaml",
+      "sha256": "836301d9b00f13b25d47d07b1a3fc2dae0a078c66375d664d03a5dfaaaf796ed",
+      "declared_cwes": [
+        89
+      ],
+      "family_cwes": [
+        89
+      ]
+    },
+    {
+      "path": "python/aws-lambda/security/sqlalchemy-sqli.yaml",
+      "sha256": "d42f3f0e1b45f89cf54243dfa0de30d811d996a70f7e73cedf290a28692415b8",
+      "declared_cwes": [
+        89
+      ],
+      "family_cwes": [
+        89
+      ]
+    },
+    {
+      "path": "python/aws-lambda/security/tainted-sql-string.yaml",
+      "sha256": "6c28ef216e3aba3b69849cb2862af72553f6e5c6335706354d475d1f4debb56b",
+      "declared_cwes": [
+        89
+      ],
+      "family_cwes": [
+        89
+      ]
+    },
+    {
+      "path": "python/django/security/audit/custom-expression-as-sql.yaml",
+      "sha256": "516a9d1d0c84701e3aa92a202c9ca8b9596f6b98de022c0c01c1135ef12fb3ab",
+      "declared_cwes": [
+        89
+      ],
+      "family_cwes": [
+        89
+      ]
+    },
+    {
+      "path": "python/django/security/audit/extends-custom-expression.yaml",
+      "sha256": "271b0932608afa83aa83b5f08051b0da7ec1d835a1438beadf6ad7ada9a32088",
+      "declared_cwes": [
+        89
+      ],
+      "family_cwes": [
+        89
+      ]
+    },
+    {
+      "path": "python/django/security/audit/query-set-extra.yaml",
+      "sha256": "ba41654546f12eec37271071181b6833908c1342b05d7e47af916a59275d8266",
+      "declared_cwes": [
+        89
+      ],
+      "family_cwes": [
+        89
+      ]
+    },
+    {
+      "path": "python/django/security/audit/raw-query.yaml",
+      "sha256": "3ed9f9713f2928257c648cf4c5c20fda908f17c07eea153f243c9950c34a1d10",
+      "declared_cwes": [
+        89
+      ],
+      "family_cwes": [
+        89
+      ]
+    },
+    {
+      "path": "python/django/security/injection/command/command-injection-os-system.yaml",
+      "sha256": "25656d77c95f6414ac7b98528b8d75b912fbb1f4a51be32db2c8fe77ad0d9fbc",
+      "declared_cwes": [
+        78
+      ],
+      "family_cwes": [
+        78
+      ]
+    },
+    {
+      "path": "python/django/security/injection/command/subprocess-injection.yaml",
+      "sha256": "9c65b291fbeb40f3f9abb6b236e34a9ea8ac2364cabfdf66c02aa78e313439a5",
+      "declared_cwes": [
+        78
+      ],
+      "family_cwes": [
+        78
+      ]
+    },
+    {
+      "path": "python/django/security/injection/path-traversal/path-traversal-file-name.yaml",
+      "sha256": "493bc2593442867c3e7fead54f55d2a66bd9e7cb4d7a2307bb71021942c23cdc",
+      "declared_cwes": [
+        22
+      ],
+      "family_cwes": [
+        22
+      ]
+    },
+    {
+      "path": "python/django/security/injection/path-traversal/path-traversal-join.yaml",
+      "sha256": "d7be8e97db324d5b1614ae087c4bf530d74d8b698bdb2ebd10c7836443d83aa4",
+      "declared_cwes": [
+        22
+      ],
+      "family_cwes": [
+        22
+      ]
+    },
+    {
+      "path": "python/django/security/injection/path-traversal/path-traversal-open.yaml",
+      "sha256": "31601c492e870d65642111f2336aa04d138ef2fe9281f3eb3a38884b9cf889b7",
+      "declared_cwes": [
+        22
+      ],
+      "family_cwes": [
+        22
+      ]
+    },
+    {
+      "path": "python/django/security/injection/request-data-fileresponse.yaml",
+      "sha256": "930ab3468f045b2d73ac113dd9b89c4613ae17620d95b5f5c51fc1c20aad6371",
+      "declared_cwes": [
+        22
+      ],
+      "family_cwes": [
+        22
+      ]
+    },
+    {
+      "path": "python/django/security/injection/sql/sql-injection-extra.yaml",
+      "sha256": "c100c7f70353217bdb26bd0292bb908e0e708e63f5ea52fdce88ebc5ffd0f802",
+      "declared_cwes": [
+        89
+      ],
+      "family_cwes": [
+        89
+      ]
+    },
+    {
+      "path": "python/django/security/injection/sql/sql-injection-rawsql.yaml",
+      "sha256": "1cffd4593ed3a1304931f687fcd6e87a803d90a74a598c41bf52e5b26eaf8b2f",
+      "declared_cwes": [
+        89
+      ],
+      "family_cwes": [
+        89
+      ]
+    },
+    {
+      "path": "python/django/security/injection/sql/sql-injection-using-db-cursor-execute.yaml",
+      "sha256": "e4f74b36aa657c91def7eaea4ea545e046d63be195eb05d99de9ed6e20de1ef4",
+      "declared_cwes": [
+        89
+      ],
+      "family_cwes": [
+        89
+      ]
+    },
+    {
+      "path": "python/django/security/injection/sql/sql-injection-using-raw.yaml",
+      "sha256": "d632bb390c6bf5e477b38d49562c94eb3acba460fd8a3073c564dd3903d7bed2",
+      "declared_cwes": [
+        89
+      ],
+      "family_cwes": [
+        89
+      ]
+    },
+    {
+      "path": "python/django/security/injection/tainted-sql-string.yaml",
+      "sha256": "43e19cfec1bef17a4efd9490a2359383e8ba67ac6335de9114c655ffbec24300",
+      "declared_cwes": [
+        915
+      ],
+      "family_cwes": [
+        89
+      ]
+    },
+    {
+      "path": "python/flask/security/injection/os-system-injection.yaml",
+      "sha256": "1d03d3a2b623500ebdaef23f57e4037ab434165ebc0240f1ceeaec3ee2fbe480",
+      "declared_cwes": [
+        78
+      ],
+      "family_cwes": [
+        78
+      ]
+    },
+    {
+      "path": "python/flask/security/injection/path-traversal-open.yaml",
+      "sha256": "6334bed72d7dc051b208c0d0a44c7f492110f31e89b48afe43e486d0dc49ebe1",
+      "declared_cwes": [
+        22
+      ],
+      "family_cwes": [
+        22
+      ]
+    },
+    {
+      "path": "python/flask/security/injection/subprocess-injection.yaml",
+      "sha256": "3999fd54bda682edd0391678e362cd8c70b313d4aeb24252179f374604c73d66",
+      "declared_cwes": [
+        78
+      ],
+      "family_cwes": [
+        78
+      ]
+    },
+    {
+      "path": "python/flask/security/injection/tainted-sql-string.yaml",
+      "sha256": "d9b562b5eb8bd7efaaa696ebd0db97e47fc498edeec094c6956ba3567bbddd77",
+      "declared_cwes": [
+        704
+      ],
+      "family_cwes": [
+        89
+      ]
+    },
+    {
+      "path": "python/lang/security/audit/dangerous-asyncio-create-exec-audit.yaml",
+      "sha256": "9308083dcaae7882f3fb4f26b0f400cca7dd79c49cb85d72b8ed5de1cacad2ce",
+      "declared_cwes": [
+        78
+      ],
+      "family_cwes": [
+        78
+      ]
+    },
+    {
+      "path": "python/lang/security/audit/dangerous-asyncio-create-exec-tainted-env-args.yaml",
+      "sha256": "81dccef20c6ab71757629dc002f90401e0744ccb7866896573ea81c5bb84e8cf",
+      "declared_cwes": [
+        78
+      ],
+      "family_cwes": [
+        78
+      ]
+    },
+    {
+      "path": "python/lang/security/audit/dangerous-asyncio-exec-audit.yaml",
+      "sha256": "ae753d565762477200ab6a16d2127b455f5af988e925d76dcb550b3559b85efc",
+      "declared_cwes": [
+        78
+      ],
+      "family_cwes": [
+        78
+      ]
+    },
+    {
+      "path": "python/lang/security/audit/dangerous-asyncio-exec-tainted-env-args.yaml",
+      "sha256": "c6e42f7c3f7ce43318c08c8d8f856f7e4d332754c483c66478407bb2cd196584",
+      "declared_cwes": [
+        78
+      ],
+      "family_cwes": [
+        78
+      ]
+    },
+    {
+      "path": "python/lang/security/audit/dangerous-asyncio-shell-audit.yaml",
+      "sha256": "e81ed31c802114fe7ccc523b6b554611044cc0a69e13daacea93fa080d28cfe9",
+      "declared_cwes": [
+        78
+      ],
+      "family_cwes": [
+        78
+      ]
+    },
+    {
+      "path": "python/lang/security/audit/dangerous-asyncio-shell-tainted-env-args.yaml",
+      "sha256": "59f1f227a3bc52469a328cc9bac7989242b3816faac9e6e999db723bbab8062d",
+      "declared_cwes": [
+        78
+      ],
+      "family_cwes": [
+        78
+      ]
+    },
+    {
+      "path": "python/lang/security/audit/dangerous-os-exec-audit.yaml",
+      "sha256": "d7aa77c8ae62e4f6d0d3cc97a363406c819c657e3b9b5ed95030a4c7ce21febc",
+      "declared_cwes": [
+        78
+      ],
+      "family_cwes": [
+        78
+      ]
+    },
+    {
+      "path": "python/lang/security/audit/dangerous-os-exec-tainted-env-args.yaml",
+      "sha256": "593edc8b93d10cfdc478070dc30a9acc74d27d47d03fa883c0aa9b7351f8e219",
+      "declared_cwes": [
+        78
+      ],
+      "family_cwes": [
+        78
+      ]
+    },
+    {
+      "path": "python/lang/security/audit/dangerous-spawn-process-audit.yaml",
+      "sha256": "6ee93ba0c11e3fe0ef11ba3b43c7632c03176bf0e480c090e78fd543e0e1291e",
+      "declared_cwes": [
+        78
+      ],
+      "family_cwes": [
+        78
+      ]
+    },
+    {
+      "path": "python/lang/security/audit/dangerous-spawn-process-tainted-env-args.yaml",
+      "sha256": "1d391dbfea8ee1dc0ad5e6cf762cae0ad36a8dcee923cac4212239852b3e988f",
+      "declared_cwes": [
+        78
+      ],
+      "family_cwes": [
+        78
+      ]
+    },
+    {
+      "path": "python/lang/security/audit/dangerous-subprocess-use-audit.yaml",
+      "sha256": "50f69dc35f47e405633559f54fc2b3bd344707221742400e74b1c902c1f76faa",
+      "declared_cwes": [
+        78
+      ],
+      "family_cwes": [
+        78
+      ]
+    },
+    {
+      "path": "python/lang/security/audit/dangerous-subprocess-use-tainted-env-args.yaml",
+      "sha256": "0f3f3f8fafef5b828a15253585e4c6648c46c6fd1cca4b0ae8c70a9399def44d",
+      "declared_cwes": [
+        78
+      ],
+      "family_cwes": [
+        78
+      ]
+    },
+    {
+      "path": "python/lang/security/audit/dangerous-system-call-audit.yaml",
+      "sha256": "279e17c553ccfae54e058f02b5ed59e7c50665b49d4eb57f767b4aa1e6d818e6",
+      "declared_cwes": [
+        78
+      ],
+      "family_cwes": [
+        78
+      ]
+    },
+    {
+      "path": "python/lang/security/audit/dangerous-system-call-tainted-env-args.yaml",
+      "sha256": "51a6fb4d788c62a22670956868c7702e286e41da0961cb6cedcbf5d9c5f03dea",
+      "declared_cwes": [
+        78
+      ],
+      "family_cwes": [
+        78
+      ]
+    },
+    {
+      "path": "python/lang/security/audit/formatted-sql-query.yaml",
+      "sha256": "3543d454e520952116963c7913a2c2bad9bf9192b6c8c80be91ab7529a88ff09",
+      "declared_cwes": [
+        89
+      ],
+      "family_cwes": [
+        89
+      ]
+    },
+    {
+      "path": "python/lang/security/audit/paramiko/paramiko-exec-command.yaml",
+      "sha256": "f673c9f0dcbcb52461548a2d3b9988390d5660cf54a0cec6d27936f40ddd5a99",
+      "declared_cwes": [
+        78
+      ],
+      "family_cwes": [
+        78
+      ]
+    },
+    {
+      "path": "python/lang/security/audit/sqli/aiopg-sqli.yaml",
+      "sha256": "a7687e9f25881204de6d5f5087d76ccf61b361b715c95d9e1af9be4139f44fcd",
+      "declared_cwes": [
+        89
+      ],
+      "family_cwes": [
+        89
+      ]
+    },
+    {
+      "path": "python/lang/security/audit/sqli/asyncpg-sqli.yaml",
+      "sha256": "c5c56307c0128f47e4aae85ea2b5ab5834ce47c35690863370d010d6fbd47300",
+      "declared_cwes": [
+        89
+      ],
+      "family_cwes": [
+        89
+      ]
+    },
+    {
+      "path": "python/lang/security/audit/sqli/pg8000-sqli.yaml",
+      "sha256": "70658799eacf63fadffe5bb79969acb7133daaf50058af627e1dfd9041628a77",
+      "declared_cwes": [
+        89
+      ],
+      "family_cwes": [
+        89
+      ]
+    },
+    {
+      "path": "python/lang/security/audit/sqli/psycopg-sqli.yaml",
+      "sha256": "22f640c86a6e4d594b8193dd40a99830e211c4af46e526306dc261f0c1a334a0",
+      "declared_cwes": [
+        89
+      ],
+      "family_cwes": [
+        89
+      ]
+    },
+    {
+      "path": "python/lang/security/audit/subprocess-list-passed-as-string.yaml",
+      "sha256": "3e85d8148402dd3fd437afda07afc1aeff3fdbe395073d968cc01dfaa80e638d",
+      "declared_cwes": [
+        78
+      ],
+      "family_cwes": [
+        78
+      ]
+    },
+    {
+      "path": "python/lang/security/audit/subprocess-shell-true.yaml",
+      "sha256": "753ba9d29d592b3d7f5086e671e424ee05138acbf75a39b663d92aa3275f5380",
+      "declared_cwes": [
+        78
+      ],
+      "family_cwes": [
+        78
+      ]
+    },
+    {
+      "path": "python/lang/security/dangerous-os-exec.yaml",
+      "sha256": "5b9a82be39e56c73bd90f376bf33843350a47f7906f68985ad09abacb83add94",
+      "declared_cwes": [
+        78
+      ],
+      "family_cwes": [
+        78
+      ]
+    },
+    {
+      "path": "python/lang/security/dangerous-spawn-process.yaml",
+      "sha256": "c6e7a2c8dcdebafa48327a455927ce1e373255f3462bd026078f10f772db141a",
+      "declared_cwes": [
+        78
+      ],
+      "family_cwes": [
+        78
+      ]
+    },
+    {
+      "path": "python/lang/security/dangerous-subprocess-use.yaml",
+      "sha256": "9aaf4e9fcb13afed4e60c04def4132f9f7f2baac3414dc1d7bbd5dcb29db0586",
+      "declared_cwes": [
+        78
+      ],
+      "family_cwes": [
+        78
+      ]
+    },
+    {
+      "path": "python/lang/security/dangerous-system-call.yaml",
+      "sha256": "07337088f457e2a1c96ca707bb598ad0676a53290ee5f19d82105fe87e10bf43",
+      "declared_cwes": [
+        78
+      ],
+      "family_cwes": [
+        78
+      ]
+    },
+    {
+      "path": "python/pyramid/security/sqlalchemy-sql-injection.yaml",
+      "sha256": "1e9cde186df20ed004805d57bee487f4424a629082b227e33da3e2936b74b1e6",
+      "declared_cwes": [
+        89
+      ],
+      "family_cwes": [
+        89
+      ]
+    },
+    {
+      "path": "python/sh/security/string-concat.yaml",
+      "sha256": "312a078510ee3f9a8d6ac59c9dea3d1a3bc17bb0220b533ae73c9949469db072",
+      "declared_cwes": [
+        78
+      ],
+      "family_cwes": [
+        78
+      ]
+    },
+    {
+      "path": "python/sqlalchemy/security/audit/avoid-sqlalchemy-text.yaml",
+      "sha256": "bbb930c18dd59b667200a23eb658fb665b87bd698c674e38b0f75069e84244cb",
+      "declared_cwes": [
+        89
+      ],
+      "family_cwes": [
+        89
+      ]
+    },
+    {
+      "path": "python/sqlalchemy/security/sqlalchemy-execute-raw-query.yaml",
+      "sha256": "ad1a0cdc4622c4031d8a43796d66a4ed89778a1ebd9d8140d42ef81e857bda3d",
+      "declared_cwes": [
+        89
+      ],
+      "family_cwes": [
+        89
+      ]
+    },
+    {
+      "path": "python/sqlalchemy/security/sqlalchemy-sql-injection.yaml",
+      "sha256": "94efc2a706da4cc0fce95cf50e8ea65e0a0480503cd7d55c7841ed34905350de",
+      "declared_cwes": [
+        89
+      ],
+      "family_cwes": [
+        89
+      ]
+    }
+  ]
+}

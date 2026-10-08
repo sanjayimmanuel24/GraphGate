@@ -1,0 +1,469 @@
+{
+  "schema_version": 1,
+  "note": "Each validated event's regression taken as one change (clean slice to regressed slice) and scanned with Semgrep and Bandit. A first look at what the two tools can see, not a gate result: no model turn and no triage is involved.",
+  "tools": {
+    "semgrep": "1.179.0",
+    "bandit": "1.9.4"
+  },
+  "rules": {
+    "commit": "a84ff9cc2453ca91d581380de4b8b3f272f6f4be",
+    "sha256": "563c8e50572630b7fde72d581f3538d4d5e848432b78229896b17e65709d2447",
+    "rule_files": 63,
+    "rule_files_by_cwe": {
+      "22": 5,
+      "77": 0,
+      "78": 33,
+      "89": 25
+    }
+  },
+  "scanner_config": "semgrep=1.179.0;bandit=1.9.4;rules=563c8e50572630b7fde72d581f3538d4d5e848432b78229896b17e65709d2447;cwes=22,77,78,89",
+  "summary": {
+    "events": 30,
+    "with_introduced_finding": 1,
+    "by_class_and_scope": {
+      "command/cross_file": {
+        "events": 1,
+        "with_finding": 0
+      },
+      "os-command/cross_file": {
+        "events": 6,
+        "with_finding": 0
+      },
+      "path-traversal/cross_file": {
+        "events": 13,
+        "with_finding": 0
+      },
+      "path-traversal/local": {
+        "events": 5,
+        "with_finding": 0
+      },
+      "sql/cross_file": {
+        "events": 4,
+        "with_finding": 0
+      },
+      "sql/local": {
+        "events": 1,
+        "with_finding": 1
+      }
+    }
+  },
+  "events": {
+    "gitpython-2f96": {
+      "vulnerability_class": "os-command",
+      "scope": "cross_file",
+      "changed_files": [
+        "git/cmd.py"
+      ],
+      "findings_before": 2,
+      "findings_after": 2,
+      "introduced": [],
+      "removed": 0,
+      "errors": []
+    },
+    "gitpython-3f7w": {
+      "vulnerability_class": "path-traversal",
+      "scope": "cross_file",
+      "changed_files": [
+        "git/index/base.py"
+      ],
+      "findings_before": 2,
+      "findings_after": 2,
+      "introduced": [],
+      "removed": 0,
+      "errors": []
+    },
+    "gitpython-6p8h": {
+      "vulnerability_class": "os-command",
+      "scope": "cross_file",
+      "changed_files": [
+        "git/repo/base.py"
+      ],
+      "findings_before": 0,
+      "findings_after": 0,
+      "introduced": [],
+      "removed": 0,
+      "errors": []
+    },
+    "gitpython-7545": {
+      "vulnerability_class": "path-traversal",
+      "scope": "local",
+      "changed_files": [
+        "git/refs/symbolic.py"
+      ],
+      "findings_before": 0,
+      "findings_after": 0,
+      "introduced": [],
+      "removed": 0,
+      "errors": []
+    },
+    "gitpython-8mcc": {
+      "vulnerability_class": "path-traversal",
+      "scope": "cross_file",
+      "changed_files": [
+        "git/repo/base.py"
+      ],
+      "findings_before": 0,
+      "findings_after": 0,
+      "introduced": [],
+      "removed": 0,
+      "errors": []
+    },
+    "gitpython-956x": {
+      "vulnerability_class": "command",
+      "scope": "cross_file",
+      "changed_files": [
+        "git/cmd.py",
+        "git/repo/base.py"
+      ],
+      "findings_before": 2,
+      "findings_after": 2,
+      "introduced": [],
+      "removed": 0,
+      "errors": []
+    },
+    "gitpython-cwvm": {
+      "vulnerability_class": "path-traversal",
+      "scope": "cross_file",
+      "changed_files": [
+        "git/refs/symbolic.py"
+      ],
+      "findings_before": 0,
+      "findings_after": 0,
+      "introduced": [],
+      "removed": 0,
+      "errors": []
+    },
+    "gitpython-hmq2": {
+      "vulnerability_class": "path-traversal",
+      "scope": "local",
+      "changed_files": [
+        "git/objects/submodule/base.py"
+      ],
+      "findings_before": 0,
+      "findings_after": 0,
+      "introduced": [],
+      "removed": 0,
+      "errors": []
+    },
+    "gitpython-pr76": {
+      "vulnerability_class": "os-command",
+      "scope": "cross_file",
+      "changed_files": [
+        "git/repo/base.py"
+      ],
+      "findings_before": 0,
+      "findings_after": 0,
+      "introduced": [],
+      "removed": 0,
+      "errors": []
+    },
+    "gitpython-r9mr": {
+      "vulnerability_class": "os-command",
+      "scope": "cross_file",
+      "changed_files": [
+        "git/cmd.py"
+      ],
+      "findings_before": 2,
+      "findings_after": 2,
+      "introduced": [],
+      "removed": 0,
+      "errors": []
+    },
+    "gitpython-rpm5": {
+      "vulnerability_class": "os-command",
+      "scope": "cross_file",
+      "changed_files": [
+        "git/cmd.py"
+      ],
+      "findings_before": 2,
+      "findings_after": 2,
+      "introduced": [],
+      "removed": 0,
+      "errors": []
+    },
+    "gitpython-v396": {
+      "vulnerability_class": "os-command",
+      "scope": "cross_file",
+      "changed_files": [
+        "git/cmd.py"
+      ],
+      "findings_before": 2,
+      "findings_after": 2,
+      "introduced": [],
+      "removed": 0,
+      "errors": []
+    },
+    "lollms-3x47": {
+      "vulnerability_class": "path-traversal",
+      "scope": "cross_file",
+      "changed_files": [
+        "lollms/security.py"
+      ],
+      "findings_before": 0,
+      "findings_after": 0,
+      "introduced": [],
+      "removed": 0,
+      "errors": []
+    },
+    "lollms-7pgr": {
+      "vulnerability_class": "path-traversal",
+      "scope": "local",
+      "changed_files": [
+        "lollms/server/endpoints/lollms_file_system.py"
+      ],
+      "findings_before": 0,
+      "findings_after": 0,
+      "introduced": [],
+      "removed": 0,
+      "errors": []
+    },
+    "lollms-8mrm": {
+      "vulnerability_class": "path-traversal",
+      "scope": "cross_file",
+      "changed_files": [
+        "lollms/server/endpoints/lollms_configuration_infos.py"
+      ],
+      "findings_before": 0,
+      "findings_after": 0,
+      "introduced": [],
+      "removed": 0,
+      "errors": []
+    },
+    "lollms-m45c": {
+      "vulnerability_class": "path-traversal",
+      "scope": "local",
+      "changed_files": [
+        "lollms/server/endpoints/lollms_personalities_infos.py"
+      ],
+      "findings_before": 0,
+      "findings_after": 0,
+      "introduced": [],
+      "removed": 0,
+      "errors": []
+    },
+    "lollms-p8h7": {
+      "vulnerability_class": "path-traversal",
+      "scope": "cross_file",
+      "changed_files": [
+        "lollms/security.py"
+      ],
+      "findings_before": 0,
+      "findings_after": 0,
+      "introduced": [],
+      "removed": 0,
+      "errors": []
+    },
+    "lollms-pwc9": {
+      "vulnerability_class": "path-traversal",
+      "scope": "cross_file",
+      "changed_files": [
+        "lollms/server/endpoints/lollms_binding_infos.py"
+      ],
+      "findings_before": 0,
+      "findings_after": 0,
+      "introduced": [],
+      "removed": 0,
+      "errors": []
+    },
+    "mako-2h4p": {
+      "vulnerability_class": "path-traversal",
+      "scope": "cross_file",
+      "changed_files": [
+        "mako/lookup.py",
+        "mako/template.py"
+      ],
+      "findings_before": 1,
+      "findings_after": 1,
+      "introduced": [],
+      "removed": 0,
+      "errors": []
+    },
+    "mako-v92g": {
+      "vulnerability_class": "path-traversal",
+      "scope": "cross_file",
+      "changed_files": [
+        "mako/template.py"
+      ],
+      "findings_before": 0,
+      "findings_after": 0,
+      "introduced": [],
+      "removed": 0,
+      "errors": []
+    },
+    "nicegui-hxp3": {
+      "vulnerability_class": "path-traversal",
+      "scope": "cross_file",
+      "changed_files": [
+        "nicegui/app/app.py"
+      ],
+      "findings_before": 0,
+      "findings_after": 0,
+      "introduced": [],
+      "removed": 0,
+      "errors": []
+    },
+    "nicegui-mwc7": {
+      "vulnerability_class": "path-traversal",
+      "scope": "local",
+      "changed_files": [
+        "nicegui/nicegui.py"
+      ],
+      "findings_before": 0,
+      "findings_after": 0,
+      "introduced": [],
+      "removed": 0,
+      "errors": []
+    },
+    "nicegui-w8wv": {
+      "vulnerability_class": "path-traversal",
+      "scope": "cross_file",
+      "changed_files": [
+        "nicegui/elements/upload_files.py"
+      ],
+      "findings_before": 0,
+      "findings_after": 0,
+      "introduced": [],
+      "removed": 0,
+      "errors": []
+    },
+    "ormar-xxh2": {
+      "vulnerability_class": "sql",
+      "scope": "cross_file",
+      "changed_files": [
+        "ormar/queryset/queryset.py"
+      ],
+      "findings_before": 0,
+      "findings_after": 0,
+      "introduced": [],
+      "removed": 0,
+      "errors": []
+    },
+    "piccolo-xq59": {
+      "vulnerability_class": "sql",
+      "scope": "cross_file",
+      "changed_files": [
+        "piccolo/engine/base.py",
+        "piccolo/engine/postgres.py"
+      ],
+      "findings_before": 6,
+      "findings_after": 6,
+      "introduced": [],
+      "removed": 0,
+      "errors": []
+    },
+    "pycsw-hg4c": {
+      "vulnerability_class": "sql",
+      "scope": "cross_file",
+      "changed_files": [
+        "pycsw/ogc/csw/cql.py",
+        "pycsw/ogc/csw/csw2.py"
+      ],
+      "findings_before": 0,
+      "findings_after": 0,
+      "introduced": [],
+      "removed": 0,
+      "errors": []
+    },
+    "tortoise-orm-9j2c": {
+      "vulnerability_class": "sql",
+      "scope": "cross_file",
+      "changed_files": [
+        "tortoise/backends/mysql/executor.py",
+        "tortoise/filters.py"
+      ],
+      "findings_before": 0,
+      "findings_after": 0,
+      "introduced": [],
+      "removed": 0,
+      "errors": []
+    },
+    "wsgidav-p6gw": {
+      "vulnerability_class": "sql",
+      "scope": "local",
+      "changed_files": [
+        "wsgidav/samples/mysql_dav_provider.py"
+      ],
+      "findings_before": 4,
+      "findings_after": 5,
+      "introduced": [
+        {
+          "tool": "semgrep",
+          "rule_id": "python.sqlalchemy.security.sqlalchemy-execute-raw-query",
+          "path": "wsgidav/samples/mysql_dav_provider.py",
+          "line": 129,
+          "cwes": [
+            89
+          ],
+          "severity": "high"
+        },
+        {
+          "tool": "semgrep",
+          "rule_id": "python.sqlalchemy.security.sqlalchemy-execute-raw-query",
+          "path": "wsgidav/samples/mysql_dav_provider.py",
+          "line": 144,
+          "cwes": [
+            89
+          ],
+          "severity": "high"
+        },
+        {
+          "tool": "bandit",
+          "rule_id": "B608",
+          "path": "wsgidav/samples/mysql_dav_provider.py",
+          "line": 145,
+          "cwes": [
+            89
+          ],
+          "severity": "medium"
+        },
+        {
+          "tool": "semgrep",
+          "rule_id": "python.sqlalchemy.security.sqlalchemy-execute-raw-query",
+          "path": "wsgidav/samples/mysql_dav_provider.py",
+          "line": 157,
+          "cwes": [
+            89
+          ],
+          "severity": "high"
+        },
+        {
+          "tool": "bandit",
+          "rule_id": "B608",
+          "path": "wsgidav/samples/mysql_dav_provider.py",
+          "line": 158,
+          "cwes": [
+            89
+          ],
+          "severity": "medium"
+        }
+      ],
+      "removed": 4,
+      "errors": []
+    },
+    "wsgidav-wxq4": {
+      "vulnerability_class": "path-traversal",
+      "scope": "cross_file",
+      "changed_files": [
+        "wsgidav/fs_dav_provider.py"
+      ],
+      "findings_before": 0,
+      "findings_after": 0,
+      "introduced": [],
+      "removed": 0,
+      "errors": []
+    },
+    "xml2rfc-cfmv": {
+      "vulnerability_class": "path-traversal",
+      "scope": "cross_file",
+      "changed_files": [
+        "xml2rfc/utils.py",
+        "xml2rfc/writers/base.py"
+      ],
+      "findings_before": 0,
+      "findings_after": 0,
+      "introduced": [],
+      "removed": 0,
+      "errors": []
+    }
+  }
+}

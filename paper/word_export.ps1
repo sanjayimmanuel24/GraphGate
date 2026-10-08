@@ -50,8 +50,10 @@ try {
         $table.Rows.Item($table.Rows.Count).Range.ParagraphFormat.KeepWithNext = 0
     }
     # Table captions stay with their table; figures stay with their caption.
+    # Headings stay with the text they introduce (outline level 10 is body text).
     foreach ($para in @($doc.Paragraphs)) {
         if ($para.Range.Text -match '^TABLE [IVX]+') { $para.KeepWithNext = -1 }
+        elseif ($para.OutlineLevel -le 2) { $para.KeepWithNext = -1 }
     }
     foreach ($shape in @($doc.InlineShapes)) { $shape.Range.Paragraphs.Item(1).KeepWithNext = -1 }
     foreach ($name in @('Heading 1', 'Heading 2')) {

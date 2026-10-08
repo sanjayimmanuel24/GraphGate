@@ -37,6 +37,10 @@ from graphgate.llm.base import CodeGenClient, CompletionError, RefusalError
 log = logging.getLogger(__name__)
 
 
+class ReplyCutOff(CompletionError):
+    """The model's reply stopped at the output limit, so its last file is incomplete."""
+
+
 class RefinementDriver:
     """Runs each seed's full prompt sequence and appends to one trace file."""
 
@@ -69,6 +73,10 @@ class RefinementDriver:
         # Outcome counters across all replications, for the run summary.
         self.refusals = 0
         self.errors = 0
+        # The part of `errors` where the call itself failed (server down, rate
+        # limit). Those are worth retrying; a reply the model did give but that
+        # cannot be used is an outcome of the model and stays in the trace.
+        self.call_failures = 0
         self.injections_applied = 0
         self.injections_failed = 0
 
@@ -150,7 +158,7 @@ class RefinementDriver:
                     # A reply cut off mid-file would still parse: the unfinished
                     # block is dropped and the finished ones applied, recording
                     # a smaller change than the model made. A failure instead.
-                    raise CompletionError(
+                    raise ReplyCutOff(
                         "response was cut off at max_tokens; the turn is not "
                         "usable (raise --max-tokens and rerun)"
                     )
@@ -189,6 +197,8 @@ class RefinementDriver:
                 return turns
             except (CompletionError, ResponseParseError) as exc:
                 self.errors += 1
+                if not isinstance(exc, (ResponseParseError, ReplyCutOff)):
+                    self.call_failures += 1
                 log.error(
                     "trace %s seed %d turn %d failed: %s",
                     self.config.trace_id,

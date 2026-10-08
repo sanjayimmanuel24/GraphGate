@@ -13,6 +13,7 @@ import pytest
 from graphgate.dataset.events import dossier_version
 from graphgate.dataset.traceplan import plan_trace
 from graphgate.harness.replay import load_records
+from graphgate.llm.base import CompletionError
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 POOL = tuple(f"instruction {i}" for i in range(10))
@@ -132,9 +133,25 @@ def test_a_recorded_event_is_not_sent_again(project, live, file_block):
     assert (project / "out" / "demo-0001.jsonl").read_bytes() == before
 
 
-def test_a_trace_with_an_error_is_not_kept(project, live, capsys):
+def test_a_reply_the_model_gave_but_that_cannot_be_used_stays_in_the_trace(project, live, capsys):
+    """An open model sometimes answers in prose. That is its outcome for the
+    turn, not a fault of the run: discarding the whole trace for it once left a
+    ten-hour run with nothing kept."""
     script = load_script()
     live(["no file blocks here"])
+
+    assert run(script, project, "--seeds", "0") == 0
+
+    out = project / "out"
+    assert [r.kind for r in load_records(out / "demo-0001.jsonl")] == ["init", "error"]
+    assert not (out / "demo-0001.jsonl.partial").exists()
+    assert "1 unusable reply(ies), 0 failed call(s)" in capsys.readouterr().out
+
+
+def test_a_trace_with_a_failed_call_is_held_back_and_retried(project, live, file_block, capsys):
+    plan = plan_trace("demo-0001", POOL)
+    script = load_script()
+    live([CompletionError("model server call failed: connection refused")])
 
     assert run(script, project, "--seeds", "0") == 0
 
@@ -143,15 +160,10 @@ def test_a_trace_with_an_error_is_not_kept(project, live, capsys):
     assert json.loads((out / "manifest.json").read_text(encoding="utf-8"))["traces"] == []
     assert "not kept" in capsys.readouterr().out
 
-    # The rerun starts the trace afresh instead of appending to the leftover.
-    # Its first reply comes from the cache (the same unparseable text), so the
-    # error recurs without a call: --keep-errors is how such a trace is kept.
-    retry = live([])
-    assert run(script, project, "--seeds", "0", "--keep-errors") == 0
-    assert retry.calls == 0
-    kept = load_records(out / "demo-0001.jsonl")
-    assert [r.kind for r in kept] == ["init", "error"]
-    assert not (out / "demo-0001.jsonl.partial").exists()
+    # The next run starts the trace afresh instead of appending to the leftover.
+    live(replies(file_block, len(plan.prompts)))
+    assert run(script, project, "--seeds", "0") == 0
+    assert (out / "demo-0001.jsonl").exists() and not (out / "demo-0001.jsonl.partial").exists()
 
 
 def test_max_calls_stops_before_an_event_it_cannot_afford(project, live, capsys):

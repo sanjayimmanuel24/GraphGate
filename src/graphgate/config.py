@@ -34,6 +34,13 @@ MODEL_PRESETS: dict[str, dict[str, str | None]] = {
     "claude-haiku-4-5": {"thinking": None, "effort": None},
 }
 
+# USD per million tokens, (input, output). For cost estimates printed before a
+# paid run only; what a run actually used is in the recorded token counts.
+PRICES_PER_MTOK: dict[str, tuple[float, float]] = {
+    "claude-opus-4-8": (5.0, 25.0),
+    "claude-haiku-4-5": (1.0, 5.0),
+}
+
 # CLI values for thinking/effort: take the model's preset, or omit the field.
 USE_PRESET = "preset"
 OMIT = "none"
@@ -69,6 +76,9 @@ class ModelConfig:
     # can leak <thinking> tags into the visible response, which would corrupt
     # the code we parse back out of it.
     thinking: str | None = "adaptive"
+    # Where an open-weight model is served ("openai-compatible" provider only),
+    # for example http://localhost:11434/v1 for a model run in a notebook.
+    base_url: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -81,12 +91,19 @@ class ModelConfig:
         max_tokens: int = 16_000,
         thinking: str = USE_PRESET,
         effort: str = USE_PRESET,
+        provider: str = "anthropic",
+        base_url: str | None = None,
     ) -> ModelConfig:
         """Settings for ``model``, filled from its preset unless overridden.
 
         ``thinking`` and ``effort`` take ``"preset"`` for the model's known-good
         value, ``"none"`` to omit the field, or an explicit value to send as-is.
         """
+        if provider != "anthropic":
+            # Thinking and effort are Anthropic request settings; other
+            # servers are sent neither.
+            return cls(provider=provider, model=model, max_tokens=max_tokens,
+                       effort=None, thinking=None, base_url=base_url)
         preset = MODEL_PRESETS.get(model)
         if preset is None:
             if USE_PRESET in (thinking, effort):

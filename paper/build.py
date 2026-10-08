@@ -95,10 +95,32 @@ def compute_numbers() -> tuple[dict[str, str], dict]:
     scope = Counter(final(r).get("scope") for r in sound)
     by_class = Counter((final(r).get("vulnerability_class"), final(r).get("scope")) for r in sound)
     signoff_path = ROOT / "data/validation_signoff.json"
-    signed = 0
-    if signoff_path.exists():
-        signed = sum(1 for d in json.loads(signoff_path.read_text(encoding="utf-8"))["decisions"].values()
-                     if d.get("decision") == "accept")
+    decisions = load("data/validation_signoff.json")["decisions"] if signoff_path.exists() else {}
+    accepted = sorted(e for e, d in decisions.items() if d.get("decision") == "accept")
+    signed = len(accepted)
+    if accepted:
+        # After the sign-off the paper reports the validated set, with the
+        # scope label the pre-registered rule computed (event.json).
+        facts = [load(f"data/events/{e}/event.json") for e in accepted]
+        scope = Counter(f["scope"] for f in facts)
+        by_class = Counter((f["vulnerability_class"], f["scope"]) for f in facts)
+    leak_path = ROOT / "data/leakage_exclusions.json"
+    leak = load("data/leakage_exclusions.json")["summary"] if leak_path.exists() else {}
+    # Semgrep and Bandit over each validated regression (scripts/scan_events.py).
+    static_path = ROOT / "data/static_first_look.json"
+    static = load("data/static_first_look.json") if static_path.exists() else {}
+    static_groups = static.get("summary", {}).get("by_class_and_scope", {})
+    # Runs with the open-weight model (scripts/summarize_open_model_runs.py).
+    open_path = ROOT / "data/open_model_runs.json"
+    open_runs = load("data/open_model_runs.json") if open_path.exists() else {}
+    pilot = open_runs.get("pilot") or {}
+    # The graph layer: builder check and first look (scripts/build_graph.py, scripts/delta_events.py).
+    delta = (load("data/delta_first_look.json") if (ROOT / "data/delta_first_look.json").exists() else {}
+             ).get("summary", {})
+    delta_c = delta.get("settings", {}).get("graphgate", {})
+    graph_totals = (load("data/graph_build_check.json") if (ROOT / "data/graph_build_check.json").exists()
+                    else {}).get("totals", {})
+    session = open_runs.get("first_dataset_session") or {}
 
     rows = []
     for r in sorted(selected, key=lambda r: (-len(r["advisories"]), r["repo"])):
@@ -132,11 +154,42 @@ def compute_numbers() -> tuple[dict[str, str], dict]:
         "nEventsCross": scope["cross_file"],
         "nEventsLocal": scope["local"],
         "nEventsSignedOff": signed,
+        "nEventsNotAccepted": len(decisions) - signed,
+        "nLeakTwins": leak.get("near_duplicates", 0),
+        "nLeakTests": leak.get("fix_tests_excluded", 0),
+        "nStaticEvents": static.get("summary", {}).get("events", 0),
+        "nStaticCaught": static.get("summary", {}).get("with_introduced_finding", 0),
+        "nPathEvents": sum(g["events"] for name, g in static_groups.items() if name.startswith("path-traversal/")),
+        "nSemgrepRules": static.get("rules", {}).get("rule_files", 0),
+        "nPathRules": (static.get("rules", {}).get("rule_files_by_cwe") or {}).get("22", 0),
+        "nSemgrepVersion": static.get("tools", {}).get("semgrep", "n/a"),
+        "nDeltaCaught": delta_c.get("flagged", 0),
+        "nDeltaCross": delta_c.get("by_scope", {}).get("cross_file", {}).get("flagged", 0),
+        "nDeltaProposed": delta.get("settings", {}).get("as-proposed", {}).get("flagged", 0),
+        "nDeltaFixes": delta.get("control_fix_flagged", {}).get("graphgate", 0),
+        "nNoPath": delta.get("slice_graphs", {}).get("without_a_source_to_sink_path", 0),
+        "nGraphRepos": graph_totals.get("repositories", 0),
+        "nGraphCalls": f"{graph_totals.get('calls', 0):,}",
+        "nUnknownShare": f"{100 * graph_totals.get('unknown_share', 0):.0f}",
+        "nGraphTests": sum(len(re.findall(r"^def test_", (ROOT / "tests" / name).read_text(encoding="utf-8"),
+                                          flags=re.M))
+                           for name in ("test_delta.py", "test_graph_extract.py", "test_graph_link.py",
+                                        "test_graph_index.py")),
+        "nPilotCalls": pilot.get("model_calls", 0),
+        "nPilotUsable": pilot.get("turns_usable", 0),
+        "nPilotSeconds": pilot.get("median_seconds_per_turn", 0),
+        "nSessionEvents": session.get("events_finished", 0),
+        "nPilotTurns": pilot.get("turns_labelled", 0),
+        "nPilotCarried": pilot.get("turns_carried", 0),
+        "nSeedEvents": session.get("events_started", 0),
+        "nInjFailed": session.get("failed_injections", 0),
+        "nInjReps": session.get("replications_under_those_seeds", 0),
+        "nBanditVersion": static.get("tools", {}).get("bandit", "n/a"),
         "nSnapshotDate": f"{dt.date.today().day} {dt.date.today():%B %Y}",
         "nTests": count_tests(),
         "nRepoRows": "\n".join(rows),
     }
-    extra = {"by_class": by_class, "funnel": funnel}
+    extra = {"by_class": by_class, "funnel": funnel, "validated": bool(accepted)}
     return {k: str(v) for k, v in n.items()}, extra
 
 
@@ -199,7 +252,7 @@ def figures(numbers: dict[str, str], extra: dict) -> None:
 
     box(1.6, 12.2, 6.8, 0.9, "Refinement prompt (turn t)")
     arrow(5, 12.2, 5, 11.55)
-    box(1.6, 10.6, 6.8, 0.95, "Code-generation LLM\n(claude-opus-4-8)")
+    box(1.6, 10.6, 6.8, 0.95, "Code-generation LLM\n(open-weight model)")
     arrow(5, 10.6, 5, 9.75, "candidate revision (full files)")
     box(0.35, 4.95, 6.95, 4.8, "", fill="#f4f4f4", dashed=True)
     ax.text(0.6, 9.45, "Security gate", fontsize=7, fontweight="bold", va="center")
@@ -235,6 +288,8 @@ def figures(numbers: dict[str, str], extra: dict) -> None:
         ("Candidate events", int(numbers["nEvents"])),
         ("Prepared, passed adversarial check", int(numbers["nEventsSound"])),
     ]
+    if extra["validated"]:
+        stages.append(("Validated at author sign-off", int(numbers["nEventsSignedOff"])))
     fig, ax = plt.subplots(figsize=(3.5, 2.0))
     labels = [s for s, _ in stages][::-1]
     values = [v for _, v in stages][::-1]
@@ -261,7 +316,7 @@ def figures(numbers: dict[str, str], extra: dict) -> None:
     for i, (c, l) in enumerate(zip(cross, local)):
         if c + l:
             ax.text(c + l + 0.2, i, f"{c} + {l}", va="center", fontsize=6.5)
-    ax.set_xlabel("Prepared events")
+    ax.set_xlabel("Validated events" if extra["validated"] else "Prepared events")
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
     ax.set_xlim(0, max(c + l for c, l in zip(cross, local)) + 3)
     ax.legend(frameon=False, fontsize=6.5, loc="lower right")

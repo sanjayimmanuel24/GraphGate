@@ -27,7 +27,7 @@ python -m pip install -e ".[dev]"
 python -m pytest -q
 ```
 
-Expected: every test passes (`379 passed` as of 2026-10-05).
+Expected: every test passes (`400 passed` as of 2026-10-06).
 
 ## 4. Replay a recorded LLM refinement run (no API key, no cost)
 
@@ -138,8 +138,108 @@ python scripts/label_traces.py --traces-dir runs/pilot-traces
 It writes `<event>.labels.json` next to each trace and prints how many turns are clean, how many hold the
 regression, and how many were `carried` because the model rewrote the regression's code.
 
-The dataset run (no `--pilot`) records only events accepted on the sign-off page and writes to
-`data/traces/`; label it with `python scripts/label_traces.py`.
+The dataset run (no `--pilot`) records only the 30 events accepted at sign-off and writes to
+`data/traces/`. It is the large paid step: about 603 calls, roughly $74-126 on Opus 4.8 at three
+replications. Check the plan first, then run it, then label it:
+
+```powershell
+python scripts/synthesize_traces.py --dry-run
+```
+
+```powershell
+python scripts/synthesize_traces.py
+```
+
+```powershell
+python scripts/label_traces.py
+```
+
+Responses are cached in `runs/cache.sqlite`, so the pilot's calls are not paid for again and an
+interrupted run continues where it stopped.
+
+## 9a. The same run with an open-weight model, in a free cloud notebook
+
+The guide asked for no commercial model. This laptop cannot run an open model of useful size, so
+the run happens in a Kaggle (or Colab) GPU notebook. Pack what the notebook needs:
+
+```powershell
+python scripts/make_notebook_bundle.py
+```
+
+Then, in Kaggle: create a notebook from `notebooks/record_traces_open_model.ipynb` (File > Import
+notebook), set Accelerator to GPU T4 x2 and Internet to On, add `runs/graphgate_bundle.zip` with
+Add input > Upload, and run the cells from the top. It installs the model server, downloads the
+model, runs the three-event pilot and saves `graphgate_results.zip` for you to download. No API
+key is involved and nothing is billed.
+
+## 10. Sign-off and leakage control (steps 2.3 and 2.6)
+
+Both read local files only and cost nothing. The first rewrites `data/validation_signoff.json`
+from the decisions exported from the sign-off page and prints the tally; the second rebuilds the
+list of repository code that the graph's retrieval must not see:
+
+```powershell
+python scripts/save_signoff.py data/interim/signoff_export/decisions
+```
+
+```powershell
+python scripts/check_leakage.py
+```
+
+## 11. Semgrep and Bandit on the regression events (step 3.1)
+
+The two analysers live in their own environment so that their packages do not mix with the
+project's. On this machine it is already set up; on a new one, create it and fetch the pinned rule
+set once (about 70 MB and 11 MB of downloads):
+
+```powershell
+python -m venv .venv-tools
+```
+
+```powershell
+.venv-tools\Scripts\python -m pip install -r requirements-analysers.txt
+```
+
+```powershell
+python scripts/fetch_semgrep_rules.py
+```
+
+Then scan every validated event's regression. It needs no network or API key, and takes about 20
+seconds the first time and almost none afterwards, because results are kept in
+`runs/analysis-cache.sqlite`:
+
+```powershell
+python scripts/scan_events.py
+```
+
+For each event it prints the injection findings the regression introduces (`+`) and removes
+(`-`). Only one of the 30 introduces any: the pattern scanners report the same lines before and
+after, which is the gap the graph-based gate is meant to close.
+
+## 12. The diff-only gates on the regression events (step 3.2)
+
+Two gates read each change from its diff: B, where the LLM triages what the scanners flag, and
+B+, where it also judges the change as a whole. See what would be sent, and the exact request for
+one event, without sending anything:
+
+```powershell
+python scripts/triage_events.py --dry-run
+```
+
+```powershell
+python scripts/triage_events.py --show-prompt lollms-m45c
+```
+
+The paid pilot judges every event's regression and, as a control, its fix: 62 calls, roughly $1-3
+on Opus 4.8. Set your API key in your own terminal first. Never paste it into a file or a chat.
+
+```powershell
+python scripts/triage_events.py --max-calls 70
+```
+
+It prints how many regressions and how many fixes each gate blocked, and writes every decision
+with its rationale to `runs/triage-pilot/decisions.jsonl`. A good gate blocks the regressions and
+lets the fixes through. This is a pilot of the triage step, not the study's result.
 
 Steps 5 and 7 use the repository clones in `data/interim/repos` and Microsoft Word respectively. Both are
 already on this machine. On another machine, steps 3, 4 and 6 work straight from the project files.

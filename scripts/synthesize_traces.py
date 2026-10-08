@@ -23,12 +23,12 @@ import argparse
 import hashlib
 import json
 import logging
-import os
 import sys
 from pathlib import Path
 
 from graphgate.cli import _parse_seeds
-from graphgate.config import DEFAULT_SEEDS, OMIT, USE_PRESET, ModelConfig
+from graphgate.config import DEFAULT_SEEDS, OMIT, PRICES_PER_MTOK, USE_PRESET, ModelConfig
+from graphgate.llm.factory import ANTHROPIC, PROVIDERS, make_client, not_ready
 from graphgate.dataset.traceplan import (
     DEFAULT_PLAN_SEED,
     estimate,
@@ -44,8 +44,6 @@ MANIFEST_SCHEMA_VERSION = 1
 DATASET_DIR = Path("data/traces")
 PILOT_DIR = Path("runs/pilot-traces")
 
-# USD per million tokens (input, output), for the --dry-run estimate only.
-PRICES = {"claude-opus-4-8": (5.0, 25.0), "claude-haiku-4-5": (1.0, 5.0)}
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -66,6 +64,10 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--seeds", type=_parse_seeds, default=DEFAULT_SEEDS,
                         help="comma-separated replications per event (default: %(default)s)")
     parser.add_argument("--model", default=ModelConfig.model, help="default: %(default)s")
+    parser.add_argument("--provider", choices=PROVIDERS, default=ANTHROPIC,
+                        help="'openai-compatible' for an open-weight model behind --base-url")
+    parser.add_argument("--base-url", default=None,
+                        help="model server address, for example http://localhost:11434/v1")
     parser.add_argument("--max-tokens", type=int, default=ModelConfig.max_tokens)
     parser.add_argument("--effort", default=USE_PRESET,
                         choices=[USE_PRESET, OMIT, "low", "medium", "high", "xhigh", "max"])
@@ -78,7 +80,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--max-calls", type=int, default=None,
                         help="stop before an event that could take this run past N billable calls")
     parser.add_argument("--keep-errors", action="store_true",
-                        help="keep a trace in which a replication ended in an error")
+                        help="keep a trace even if a call to the model server failed in it")
     parser.add_argument("--log-level", default="WARNING",
                         choices=["DEBUG", "INFO", "WARNING", "ERROR"])
     return parser
@@ -110,7 +112,7 @@ def print_plan(args, selection, plans, out_dir: Path) -> None:
 
     print(f"\nto record: {calls} call(s) at most, ~{tokens_in:,} input tokens, "
           f"~{tokens_out[0]:,} to {tokens_out[1]:,} output tokens (rough)")
-    price = PRICES.get(args.model)
+    price = PRICES_PER_MTOK.get(args.model)
     if price:
         low, high = ((tokens_in * price[0] + out * price[1]) / 1e6 for out in tokens_out)
         print(f"rough cost on {args.model}: ${low:.0f} to ${high:.0f} "
@@ -169,19 +171,17 @@ def main(argv: list[str] | None = None) -> int:
     if previous is not None and previous["pilot"] != args.pilot:
         raise SystemExit(f"{out_dir} holds {'pilot' if previous['pilot'] else 'dataset'} traces; "
                          "pilot and dataset traces do not share a directory")
-    if not args.cache_only and not os.environ.get("ANTHROPIC_API_KEY"):
-        raise SystemExit("ANTHROPIC_API_KEY is not set in this shell. Set it yourself "
-                         "(never in a project file), or pass --cache-only.")
+    model = ModelConfig.for_model(args.model, max_tokens=args.max_tokens, thinking=args.thinking,
+                                  effort=args.effort, provider=args.provider, base_url=args.base_url)
+    if not args.cache_only and not_ready(model):
+        raise SystemExit(not_ready(model))
 
     # Imported after validation, so a bad command line needs no SDK.
-    from graphgate.llm.anthropic_client import AnthropicCodeGenClient
     from graphgate.llm.cache import CacheError, CachingClient, ResponseCache
 
-    model = ModelConfig.for_model(args.model, max_tokens=args.max_tokens,
-                                  thinking=args.thinking, effort=args.effort)
     out_dir.mkdir(parents=True, exist_ok=True)
     with ResponseCache(args.cache) as cache:
-        client = CachingClient(AnthropicCodeGenClient(model), cache, read_only=args.cache_only)
+        client = CachingClient(make_client(model), cache, read_only=args.cache_only)
         for event_id in selection.events:
             final = out_dir / f"{event_id}.jsonl"
             if final.exists():
@@ -204,11 +204,14 @@ def main(argv: list[str] | None = None) -> int:
                 break
             print(f"{event_id}: regression placed in {driver.injections_applied}/{len(args.seeds)} "
                   f"replication(s); {driver.injections_failed} failed injection(s), "
-                  f"{driver.refusals} refusal(s), {driver.errors} error(s)")
-            if driver.errors and not args.keep_errors:
-                print(f"  not kept ({partial.name}). A failed API call is retried on the next run; "
-                      "a reply that could not be used is cached and will recur, so pass "
-                      "--keep-errors to keep the trace as it is")
+                  f"{driver.refusals} refusal(s), {driver.errors - driver.call_failures} unusable "
+                  f"reply(ies), {driver.call_failures} failed call(s)")
+            # A reply the model gave but that cannot be used is the model's
+            # outcome and belongs in the trace. Only a call that failed outright
+            # holds the trace back, because the next run can retry it.
+            if driver.call_failures and not args.keep_errors:
+                print(f"  not kept ({partial.name}): a call to the model server failed; "
+                      "the next run retries it, and finished turns come from the cache")
                 continue
             partial.replace(final)
         stats = cache.stats()

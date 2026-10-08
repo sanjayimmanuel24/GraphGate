@@ -45,4 +45,6 @@ docs/            proposal (the spec), figures, paper draft
 
 ## Status
 
-**Current phase:** M1.1 — refinement harness. Step 1.1 (scaffold) complete.
+**Current phase:** M1.2 — dataset v1. The harness (M1.1) is complete; 30 regression events are
+validated and their leakage exclusions computed; refinement traces are still to be recorded. See
+the "Current phase" section of [CLAUDE.md](CLAUDE.md) for the detailed state.
