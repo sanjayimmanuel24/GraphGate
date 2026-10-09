@@ -173,6 +173,8 @@ class _Linker:
                      "line": sym["line"], "end_line": sym["end_line"], "digest": sym["digest"]}
             if sym["kind"] in (FUNCTION, METHOD) and is_validator_name(sym["qualname"].split(".")[-1]):
                 attrs["sanitizer"] = "validator"
+            if sym.get("origin"):
+                attrs["origin"] = sym["origin"]      # code laid around a slice (graph.overlay)
             self.graph.add_node(sid, **attrs)
         for sym in self.symbols.values():
             self._flows(sym)

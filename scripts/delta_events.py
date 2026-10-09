@@ -12,6 +12,10 @@ triage, the graphs cover the event's slice and not the whole repository, and
 whether the rules also fire on harmless changes can only be measured on
 recorded traces.
 
+The same change is also judged with the rest of the repository around the
+slice, the registered view of Condition C (graph.overlay), where a snapshot of
+the repository exists. The view and its rules were fixed before it was run.
+
 What was fixed before the first run and is reported whatever it shows:
 - the graph settings of Condition C (link.GRAPHGATE) and, beside them, the
   other three combinations (link.SETTINGS);
@@ -32,9 +36,11 @@ import json
 import sys
 from pathlib import Path
 
+from graphgate.dataset.leakage import load_exclusions
 from graphgate.dataset.traceplan import select_events
 from graphgate.graph.delta import DEFAULT_HOPS, apply_rules, changed_symbols, free_paths
-from graphgate.graph.link import SETTINGS, build_graph
+from graphgate.graph.link import SETTINGS, build_graph, link
+from graphgate.graph.overlay import view_for_event
 from graphgate.graph.model import with_role
 from graphgate.harness.snapshot import load_snapshot
 
@@ -73,6 +79,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--signoff", type=Path, default=Path("data/validation_signoff.json"))
     parser.add_argument("--ai-review", type=Path, default=Path("data/validation_ai_review.json"))
     parser.add_argument("--out", type=Path, default=Path("data/delta_first_look.json"))
+    parser.add_argument("--repo-snapshots", type=Path, default=Path("data/interim/repo_snapshots"),
+                        help="repositories at the fix commit (scripts/build_repo_snapshots.py)")
+    parser.add_argument("--leakage", type=Path, default=Path("data/leakage_exclusions.json"))
     args = parser.parse_args(argv)
     sys.stdout.reconfigure(encoding="utf-8")
 
@@ -83,6 +92,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"no validated event in {args.signoff.as_posix()}")
         return 1
 
+    exclusions = load_exclusions(args.leakage) if args.leakage.exists() else {}
     record = {}
     for event_id in selected:
         event_dir = args.events_dir / event_id
@@ -109,12 +119,36 @@ def main(argv: list[str] | None = None) -> int:
                 entry["graph"] = {"sinks": len(with_role(before, "sink")),
                                   "source_sink_pairs": len(free_paths(before)),
                                   "edges_changed": edges_of(before) != edges_of(after)}
+        # The registered view of Condition C: the same change with the rest of the
+        # repository around the slice (graph.overlay), leakage exclusions applied.
+        entry["repository_view"] = None
+        if (args.repo_snapshots / f"{event_id}.json").exists():
+            left_out = exclusions.get(event_id)
+            view = view_for_event(event_dir, args.repo_snapshots,
+                                  exclude_files=left_out.files if left_out else (),
+                                  exclude_symbols=left_out.symbols if left_out else ())
+            before = link(view.facts(clean), config=SETTINGS[PRIMARY])
+            after = link(view.facts(regressed), config=SETTINGS[PRIMARY])
+            flags = apply_rules(before, after, hops=DEFAULT_HOPS)
+            entry["repository_view"] = {
+                "rules": rules_fired(flags), "flags": len(flags),
+                "fix_rules": rules_fired(apply_rules(after, before, hops=DEFAULT_HOPS)),
+                "by_depth": {str(depth): rules_fired(apply_rules(before, after, hops=depth)) for depth in DEPTHS},
+                "files": before.graph["stats"]["files"], "sinks": len(with_role(before, "sink")),
+                "unknown_calls": before.graph["stats"]["unknown_calls"],
+                "calls": before.graph["stats"]["calls_total"],
+                "flag_summaries": [f"{flag.rule}: {flag.summary}" for flag in flags][:12],
+            }
         record[event_id] = entry
         primary = entry["settings"][PRIMARY]
+        around = entry["repository_view"]
         print(f"{event_id:<20} [{facts['vulnerability_class']}, {facts['scope']}] "
               f"{', '.join(primary['rules']) or 'no flag':<14} "
               f"fix: {', '.join(primary['fix_rules']) or 'no flag':<14} "
-              f"as proposed: {', '.join(entry['settings']['as-proposed']['rules']) or 'no flag'}")
+              f"as proposed: {', '.join(entry['settings']['as-proposed']['rules']) or 'no flag':<10} "
+              + ("" if around is None else
+                 f"| repository: {', '.join(around['rules']) or 'no flag':<14} "
+                 f"fix: {', '.join(around['fix_rules']) or 'no flag'}"))
 
     summary = {
         "settings": {name: tally(record, lambda e, n=name: e["settings"][n]["rules"]) for name in SETTINGS},
@@ -131,6 +165,19 @@ def main(argv: list[str] | None = None) -> int:
                                                               for e in record.values()),
                          "regression_changes_an_edge": sum(e["graph"]["edges_changed"] for e in record.values())},
     }
+    seen = {event_id: e for event_id, e in record.items() if e["repository_view"] is not None}
+    summary["repository_view"] = None if not seen else {
+        **tally(seen, lambda e: e["repository_view"]["rules"]),
+        "events_without_a_snapshot": len(record) - len(seen),
+        "leakage_exclusions_applied": bool(exclusions),
+        "control_fix_flagged": sum(bool(e["repository_view"]["fix_rules"]) for e in seen.values()),
+        "by_rule": {rule: sum(rule in e["repository_view"]["rules"] for e in seen.values()) for rule in RULE_NAMES},
+        "control_fix_by_rule": {rule: sum(rule in e["repository_view"]["fix_rules"] for e in seen.values())
+                                for rule in RULE_NAMES},
+        "by_depth": {str(depth): sum(bool(e["repository_view"]["by_depth"][str(depth)]) for e in seen.values())
+                     for depth in DEPTHS},
+        "graphs_without_a_sink": sum(e["repository_view"]["sinks"] == 0 for e in seen.values()),
+    }
     print()
     for name in SETTINGS:
         result = summary["settings"][name]
@@ -141,6 +188,15 @@ def main(argv: list[str] | None = None) -> int:
     print(f"by rule ({PRIMARY}): {summary['by_rule']}; on the fixes: {summary['control_fix_by_rule']}")
     print(f"by depth ({PRIMARY}): {summary['by_depth']}")
     print(f"slice graphs: {summary['slice_graphs']}")
+    around = summary["repository_view"]
+    if around is None:
+        print("repository view: no snapshot found, not computed (scripts/build_repo_snapshots.py)")
+    else:
+        print(f"repository view ({PRIMARY}): flags {around['flagged']} of {around['events']} regressions "
+              f"(cross-file {around['by_scope']['cross_file']['flagged']} of "
+              f"{around['by_scope']['cross_file']['events']}, local {around['by_scope']['local']['flagged']} of "
+              f"{around['by_scope']['local']['events']}); flags {around['control_fix_flagged']} of the fixes; "
+              f"by rule {around['by_rule']}; by depth {around['by_depth']}")
 
     if args.events:
         print("preview only: nothing written")
@@ -151,7 +207,8 @@ def main(argv: list[str] | None = None) -> int:
                 "code graph of both built, and rules R1 to R4 applied. A first look, not a gate result: no "
                 "model turn and no triage is involved, the graphs cover the slice and not the repository, "
                 "and the false-alarm rate on harmless changes is not measured here. 'fix_rules' is the "
-                "control: the same rules on the reverse change.",
+                "control: the same rules on the reverse change. 'repository_view' is the same change with "
+                "the rest of the repository at the fix commit laid around the slice.",
         "primary_setting": PRIMARY,
         "settings": {name: config.to_dict() for name, config in SETTINGS.items()},
         "hops": DEFAULT_HOPS,

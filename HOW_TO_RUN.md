@@ -246,7 +246,12 @@ already on this machine. On another machine, steps 3, 4 and 6 work straight from
 
 ## 13. The conditions over recorded traces (step 3.4)
 
-Traces must be labelled first (`python scripts/label_traces.py`, see section 9).
+Traces must be labelled first (`python scripts/label_traces.py`, see section 9). Condition C
+needs each event's repository at its fix commit, written once from the local clones:
+
+```powershell
+python scripts/build_repo_snapshots.py
+```
 
 Without a model, on the pilot traces (about four minutes: each turn's scan is timed on its own):
 
@@ -254,7 +259,8 @@ Without a model, on the pilot traces (about four minutes: each turn's scan is ti
 python scripts/run_conditions.py --traces runs/pilot-traces --no-triage
 ```
 
-This runs A, B and C with triage switched off, so whatever is flagged blocks. It writes
+This runs A, B and both views of C (`C` with the repository around the slice, `C-slice` with
+the slice alone) with triage switched off, so whatever is flagged blocks. It writes
 `turns.csv`, `decisions.jsonl`, `summary.json` and `degradation.png` to `runs/conditions-pilot/`.
 Add `--time-scans 0` to skip the timing and finish in seconds.
 
@@ -266,3 +272,80 @@ python scripts/run_conditions.py --provider openai-compatible --base-url http://
 
 Dataset traces (`data/traces/`) give `data/results/`. Pilot figures are a test of the tools and
 are never quoted as results.
+
+## 14. A demonstration, start to finish (no model, no network)
+
+Every command below runs on this machine as it is, in the order given. Times are from this laptop.
+`HOW_TO_RUN_VSCODE.md` is the same walk-through written for VS Code, with the output each step
+prints, one-click tasks and what to do when a step fails.
+
+**The code is tested** (about a minute):
+
+```powershell
+python -m pytest -q
+```
+
+**A recorded run of the open-weight model replays byte for byte.** The three pilot traces in
+`runs/pilot-traces/` hold the model's real replies; `MODEL_USED.txt` there names the model.
+
+```powershell
+Remove-Item runs/replay-demo.jsonl -ErrorAction SilentlyContinue
+```
+
+```powershell
+python -m graphgate.cli --replay runs/pilot-traces/nicegui-hxp3.jsonl --out runs/replay-demo.jsonl
+```
+
+```powershell
+Get-FileHash runs/pilot-traces/nicegui-hxp3.jsonl, runs/replay-demo.jsonl | Format-List Hash, Path
+```
+
+**The labels of those traces**, read off the recorded code:
+
+```powershell
+python scripts/label_traces.py --traces-dir runs/pilot-traces
+```
+
+**What the pattern scanners see of the 30 regressions** (about 20 seconds): 1 of 30.
+
+```powershell
+python scripts/scan_events.py
+```
+
+**The graph builder on the 12 seed repositories** (about a minute): symbols, calls and the share
+of calls it could not resolve, per repository.
+
+```powershell
+python scripts/build_graph.py --check
+```
+
+**What the graph rules see of the 30 regressions** (two to three minutes): 8 of 30 on the slice,
+11 of 30 with the repository around it, and how often they fire on the fix.
+
+```powershell
+python scripts/delta_events.py
+```
+
+**One regression through the gate, stage by stage** (a few seconds): the diff, what the scanners
+say, what the rules flag, and the exact question the triage model would be asked. `--fix` shows
+the reverse change as a control.
+
+```powershell
+python scripts/demo_gate.py nicegui-hxp3
+```
+
+**The conditions over the pilot traces, without triage** (a few seconds; a test of the tools, not
+a result), with the degradation curve:
+
+```powershell
+python scripts/run_conditions.py --traces runs/pilot-traces --no-triage --time-scans 0
+```
+
+```powershell
+start runs\conditions-pilot\degradation.png
+```
+
+**The dashboard and the paper** (sections 6 and 7).
+
+Not yet there to show: any gate result with the model's triage, the full recording of the 30
+events (in progress in the notebook), and Pysa.

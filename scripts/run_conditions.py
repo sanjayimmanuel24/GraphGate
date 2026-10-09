@@ -6,8 +6,12 @@
 
 Conditions: A (no gate), B (Semgrep and Bandit, then LLM triage), B+ (B, with
 the model also judging every change as a whole) and C (B plus the graph rules).
-Every condition is given the same recorded turns. Traces must be labelled
-first (scripts/label_traces.py).
+C has two views. "C" is the registered one: its graph holds the slice and the
+rest of the repository at the fix commit, from the snapshots written by
+scripts/build_repo_snapshots.py, with the event's leakage exclusions applied.
+"C-slice" sees the slice alone and is reported beside it. Every condition is
+given the same recorded turns. Traces must be labelled first
+(scripts/label_traces.py).
 
 Written to the output directory:
 - turns.csv       one row per (trace, seed, condition, iteration); every
@@ -38,6 +42,7 @@ from pathlib import Path
 
 from graphgate.config import OMIT, USE_PRESET, ModelConfig
 from graphgate.dataset.labels import labels_path
+from graphgate.dataset.leakage import load_exclusions
 from graphgate.experiment.metrics import summarise, write_rows
 from graphgate.experiment.runner import CONDITION_A, NoGate, run_trace
 from graphgate.gate.analysers import FindingCache, default_scanner
@@ -46,10 +51,12 @@ from graphgate.gate.local import CONDITION_B, CONDITION_B_PLUS, LocalGate
 from graphgate.gate.triage import PROMPT_VERSION, prompt_sha256
 from graphgate.graph.delta import DEFAULT_HOPS
 from graphgate.graph.link import SETTINGS
+from graphgate.graph.overlay import SnapshotMissing, view_for_event
 from graphgate.harness.replay import replay_turns
 from graphgate.llm.factory import ANTHROPIC, PROVIDERS, make_client, not_ready
 
-ALL_CONDITIONS = (CONDITION_A, CONDITION_B, CONDITION_B_PLUS, CONDITION_C)
+CONDITION_C_SLICE = "C-slice"
+ALL_CONDITIONS = (CONDITION_A, CONDITION_B, CONDITION_B_PLUS, CONDITION_C_SLICE, CONDITION_C)
 UNTRIAGED_SUFFIX = "-untriaged"
 TRIAGE_MAX_TOKENS = 8000
 SCHEMA_VERSION = 1
@@ -61,7 +68,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--out-dir", type=Path, default=None,
                         help="default: data/results, or runs/conditions-pilot for pilot traces")
     parser.add_argument("--conditions", default=",".join(ALL_CONDITIONS),
-                        help="comma-separated, from A, B, B+, C (default: %(default)s)")
+                        help="comma-separated, from A, B, B+, C-slice, C (default: %(default)s)")
     parser.add_argument("--no-triage", action="store_true",
                         help="run B and C without the model: whatever is flagged blocks")
     parser.add_argument("--graph-setting", choices=sorted(SETTINGS), default="graphgate",
@@ -72,6 +79,10 @@ def build_parser() -> argparse.ArgumentParser:
                         help="time the static scan of N turns on its own, outside the batched run "
                              "(default: every turn; 0: none). Semgrep takes about ten seconds each time.")
     parser.add_argument("--events-dir", type=Path, default=Path("data/events"))
+    parser.add_argument("--repo-snapshots", type=Path, default=Path("data/interim/repo_snapshots"),
+                        help="repositories at the fix commit, for C (default: %(default)s)")
+    parser.add_argument("--leakage", type=Path, default=Path("data/leakage_exclusions.json"),
+                        help="what C's repository view must leave out (default: %(default)s)")
     parser.add_argument("--model", default=ModelConfig.model, help="triage model (default: %(default)s)")
     parser.add_argument("--provider", choices=PROVIDERS, default=ANTHROPIC)
     parser.add_argument("--base-url", default=None)
@@ -195,16 +206,30 @@ def main(argv: list[str] | None = None) -> int:
             cache = ResponseCache(args.cache)
             client = CachingClient(make_client(model), cache, read_only=args.cache_only)
 
-        gates = {}
-        for condition in wanted:
-            name = condition + (UNTRIAGED_SUFFIX if args.no_triage and condition != CONDITION_A else "")
-            if condition == CONDITION_A:
-                gates[name] = NoGate()
-            elif condition == CONDITION_C:
-                gates[name] = GraphGate(scanner, client, config=SETTINGS[args.graph_setting], hops=args.hops,
-                                        use_triage=not args.no_triage)
-            else:
-                gates[name] = LocalGate(condition, scanner, client, use_triage=not args.no_triage)
+        exclusions = load_exclusions(args.leakage) if CONDITION_C in wanted and args.leakage.exists() else {}
+        if CONDITION_C in wanted and not args.leakage.exists():
+            raise SystemExit(f"{args.leakage.as_posix()} is missing: C's repository view must apply the "
+                             "leakage exclusions (scripts/check_leakage.py)")
+
+        def gates_for(trace: Path) -> dict:
+            """The gates for one trace. C's repository view belongs to the trace's event."""
+            gates = {}
+            for condition in wanted:
+                name = condition + (UNTRIAGED_SUFFIX if args.no_triage and condition != CONDITION_A else "")
+                if condition == CONDITION_A:
+                    gates[name] = NoGate()
+                elif condition in (CONDITION_C, CONDITION_C_SLICE):
+                    view = None
+                    if condition == CONDITION_C:
+                        left_out = exclusions.get(trace.stem)
+                        view = view_for_event(args.events_dir / trace.stem, args.repo_snapshots,
+                                              exclude_files=left_out.files if left_out else (),
+                                              exclude_symbols=left_out.symbols if left_out else ())
+                    gates[name] = GraphGate(scanner, client, config=SETTINGS[args.graph_setting],
+                                            hops=args.hops, use_triage=not args.no_triage, view=view)
+                else:
+                    gates[name] = LocalGate(condition, scanner, client, use_triage=not args.no_triage)
+            return gates
 
         timer = make_scan_timer(args.time_scans) if needs_scanner and args.time_scans != 0 else None
         try:
@@ -218,6 +243,11 @@ def main(argv: list[str] | None = None) -> int:
                               f"{args.max_calls}")
                         complete = False
                         break
+                    try:
+                        gates = gates_for(trace)
+                    except SnapshotMissing as exc:
+                        # Never fall back to the slice: that would be C-slice under C's name.
+                        raise SystemExit(f"{exc}; or leave C out with --conditions") from exc
                     found = list(run_trace(trace, gates, event=event_facts(args.events_dir, trace),
                                            scan_timer=timer, on_decision=keep))
                     rows.extend(found)
@@ -244,7 +274,8 @@ def main(argv: list[str] | None = None) -> int:
             "model": args.model, "provider": args.provider, "prompt_version": PROMPT_VERSION,
             "prompt_sha256": prompt_sha256()},
         "graph": {"setting": args.graph_setting, "config": SETTINGS[args.graph_setting].to_dict(),
-                  "hops": args.hops} if CONDITION_C in wanted else None,
+                  "hops": args.hops, "registered_view": "repository (condition C); C-slice is the slice alone"}
+        if {CONDITION_C, CONDITION_C_SLICE} & set(wanted) else None,
         "scanner": scanner.config if scanner is not None else None,
         **summarise(rows),
     }

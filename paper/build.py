@@ -118,6 +118,7 @@ def compute_numbers() -> tuple[dict[str, str], dict]:
     delta = (load("data/delta_first_look.json") if (ROOT / "data/delta_first_look.json").exists() else {}
              ).get("summary", {})
     delta_c = delta.get("settings", {}).get("graphgate", {})
+    delta_repo = delta.get("repository_view") or {}      # the registered view of Condition C
     graph_totals = (load("data/graph_build_check.json") if (ROOT / "data/graph_build_check.json").exists()
                     else {}).get("totals", {})
     session = open_runs.get("first_dataset_session") or {}
@@ -166,6 +167,11 @@ def compute_numbers() -> tuple[dict[str, str], dict]:
         "nDeltaCaught": delta_c.get("flagged", 0),
         "nDeltaCross": delta_c.get("by_scope", {}).get("cross_file", {}).get("flagged", 0),
         "nDeltaProposed": delta.get("settings", {}).get("as-proposed", {}).get("flagged", 0),
+        "nDeltaRepo": delta_repo.get("flagged", 0),
+        "nDeltaRepoCross": delta_repo.get("by_scope", {}).get("cross_file", {}).get("flagged", 0),
+        "nDeltaRepoFixes": delta_repo.get("control_fix_flagged", 0),
+        "nDepthOne": (delta_repo.get("by_depth") or {}).get("1", 0),
+        "nEdgeChanged": delta.get("slice_graphs", {}).get("regression_changes_an_edge", 0),
         "nDeltaFixes": delta.get("control_fix_flagged", {}).get("graphgate", 0),
         "nNoPath": delta.get("slice_graphs", {}).get("without_a_source_to_sink_path", 0),
         "nGraphRepos": graph_totals.get("repositories", 0),

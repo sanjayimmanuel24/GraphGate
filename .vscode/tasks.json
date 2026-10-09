@@ -1,0 +1,73 @@
+{
+    "version": "2.0.0",
+    "windows": {
+        "options": {
+            "shell": {
+                "executable": "powershell.exe",
+                "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command"]
+            }
+        }
+    },
+    "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+    },
+    "problemMatcher": [],
+    "tasks": [
+        {
+            "label": "GraphGate 1: run the tests",
+            "type": "shell",
+            "command": "python -m pytest -q"
+        },
+        {
+            "label": "GraphGate 2: replay a recorded run and compare hashes",
+            "type": "shell",
+            "command": "Remove-Item runs/replay-demo.jsonl -ErrorAction SilentlyContinue; python -m graphgate.cli --replay runs/pilot-traces/nicegui-hxp3.jsonl --out runs/replay-demo.jsonl; Get-FileHash runs/pilot-traces/nicegui-hxp3.jsonl, runs/replay-demo.jsonl | Format-List Hash, Path"
+        },
+        {
+            "label": "GraphGate 3: label the pilot traces",
+            "type": "shell",
+            "command": "python scripts/label_traces.py --traces-dir runs/pilot-traces"
+        },
+        {
+            "label": "GraphGate 4: scanners on the 30 regressions",
+            "type": "shell",
+            "command": "python scripts/scan_events.py"
+        },
+        {
+            "label": "GraphGate 5: graph builder on the 12 repositories",
+            "type": "shell",
+            "command": "python scripts/build_graph.py --check"
+        },
+        {
+            "label": "GraphGate 6: graph rules on the 30 regressions",
+            "type": "shell",
+            "command": "python scripts/delta_events.py"
+        },
+        {
+            "label": "GraphGate 7: one regression through the gate",
+            "type": "shell",
+            "command": "python scripts/demo_gate.py ${input:event}"
+        },
+        {
+            "label": "GraphGate 8: conditions over the pilot traces (tool test)",
+            "type": "shell",
+            "command": "python scripts/run_conditions.py --traces runs/pilot-traces --no-triage --time-scans 0; code runs/conditions-pilot/degradation.png"
+        },
+        {
+            "label": "GraphGate 9: dashboard and paper",
+            "type": "shell",
+            "command": "python scripts/build_dashboard.py; start dashboard\\index.html; start paper\\output\\GraphGate_paper.pdf"
+        }
+    ],
+    "inputs": [
+        {
+            "id": "event",
+            "type": "pickString",
+            "description": "Which regression to walk through the gate",
+            "options": ["nicegui-hxp3", "gitpython-2f96", "mako-2h4p", "wsgidav-p6gw", "piccolo-xq59"],
+            "default": "nicegui-hxp3"
+        }
+    ]
+}

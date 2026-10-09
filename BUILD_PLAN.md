@@ -437,14 +437,18 @@ turn's scan alone takes a median of 8.9 s, the graph stage 0.01 s. Without triag
 the 3 regressions on arrival and 6 of the 18 turns that introduce nothing; B blocks 1 and 0. The
 model's ordinary edits trip the graph rules often, which is what triage is there to filter.*
 
-*Open, to settle before the dataset run:*
-- *Which reading of the false-positive rate the registered limit of about 15% applies to. The
-  paper currently says "of clean turns".*
+*Decided with the owner on 2026-10-08, before any condition was run on dataset traces: the
+registered limit of about 15% applies to blocked clean turns over all clean turns. The other
+readings are reported beside it.*
+
+*Open:*
 - *Whether the credit for a late catch stays as it is, or the stricter figure becomes the
   headline. Both are in the summary either way.*
-- *The run needs the analysers and the pinned Semgrep rules where the model is, so the notebook
-  has to install `requirements-analysers.txt` and fetch the rules before it can run B, B+ or C
-  with triage.*
+- *Done 2026-10-08: the notebook installs the analysers in their own environment, fetches the
+  pinned Semgrep rules and checks them against the hashes in the bundle, runs the triage pilot,
+  and runs the conditions over the dataset traces only once every validated event has its trace.
+  If more than 10% of the triage pilot's replies cannot be used, the conditions are not run (a
+  limit fixed before the pilot). None of this has run in the notebook yet.*
 
 ---
 
@@ -538,12 +542,13 @@ scanners. R1 fires on 7 events, R3 on 5, R2 on 2, R4 on 1. The proposal's litera
   proposal's error analysis names.*
 - *What it does not say: how often the rules fire on a model's harmless turns. That needs the
   recorded traces.*
+- ***With the repository around the slice** (the registered view of Condition C, decided and
+  built on 2026-10-08, run once afterwards; 5.2): the rules flag **11 of 30** (8 of 24
+  cross-file, 3 of 6 local) and 5 of the 30 fixes. R3 fires on 9 events, R1 on 7, R2 on 3, R4 on
+  2; by depth 7, 11, 11 and 11. The three events gained are GitPython regressions whose sink the
+  slice had cut away. One file of pycsw does not parse and is listed in the graph's record.*
 
 *Open:*
-- *For 5.2: the first look ran on slices. Laying the repository around a slice does not bring
-  back a function that was cut out of a slice file, and for several events that function is the
-  sink. How Condition C sees cut code has to be decided before C is run, and not by looking at
-  which events it would rescue.*
 - *Pysa's stub files were not on this machine when the catalog was written. Check the entries
   against the pinned stubs when Pysa is set up (3.3).*
 - *The per-repository sanitizer extension the proposal allows (`Catalog.extended`) is unused. It
@@ -579,9 +584,29 @@ model. Not run for results.*
   looked up, so the sink behind it is shown even when it is in a file the diff does not touch.*
 - *The graph covers the files the gate is given: for a trace, the slice. The open question below
   stands.*
-- *Open: how Condition C sees code cut from a slice (see M2.1, "Open"). The leakage exclusions go
-  in through the gate's `exclude`; nothing passes them yet, because nothing outside the slice is
-  loaded.*
+- ***Decided with the owner on 2026-10-08, before C saw any dataset trace: two views, the
+  repository one registered.** `C` builds its graph from the slice plus the rest of the
+  repository at the fix commit, with the leakage exclusions applied, as proposal 6.3 describes.
+  `C-slice` sees the slice alone and is reported beside it.*
+- *The repository view, `graphgate.graph.overlay.RepositoryView` (18 tests). A graph then holds
+  the repository's other files as they are, the slice files as the trace has them, and the code
+  the slicer cut out of each slice file, taken from the repository's copy. The last part works on
+  facts, not text, because the model rewrites a slice file as a whole. Rules, fixed before the
+  view was run: "cut" means defined in the repository's file and not in the event's clean slice;
+  what the slice held at the start belongs to the trace and is never restored once the model
+  deletes it; a name the model defines wins over a cut definition; a cut method goes when its
+  class goes. From the repository's copy also come the module-level assignments the slice never
+  had and the imports the trace's copy lacks. Leakage exclusions are applied by file and by
+  function.*
+- *Snapshots: `scripts/build_repo_snapshots.py` writes each event's repository at its fix commit
+  to the ignored `data/interim/repo_snapshots/` (3,008 distinct files, 23 MB, from the local
+  clones). `C` for an event without a snapshot stops with an error and never uses the slice in
+  its place.*
+- *Time: linking a whole repository takes up to a few seconds, so the gate keeps the last graphs
+  by code state and links each state once.*
+- *Known limit: files outside the slice are at the fix commit, so a sibling file the fix also
+  changed is seen in its fixed form. It is the same before and after every turn, so it raises no
+  flag, but it can appear as code shown to the triage model.*
 
 **5.3** Collect the real-session holdout set: 10–20 genuine multi-turn refinement sessions with
 manual two-pass review of naturally occurring regressions (disagreements adjudicated). Keep this

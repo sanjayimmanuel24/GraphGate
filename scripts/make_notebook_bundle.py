@@ -1,11 +1,16 @@
-"""Pack what a cloud notebook needs to record traces with an open-weight model.
+"""Pack what a cloud notebook needs to record traces and run the gate conditions.
 
+    python scripts/build_repo_snapshots.py
     python scripts/make_notebook_bundle.py
 
-Writes runs/graphgate_bundle.zip: the package, the scripts and the dataset
-files the trace tools read. Upload it to the notebook
-(notebooks/record_traces_open_model.ipynb says where). Nothing secret goes in:
-no caches, no clones, no tools environment, no rule files.
+Writes runs/graphgate_bundle.zip: the package, the scripts, the dataset files
+the tools read, and the repository snapshots Condition C's registered view
+needs (data/interim/repo_snapshots, the seed repositories' Python files at
+each event's fix commit; all of them under MIT, Apache-2.0 or BSD licences).
+Upload it to the notebook (notebooks/record_traces_open_model.ipynb says
+where), as a private input. Nothing secret goes in: no caches, no clones, no
+tools environment. The Semgrep rule files stay out as well, because their
+licence does not allow passing them on; the notebook fetches them itself.
 """
 
 from __future__ import annotations
@@ -17,7 +22,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 INCLUDE = ("pyproject.toml", "README.md", "src", "scripts", "data/events", "data/refinement_prompts.txt",
-           "data/validation_signoff.json", "data/validation_ai_review.json")
+           "data/validation_signoff.json", "data/validation_ai_review.json",
+           "requirements-analysers.txt", "data/semgrep_rules.json", "data/leakage_exclusions.json",
+           "data/interim/repo_snapshots")
 SKIP_PARTS = {"__pycache__"}
 
 
@@ -26,7 +33,8 @@ def files() -> list[Path]:
     for entry in INCLUDE:
         path = ROOT / entry
         if not path.exists():
-            raise SystemExit(f"missing {entry}")
+            raise SystemExit(f"missing {entry}" + (": run scripts/build_repo_snapshots.py first"
+                                                   if entry.endswith("repo_snapshots") else ""))
         found.extend([path] if path.is_file() else
                      sorted(p for p in path.rglob("*") if p.is_file() and not SKIP_PARTS & set(p.parts)))
     return found

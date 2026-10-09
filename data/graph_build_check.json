@@ -40,8 +40,8 @@
         "library": 5,
         "validator": 26
       },
-      "seconds_full_build": 1.24,
-      "seconds_after_one_file_changed": 0.69
+      "seconds_full_build": 1.84,
+      "seconds_after_one_file_changed": 0.7
     },
     {
       "repo": "parisneo/lollms_legacy",
@@ -79,8 +79,8 @@
         "library": 4,
         "validator": 50
       },
-      "seconds_full_build": 2.37,
-      "seconds_after_one_file_changed": 1.04
+      "seconds_full_build": 2.62,
+      "seconds_after_one_file_changed": 1.1
     },
     {
       "repo": "datadog/guarddog",
@@ -116,8 +116,8 @@
         "library": 4,
         "validator": 22
       },
-      "seconds_full_build": 0.62,
-      "seconds_after_one_file_changed": 0.32
+      "seconds_full_build": 0.69,
+      "seconds_after_one_file_changed": 0.35
     },
     {
       "repo": "ietf-tools/xml2rfc",
@@ -152,8 +152,8 @@
         "library": 4,
         "validator": 41
       },
-      "seconds_full_build": 1.59,
-      "seconds_after_one_file_changed": 0.84
+      "seconds_full_build": 1.58,
+      "seconds_after_one_file_changed": 0.9
     },
     {
       "repo": "zauberzeug/nicegui",
@@ -191,8 +191,8 @@
         "library": 4,
         "validator": 43
       },
-      "seconds_full_build": 1.99,
-      "seconds_after_one_file_changed": 0.99
+      "seconds_full_build": 1.87,
+      "seconds_after_one_file_changed": 0.94
     },
     {
       "repo": "mar10/wsgidav",
@@ -227,8 +227,8 @@
         "library": 4,
         "validator": 17
       },
-      "seconds_full_build": 0.67,
-      "seconds_after_one_file_changed": 0.32
+      "seconds_full_build": 0.74,
+      "seconds_after_one_file_changed": 0.33
     },
     {
       "repo": "sqlalchemy/mako",
@@ -261,8 +261,8 @@
         "library": 2,
         "validator": 10
       },
-      "seconds_full_build": 0.33,
-      "seconds_after_one_file_changed": 0.2
+      "seconds_full_build": 0.34,
+      "seconds_after_one_file_changed": 0.23
     },
     {
       "repo": "alerta/alerta",
@@ -298,8 +298,8 @@
         "library": 5,
         "validator": 17
       },
-      "seconds_full_build": 0.91,
-      "seconds_after_one_file_changed": 0.46
+      "seconds_full_build": 1.0,
+      "seconds_after_one_file_changed": 0.53
     },
     {
       "repo": "geopython/pycsw",
@@ -336,8 +336,8 @@
         "library": 4,
         "validator": 14
       },
-      "seconds_full_build": 1.32,
-      "seconds_after_one_file_changed": 0.6
+      "seconds_full_build": 1.44,
+      "seconds_after_one_file_changed": 0.57
     },
     {
       "repo": "piccolo-orm/piccolo",
@@ -374,8 +374,8 @@
         "library": 3,
         "validator": 21
       },
-      "seconds_full_build": 0.89,
-      "seconds_after_one_file_changed": 0.53
+      "seconds_full_build": 0.86,
+      "seconds_after_one_file_changed": 0.51
     },
     {
       "repo": "tortoise/tortoise-orm",
@@ -410,8 +410,8 @@
         "library": 2,
         "validator": 69
       },
-      "seconds_full_build": 1.64,
-      "seconds_after_one_file_changed": 0.93
+      "seconds_full_build": 1.58,
+      "seconds_after_one_file_changed": 0.87
     },
     {
       "repo": "collerek/ormar",
@@ -442,8 +442,8 @@
         "library": 4,
         "validator": 44
       },
-      "seconds_full_build": 0.77,
-      "seconds_after_one_file_changed": 0.39
+      "seconds_full_build": 0.73,
+      "seconds_after_one_file_changed": 0.36
     }
   ],
   "totals": {

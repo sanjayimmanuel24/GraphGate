@@ -289,6 +289,14 @@ the controlled design is the contribution. Do not tune toward a positive result.
   - Report recall at introduction as the main recall figure: the introducing turn is always read
     off the code, later turns are mostly carried.
   - Give false blocks in every reading the summary holds, and say which one a claim uses.
+    **Decided by the owner on 2026-10-08, before any condition was run on dataset traces: the
+    registered limit of about 15% applies to blocked clean turns over all clean turns**
+    (`false_blocks.all_clean_turns.rate`). The other readings are reported beside it.
+  - **Condition C has two views, decided by the owner on 2026-10-08 before C saw any dataset
+    trace.** The registered C builds its graph from the slice plus the rest of the repository at
+    the fix commit, with the event's leakage exclusions applied (`C`). C on the slice alone is
+    reported beside it (`C-slice`), never in its place. A run of `C` for an event whose
+    repository snapshot is missing must fail, not fall back to the slice.
   - Dataset results go to `data/results/`, pilot results to `runs/conditions-pilot/`; the
     summary says which it is. Never quote a pilot figure as a result.
   - `--no-triage` (B-untriaged, C-untriaged) is the "rules without LLM triage" ablation, not a
@@ -355,15 +363,23 @@ event. A first look then took each validated event's regression as one change
 the scanners: the rules flag 8 of 30 (5 of 24 cross-file), the scanners 1 of 30; on the reverse
 change, the fix, the rules fire on 4 of 30. It is not a gate result, and the rules, the catalog
 and the settings were not changed after it. Never change them to raise that number; report the
-22 misses by cause (BUILD_PLAN M2.1). Next for the graph: how Condition C sees code cut from a
-slice (5.2).
+misses by cause (BUILD_PLAN M2.1). With the repository laid around the slice, the registered
+view of Condition C (`graphgate.graph.overlay`, decided and built 2026-10-08, then run once),
+the rules flag 11 of 30 (8 of 24 cross-file) and 5 of the fixes. The view's rules are fixed in
+the module's docstring; do not change them after this run either.
 
 **Runner built (2026-10-08):** step 3.4's runner and measures, and Condition C's gate (5.2, in
 part), are built and tested (603 tests); a tool test on the three pilot traces ran without
 triage (BUILD_PLAN 3.4). No condition has been run on dataset traces. Before that run: record
-the traces, set up the analysers and rules in the notebook, and settle the open points listed
-under 3.4 and M2.1 in BUILD_PLAN (which false-positive reading the 15% limit uses; how C sees
-code cut from a slice).
+the traces and set up the analysers and rules in the notebook. The two open points were settled
+by the owner on 2026-10-08 (the 15% limit is on clean turns blocked; the registered C sees the
+repository, C on the slice is reported beside it).
+
+**Notebook, second half (2026-10-08, not yet run there):** after the model is up, the notebook
+installs the analysers, fetches and checks the Semgrep rules, runs the triage pilot, records
+traces for what is left of the session, and runs `scripts/run_conditions.py` over the dataset
+traces only when all of them are recorded. The bundle now carries the repository snapshots
+(`python scripts/build_repo_snapshots.py`, then `python scripts/make_notebook_bundle.py`).
 
 **Model switch, in progress (2026-10-08).** The experiment model is `qwen2.5-coder:14b`
 (Q4_K_M, Apache-2.0, 32,768-token context, Ollama 0.40.0), run by the owner in a Kaggle GPU

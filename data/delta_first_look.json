@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "note": "Each validated event's regression taken as one change (clean slice to regressed slice), the code graph of both built, and rules R1 to R4 applied. A first look, not a gate result: no model turn and no triage is involved, the graphs cover the slice and not the repository, and the false-alarm rate on harmless changes is not measured here. 'fix_rules' is the control: the same rules on the reverse change.",
+  "note": "Each validated event's regression taken as one change (clean slice to regressed slice), the code graph of both built, and rules R1 to R4 applied. A first look, not a gate result: no model turn and no triage is involved, the graphs cover the slice and not the repository, and the false-alarm rate on harmless changes is not measured here. 'fix_rules' is the control: the same rules on the reverse change. 'repository_view' is the same change with the rest of the repository at the fix commit laid around the slice.",
   "primary_setting": "graphgate",
   "settings": {
     "graphgate": {
@@ -216,6 +216,68 @@
       "without_a_sink": 5,
       "without_a_source_to_sink_path": 8,
       "regression_changes_an_edge": 27
+    },
+    "repository_view": {
+      "events": 30,
+      "flagged": 11,
+      "by_scope": {
+        "cross_file": {
+          "events": 24,
+          "flagged": 8
+        },
+        "local": {
+          "events": 6,
+          "flagged": 3
+        }
+      },
+      "by_class_and_scope": {
+        "command/cross_file": {
+          "events": 1,
+          "flagged": 0
+        },
+        "os-command/cross_file": {
+          "events": 6,
+          "flagged": 2
+        },
+        "path-traversal/cross_file": {
+          "events": 13,
+          "flagged": 4
+        },
+        "path-traversal/local": {
+          "events": 5,
+          "flagged": 2
+        },
+        "sql/cross_file": {
+          "events": 4,
+          "flagged": 2
+        },
+        "sql/local": {
+          "events": 1,
+          "flagged": 1
+        }
+      },
+      "events_without_a_snapshot": 0,
+      "leakage_exclusions_applied": true,
+      "control_fix_flagged": 5,
+      "by_rule": {
+        "R1": 7,
+        "R2": 3,
+        "R3": 9,
+        "R4": 2
+      },
+      "control_fix_by_rule": {
+        "R1": 2,
+        "R2": 0,
+        "R3": 5,
+        "R4": 0
+      },
+      "by_depth": {
+        "1": 7,
+        "2": 11,
+        "3": 11,
+        "None": 11
+      },
+      "graphs_without_a_sink": 0
     }
   },
   "events": {
@@ -264,6 +326,32 @@
         "sinks": 1,
         "source_sink_pairs": 7,
         "edges_changed": true
+      },
+      "repository_view": {
+        "rules": [
+          "R3"
+        ],
+        "flags": 1,
+        "fix_rules": [],
+        "by_depth": {
+          "1": [],
+          "2": [
+            "R3"
+          ],
+          "3": [
+            "R3"
+          ],
+          "None": [
+            "R3"
+          ]
+        },
+        "files": 89,
+        "sinks": 151,
+        "unknown_calls": 3835,
+        "calls": 8749,
+        "flag_summaries": [
+          "R3: git/cmd.py::Git.check_unsafe_options no longer applies guard@git/cmd.py::Git.check_unsafe_options::e799c6468436"
+        ]
       }
     },
     "gitpython-3f7w": {
@@ -308,6 +396,32 @@
         "sinks": 1,
         "source_sink_pairs": 8,
         "edges_changed": true
+      },
+      "repository_view": {
+        "rules": [
+          "R3"
+        ],
+        "flags": 1,
+        "fix_rules": [],
+        "by_depth": {
+          "1": [],
+          "2": [
+            "R3"
+          ],
+          "3": [
+            "R3"
+          ],
+          "None": [
+            "R3"
+          ]
+        },
+        "files": 140,
+        "sinks": 175,
+        "unknown_calls": 4885,
+        "calls": 10615,
+        "flag_summaries": [
+          "R3: git/index/base.py::IndexFile.checkout no longer applies git/cmd.py::Git.check_unsafe_options"
+        ]
       }
     },
     "gitpython-6p8h": {
@@ -351,6 +465,22 @@
         "sinks": 1,
         "source_sink_pairs": 8,
         "edges_changed": false
+      },
+      "repository_view": {
+        "rules": [],
+        "flags": 0,
+        "fix_rules": [],
+        "by_depth": {
+          "1": [],
+          "2": [],
+          "3": [],
+          "None": []
+        },
+        "files": 90,
+        "sinks": 172,
+        "unknown_calls": 4141,
+        "calls": 9546,
+        "flag_summaries": []
       }
     },
     "gitpython-7545": {
@@ -442,6 +572,62 @@
         "sinks": 5,
         "source_sink_pairs": 17,
         "edges_changed": true
+      },
+      "repository_view": {
+        "rules": [
+          "R1",
+          "R2",
+          "R3",
+          "R4"
+        ],
+        "flags": 124,
+        "fix_rules": [
+          "R1",
+          "R3"
+        ],
+        "by_depth": {
+          "1": [
+            "R1",
+            "R2",
+            "R3"
+          ],
+          "2": [
+            "R1",
+            "R2",
+            "R3",
+            "R4"
+          ],
+          "3": [
+            "R1",
+            "R2",
+            "R3",
+            "R4"
+          ],
+          "None": [
+            "R1",
+            "R2",
+            "R3",
+            "R4"
+          ]
+        },
+        "files": 88,
+        "sinks": 157,
+        "unknown_calls": 3728,
+        "calls": 8581,
+        "flag_summaries": [
+          "R1: sanitizer git/refs/symbolic.py::SymbolicReference._get_validated_path is gone while 2 caller(s) remain",
+          "R1: sanitizer git/refs/symbolic.py::SymbolicReference._get_validated_ref_path is gone while 4 caller(s) remain",
+          "R2: new path from git/objects/commit.py::Commit.create_from_tree#repo to sink@git/refs/symbolic.py::SymbolicReference._create::builtins.open",
+          "R2: new path from git/objects/commit.py::Commit.create_from_tree#repo to sink@git/refs/symbolic.py::SymbolicReference.delete::os.remove",
+          "R2: new path from git/objects/submodule/base.py::Submodule.add#branch to sink@git/refs/symbolic.py::SymbolicReference._create::builtins.open",
+          "R2: new path from git/objects/submodule/base.py::Submodule.add#branch to sink@git/refs/symbolic.py::SymbolicReference.delete::os.remove",
+          "R2: new path from git/objects/submodule/base.py::Submodule.add#repo to sink@git/refs/symbolic.py::SymbolicReference._create::builtins.open",
+          "R2: new path from git/objects/submodule/base.py::Submodule.add#repo to sink@git/refs/symbolic.py::SymbolicReference.delete::os.remove",
+          "R2: new path from git/objects/submodule/base.py::Submodule.iter_items#repo to sink@git/refs/symbolic.py::SymbolicReference._create::builtins.open",
+          "R2: new path from git/objects/submodule/base.py::Submodule.iter_items#repo to sink@git/refs/symbolic.py::SymbolicReference.delete::os.remove",
+          "R2: new path from git/objects/submodule/root.py::RootModule.update#dry_run to sink@git/refs/symbolic.py::SymbolicReference._create::builtins.open",
+          "R2: new path from git/objects/submodule/root.py::RootModule.update#dry_run to sink@git/refs/symbolic.py::SymbolicReference.delete::os.remove"
+        ]
       }
     },
     "gitpython-8mcc": {
@@ -485,6 +671,22 @@
         "sinks": 1,
         "source_sink_pairs": 8,
         "edges_changed": false
+      },
+      "repository_view": {
+        "rules": [],
+        "flags": 0,
+        "fix_rules": [],
+        "by_depth": {
+          "1": [],
+          "2": [],
+          "3": [],
+          "None": []
+        },
+        "files": 141,
+        "sinks": 204,
+        "unknown_calls": 4962,
+        "calls": 11069,
+        "flag_summaries": []
       }
     },
     "gitpython-956x": {
@@ -536,6 +738,22 @@
         "sinks": 1,
         "source_sink_pairs": 10,
         "edges_changed": true
+      },
+      "repository_view": {
+        "rules": [],
+        "flags": 0,
+        "fix_rules": [],
+        "by_depth": {
+          "1": [],
+          "2": [],
+          "3": [],
+          "None": []
+        },
+        "files": 86,
+        "sinks": 130,
+        "unknown_calls": 3035,
+        "calls": 7399,
+        "flag_summaries": []
       }
     },
     "gitpython-cwvm": {
@@ -611,6 +829,42 @@
         "sinks": 2,
         "source_sink_pairs": 5,
         "edges_changed": true
+      },
+      "repository_view": {
+        "rules": [
+          "R1",
+          "R3"
+        ],
+        "flags": 2,
+        "fix_rules": [
+          "R3"
+        ],
+        "by_depth": {
+          "1": [
+            "R1",
+            "R3"
+          ],
+          "2": [
+            "R1",
+            "R3"
+          ],
+          "3": [
+            "R1",
+            "R3"
+          ],
+          "None": [
+            "R1",
+            "R3"
+          ]
+        },
+        "files": 73,
+        "sinks": 136,
+        "unknown_calls": 3426,
+        "calls": 7427,
+        "flag_summaries": [
+          "R1: sanitizer git/refs/symbolic.py::SymbolicReference._check_ref_name_valid is gone while 1 caller(s) remain",
+          "R3: git/refs/symbolic.py::SymbolicReference._get_ref_info_helper no longer applies git/refs/symbolic.py::SymbolicReference._check_ref_name_valid"
+        ]
       }
     },
     "gitpython-hmq2": {
@@ -675,6 +929,57 @@
         "sinks": 4,
         "source_sink_pairs": 0,
         "edges_changed": true
+      },
+      "repository_view": {
+        "rules": [
+          "R1",
+          "R2",
+          "R3",
+          "R4"
+        ],
+        "flags": 29,
+        "fix_rules": [],
+        "by_depth": {
+          "1": [
+            "R1",
+            "R2",
+            "R3"
+          ],
+          "2": [
+            "R1",
+            "R2",
+            "R3",
+            "R4"
+          ],
+          "3": [
+            "R1",
+            "R3",
+            "R4"
+          ],
+          "None": [
+            "R1",
+            "R3",
+            "R4"
+          ]
+        },
+        "files": 142,
+        "sinks": 195,
+        "unknown_calls": 4925,
+        "calls": 10873,
+        "flag_summaries": [
+          "R1: sanitizer git/objects/submodule/base.py::Submodule._validated_name is gone while 7 caller(s) remain",
+          "R2: new path from git/objects/submodule/base.py::Submodule.rename#new_name to sink@fuzzing/fuzz-targets/fuzz_submodule.py::TestOneInput::builtins.open",
+          "R2: new path from git/objects/submodule/base.py::Submodule.rename#new_name to sink@git/objects/submodule/base.py::Submodule._clone_repo::os.makedirs",
+          "R2: new path from git/objects/submodule/base.py::Submodule.rename#new_name to sink@git/objects/submodule/base.py::Submodule._write_git_file_and_module_config::builtins.open",
+          "R2: new path from git/objects/submodule/base.py::Submodule.rename#new_name to sink@git/objects/submodule/base.py::Submodule._write_git_file_and_module_config::os.remove",
+          "R2: new path from git/objects/submodule/base.py::Submodule.rename#new_name to sink@git/repo/base.py::Repo.__init__::.read_text",
+          "R2: new path from git/objects/submodule/base.py::Submodule.rename#new_name to sink@git/repo/base.py::Repo.__init__::builtins.open",
+          "R2: new path from git/objects/submodule/base.py::Submodule.rename#new_name to sink@git/repo/base.py::Repo._get_alternates::builtins.open",
+          "R2: new path from git/objects/submodule/base.py::Submodule.rename#new_name to sink@git/repo/base.py::Repo._set_daemon_export::os.unlink",
+          "R2: new path from git/objects/submodule/base.py::Submodule.rename#new_name to sink@git/repo/base.py::Repo.currently_rebasing_on::builtins.open",
+          "R2: new path from git/objects/submodule/base.py::Submodule.rename#new_name to sink@git/repo/base.py::Repo.description::builtins.open",
+          "R2: new path from git/objects/submodule/base.py::Submodule.rename#new_name to sink@git/repo/base.py::Repo.init::os.makedirs"
+        ]
       }
     },
     "gitpython-pr76": {
@@ -718,6 +1023,22 @@
         "sinks": 1,
         "source_sink_pairs": 5,
         "edges_changed": true
+      },
+      "repository_view": {
+        "rules": [],
+        "flags": 0,
+        "fix_rules": [],
+        "by_depth": {
+          "1": [],
+          "2": [],
+          "3": [],
+          "None": []
+        },
+        "files": 71,
+        "sinks": 115,
+        "unknown_calls": 3065,
+        "calls": 6819,
+        "flag_summaries": []
       }
     },
     "gitpython-r9mr": {
@@ -761,6 +1082,22 @@
         "sinks": 1,
         "source_sink_pairs": 8,
         "edges_changed": true
+      },
+      "repository_view": {
+        "rules": [],
+        "flags": 0,
+        "fix_rules": [],
+        "by_depth": {
+          "1": [],
+          "2": [],
+          "3": [],
+          "None": []
+        },
+        "files": 90,
+        "sinks": 159,
+        "unknown_calls": 4046,
+        "calls": 9254,
+        "flag_summaries": []
       }
     },
     "gitpython-rpm5": {
@@ -809,6 +1146,34 @@
         "sinks": 1,
         "source_sink_pairs": 7,
         "edges_changed": true
+      },
+      "repository_view": {
+        "rules": [
+          "R3"
+        ],
+        "flags": 1,
+        "fix_rules": [
+          "R3"
+        ],
+        "by_depth": {
+          "1": [],
+          "2": [
+            "R3"
+          ],
+          "3": [
+            "R3"
+          ],
+          "None": [
+            "R3"
+          ]
+        },
+        "files": 86,
+        "sinks": 140,
+        "unknown_calls": 3388,
+        "calls": 7847,
+        "flag_summaries": [
+          "R3: git/cmd.py::Git.check_unsafe_options no longer applies guard@git/cmd.py::Git.check_unsafe_options::2ab58fd149cb"
+        ]
       }
     },
     "gitpython-v396": {
@@ -852,6 +1217,22 @@
         "sinks": 1,
         "source_sink_pairs": 7,
         "edges_changed": true
+      },
+      "repository_view": {
+        "rules": [],
+        "flags": 0,
+        "fix_rules": [],
+        "by_depth": {
+          "1": [],
+          "2": [],
+          "3": [],
+          "None": []
+        },
+        "files": 88,
+        "sinks": 150,
+        "unknown_calls": 3588,
+        "calls": 8343,
+        "flag_summaries": []
       }
     },
     "lollms-3x47": {
@@ -895,6 +1276,22 @@
         "sinks": 0,
         "source_sink_pairs": 0,
         "edges_changed": true
+      },
+      "repository_view": {
+        "rules": [],
+        "flags": 0,
+        "fix_rules": [],
+        "by_depth": {
+          "1": [],
+          "2": [],
+          "3": [],
+          "None": []
+        },
+        "files": 64,
+        "sinks": 113,
+        "unknown_calls": 1804,
+        "calls": 4906,
+        "flag_summaries": []
       }
     },
     "lollms-7pgr": {
@@ -939,6 +1336,22 @@
         "sinks": 0,
         "source_sink_pairs": 0,
         "edges_changed": true
+      },
+      "repository_view": {
+        "rules": [],
+        "flags": 0,
+        "fix_rules": [],
+        "by_depth": {
+          "1": [],
+          "2": [],
+          "3": [],
+          "None": []
+        },
+        "files": 132,
+        "sinks": 155,
+        "unknown_calls": 2676,
+        "calls": 7674,
+        "flag_summaries": []
       }
     },
     "lollms-8mrm": {
@@ -982,6 +1395,22 @@
         "sinks": 1,
         "source_sink_pairs": 1,
         "edges_changed": false
+      },
+      "repository_view": {
+        "rules": [],
+        "flags": 0,
+        "fix_rules": [],
+        "by_depth": {
+          "1": [],
+          "2": [],
+          "3": [],
+          "None": []
+        },
+        "files": 131,
+        "sinks": 156,
+        "unknown_calls": 2610,
+        "calls": 7459,
+        "flag_summaries": []
       }
     },
     "lollms-m45c": {
@@ -1026,6 +1455,22 @@
         "sinks": 1,
         "source_sink_pairs": 0,
         "edges_changed": true
+      },
+      "repository_view": {
+        "rules": [],
+        "flags": 0,
+        "fix_rules": [],
+        "by_depth": {
+          "1": [],
+          "2": [],
+          "3": [],
+          "None": []
+        },
+        "files": 83,
+        "sinks": 129,
+        "unknown_calls": 2202,
+        "calls": 6178,
+        "flag_summaries": []
       }
     },
     "lollms-p8h7": {
@@ -1069,6 +1514,22 @@
         "sinks": 0,
         "source_sink_pairs": 0,
         "edges_changed": true
+      },
+      "repository_view": {
+        "rules": [],
+        "flags": 0,
+        "fix_rules": [],
+        "by_depth": {
+          "1": [],
+          "2": [],
+          "3": [],
+          "None": []
+        },
+        "files": 65,
+        "sinks": 113,
+        "unknown_calls": 1892,
+        "calls": 5109,
+        "flag_summaries": []
       }
     },
     "lollms-pwc9": {
@@ -1114,6 +1575,22 @@
         "sinks": 0,
         "source_sink_pairs": 0,
         "edges_changed": true
+      },
+      "repository_view": {
+        "rules": [],
+        "flags": 0,
+        "fix_rules": [],
+        "by_depth": {
+          "1": [],
+          "2": [],
+          "3": [],
+          "None": []
+        },
+        "files": 62,
+        "sinks": 97,
+        "unknown_calls": 1615,
+        "calls": 4432,
+        "flag_summaries": []
       }
     },
     "mako-2h4p": {
@@ -1158,6 +1635,22 @@
         "sinks": 1,
         "source_sink_pairs": 26,
         "edges_changed": true
+      },
+      "repository_view": {
+        "rules": [],
+        "flags": 0,
+        "fix_rules": [],
+        "by_depth": {
+          "1": [],
+          "2": [],
+          "3": [],
+          "None": []
+        },
+        "files": 70,
+        "sinks": 16,
+        "unknown_calls": 1377,
+        "calls": 4356,
+        "flag_summaries": []
       }
     },
     "mako-v92g": {
@@ -1201,6 +1694,22 @@
         "sinks": 1,
         "source_sink_pairs": 26,
         "edges_changed": true
+      },
+      "repository_view": {
+        "rules": [],
+        "flags": 0,
+        "fix_rules": [],
+        "by_depth": {
+          "1": [],
+          "2": [],
+          "3": [],
+          "None": []
+        },
+        "files": 70,
+        "sinks": 16,
+        "unknown_calls": 1375,
+        "calls": 4354,
+        "flag_summaries": []
       }
     },
     "nicegui-hxp3": {
@@ -1260,6 +1769,34 @@
         "sinks": 1,
         "source_sink_pairs": 2,
         "edges_changed": true
+      },
+      "repository_view": {
+        "rules": [
+          "R3"
+        ],
+        "flags": 1,
+        "fix_rules": [
+          "R3"
+        ],
+        "by_depth": {
+          "1": [],
+          "2": [
+            "R3"
+          ],
+          "3": [
+            "R3"
+          ],
+          "None": [
+            "R3"
+          ]
+        },
+        "files": 581,
+        "sinks": 52,
+        "unknown_calls": 4230,
+        "calls": 15918,
+        "flag_summaries": [
+          "R3: nicegui/app/app.py::App.add_media_files.read_item no longer applies guard@nicegui/app/app.py::App.add_media_files.read_item::a6e523ff2a15"
+        ]
       }
     },
     "nicegui-mwc7": {
@@ -1303,6 +1840,22 @@
         "sinks": 0,
         "source_sink_pairs": 0,
         "edges_changed": true
+      },
+      "repository_view": {
+        "rules": [],
+        "flags": 0,
+        "fix_rules": [],
+        "by_depth": {
+          "1": [],
+          "2": [],
+          "3": [],
+          "None": []
+        },
+        "files": 609,
+        "sinks": 47,
+        "unknown_calls": 2915,
+        "calls": 10321,
+        "flag_summaries": []
       }
     },
     "nicegui-w8wv": {
@@ -1366,6 +1919,34 @@
         "sinks": 2,
         "source_sink_pairs": 1,
         "edges_changed": true
+      },
+      "repository_view": {
+        "rules": [
+          "R1"
+        ],
+        "flags": 1,
+        "fix_rules": [],
+        "by_depth": {
+          "1": [
+            "R1"
+          ],
+          "2": [
+            "R1"
+          ],
+          "3": [
+            "R1"
+          ],
+          "None": [
+            "R1"
+          ]
+        },
+        "files": 620,
+        "sinks": 51,
+        "unknown_calls": 4745,
+        "calls": 17527,
+        "flag_summaries": [
+          "R1: sanitizer nicegui/elements/upload_files.py::_sanitize_filename is gone while 1 caller(s) remain"
+        ]
       }
     },
     "ormar-xxh2": {
@@ -1409,6 +1990,22 @@
         "sinks": 1,
         "source_sink_pairs": 5,
         "edges_changed": true
+      },
+      "repository_view": {
+        "rules": [],
+        "flags": 0,
+        "fix_rules": [],
+        "by_depth": {
+          "1": [],
+          "2": [],
+          "3": [],
+          "None": []
+        },
+        "files": 303,
+        "sinks": 27,
+        "unknown_calls": 4730,
+        "calls": 10544,
+        "flag_summaries": []
       }
     },
     "piccolo-xq59": {
@@ -1484,6 +2081,42 @@
         "sinks": 3,
         "source_sink_pairs": 7,
         "edges_changed": true
+      },
+      "repository_view": {
+        "rules": [
+          "R1",
+          "R3"
+        ],
+        "flags": 4,
+        "fix_rules": [],
+        "by_depth": {
+          "1": [
+            "R1",
+            "R3"
+          ],
+          "2": [
+            "R1",
+            "R3"
+          ],
+          "3": [
+            "R1",
+            "R3"
+          ],
+          "None": [
+            "R1",
+            "R3"
+          ]
+        },
+        "files": 350,
+        "sinks": 56,
+        "unknown_calls": 3486,
+        "calls": 10786,
+        "flag_summaries": [
+          "R1: sanitizer piccolo/engine/base.py::validate_savepoint_name is gone while 3 caller(s) remain",
+          "R3: piccolo/engine/postgres.py::PostgresTransaction.savepoint no longer applies piccolo/engine/base.py::validate_savepoint_name",
+          "R3: piccolo/engine/postgres.py::Savepoint.release no longer applies piccolo/engine/base.py::validate_savepoint_name",
+          "R3: piccolo/engine/postgres.py::Savepoint.rollback_to no longer applies piccolo/engine/base.py::validate_savepoint_name"
+        ]
       }
     },
     "pycsw-hg4c": {
@@ -1531,6 +2164,22 @@
         "sinks": 2,
         "source_sink_pairs": 1,
         "edges_changed": true
+      },
+      "repository_view": {
+        "rules": [],
+        "flags": 0,
+        "fix_rules": [],
+        "by_depth": {
+          "1": [],
+          "2": [],
+          "3": [],
+          "None": []
+        },
+        "files": 49,
+        "sinks": 36,
+        "unknown_calls": 1795,
+        "calls": 5024,
+        "flag_summaries": []
       }
     },
     "tortoise-orm-9j2c": {
@@ -1615,6 +2264,35 @@
         "sinks": 1,
         "source_sink_pairs": 1,
         "edges_changed": true
+      },
+      "repository_view": {
+        "rules": [
+          "R1"
+        ],
+        "flags": 2,
+        "fix_rules": [],
+        "by_depth": {
+          "1": [
+            "R1"
+          ],
+          "2": [
+            "R1"
+          ],
+          "3": [
+            "R1"
+          ],
+          "None": [
+            "R1"
+          ]
+        },
+        "files": 176,
+        "sinks": 22,
+        "unknown_calls": 2092,
+        "calls": 7757,
+        "flag_summaries": [
+          "R1: sanitizer tortoise/backends/mysql/executor.py::escape_like is gone while 6 caller(s) remain",
+          "R1: sanitizer tortoise/filters.py::escape_like is gone while 6 caller(s) remain"
+        ]
       }
     },
     "wsgidav-p6gw": {
@@ -1694,6 +2372,56 @@
         "sinks": 2,
         "source_sink_pairs": 0,
         "edges_changed": true
+      },
+      "repository_view": {
+        "rules": [
+          "R1",
+          "R2",
+          "R3"
+        ],
+        "flags": 12,
+        "fix_rules": [
+          "R1",
+          "R3"
+        ],
+        "by_depth": {
+          "1": [
+            "R1"
+          ],
+          "2": [
+            "R1",
+            "R2",
+            "R3"
+          ],
+          "3": [
+            "R1",
+            "R2",
+            "R3"
+          ],
+          "None": [
+            "R1",
+            "R2",
+            "R3"
+          ]
+        },
+        "files": 63,
+        "sinks": 42,
+        "unknown_calls": 1849,
+        "calls": 4139,
+        "flag_summaries": [
+          "R1: sanitizer wsgidav/samples/mysql_dav_provider.py::_escape_id is gone while 7 caller(s) remain",
+          "R2: new path from wsgidav/samples/mysql_dav_provider.py::MySQLBrowserProvider.__init__#db to sink@wsgidav/samples/mysql_dav_provider.py::MySQLBrowserProvider._exists_record_by_primary_key::.execute",
+          "R2: new path from wsgidav/samples/mysql_dav_provider.py::MySQLBrowserProvider.__init__#host to sink@wsgidav/samples/mysql_dav_provider.py::MySQLBrowserProvider._exists_record_by_primary_key::.execute",
+          "R2: new path from wsgidav/samples/mysql_dav_provider.py::MySQLBrowserProvider.__init__#passwd to sink@wsgidav/samples/mysql_dav_provider.py::MySQLBrowserProvider._exists_record_by_primary_key::.execute",
+          "R2: new path from wsgidav/samples/mysql_dav_provider.py::MySQLBrowserProvider.__init__#user to sink@wsgidav/samples/mysql_dav_provider.py::MySQLBrowserProvider._exists_record_by_primary_key::.execute",
+          "R3: wsgidav/samples/mysql_dav_provider.py::MySQLBrowserProvider._exists_record_by_primary_key no longer applies wsgidav/samples/mysql_dav_provider.py::_escape_id",
+          "R3: wsgidav/samples/mysql_dav_provider.py::MySQLBrowserProvider._find_primary_key no longer applies wsgidav/samples/mysql_dav_provider.py::_escape_id",
+          "R3: wsgidav/samples/mysql_dav_provider.py::MySQLBrowserProvider._get_field_by_primary_key no longer applies wsgidav/samples/mysql_dav_provider.py::_escape_id",
+          "R3: wsgidav/samples/mysql_dav_provider.py::MySQLBrowserProvider._get_field_list no longer applies wsgidav/samples/mysql_dav_provider.py::_escape_id",
+          "R3: wsgidav/samples/mysql_dav_provider.py::MySQLBrowserProvider._get_record_by_primary_key no longer applies wsgidav/samples/mysql_dav_provider.py::_escape_id",
+          "R3: wsgidav/samples/mysql_dav_provider.py::MySQLBrowserProvider._list_fields no longer applies wsgidav/samples/mysql_dav_provider.py::_escape_id",
+          "R3: wsgidav/samples/mysql_dav_provider.py::MySQLBrowserResource.get_content no longer applies wsgidav/samples/mysql_dav_provider.py::_escape_id"
+        ]
       }
     },
     "wsgidav-wxq4": {
@@ -1737,6 +2465,22 @@
         "sinks": 1,
         "source_sink_pairs": 4,
         "edges_changed": true
+      },
+      "repository_view": {
+        "rules": [],
+        "flags": 0,
+        "fix_rules": [],
+        "by_depth": {
+          "1": [],
+          "2": [],
+          "3": [],
+          "None": []
+        },
+        "files": 63,
+        "sinks": 42,
+        "unknown_calls": 1846,
+        "calls": 4119,
+        "flag_summaries": []
       }
     },
     "xml2rfc-cfmv": {
@@ -1782,6 +2526,22 @@
         "sinks": 2,
         "source_sink_pairs": 3,
         "edges_changed": true
+      },
+      "repository_view": {
+        "rules": [],
+        "flags": 0,
+        "fix_rules": [],
+        "by_depth": {
+          "1": [],
+          "2": [],
+          "3": [],
+          "None": []
+        },
+        "files": 40,
+        "sinks": 28,
+        "unknown_calls": 3049,
+        "calls": 9070,
+        "flag_summaries": []
       }
     }
   }

@@ -20,8 +20,11 @@ sink, R3 about a function. Only the first ``max_items`` groups are shown; the
 decision records every flag and which item, if any, stands for it, so a flag
 that was not shown is visible in the record and never silently dropped.
 
-The graphs cover the files the gate is given. Code outside them is not seen;
-how Condition C sees the rest of a repository is settled in BUILD_PLAN 5.2.
+Two views, fixed with the owner before C saw any dataset trace. Given a
+``RepositoryView``, the graphs hold the slice and the rest of the repository
+around it: that is the registered Condition C. Without one, they hold the
+files the gate is given and nothing else: C on the slice alone, reported
+beside it as ``C-slice``.
 """
 
 from __future__ import annotations
@@ -38,6 +41,7 @@ from graphgate.graph.catalog import DEFAULT, Catalog
 from graphgate.graph.delta import DEFAULT_HOPS, Flag, apply_rules
 from graphgate.graph.extract import extract
 from graphgate.graph.link import GRAPHGATE, GraphConfig, link
+from graphgate.graph.overlay import REPOSITORY, RepositoryView
 from graphgate.graph.model import (
     CALL,
     EXTERNAL,
@@ -165,13 +169,15 @@ def _line(flag: Flag, before: nx.MultiDiGraph, after: nx.MultiDiGraph) -> str:
             f"step(s), was {flag.detail['hops_before']}: {route}")
 
 
-def _code(symbols: list[str], change: Change, before: nx.MultiDiGraph, after: nx.MultiDiGraph, budget: int
-          ) -> list[str]:
+def _code(symbols: list[str], change: Change, before: nx.MultiDiGraph, after: nx.MultiDiGraph, budget: int,
+          repository: Mapping[str, str]) -> list[str]:
     """The code of the functions a group of flags is about, within ``budget`` characters."""
     lines: list[str] = []
     for index, symbol in enumerate(symbols):
         graph, files, when = (after, change.after, "") if symbol in after else (before, change.before, ", before the change")
         data = graph.nodes[symbol]
+        if data.get("origin") == REPOSITORY:
+            files = repository                    # not in the trace's files: read from the repository
         text = files.get(data["path"], "").splitlines()[data["line"] - 1:data["end_line"]]
         header = f"    # {data['path']}, lines {data['line']}-{data['end_line']}{when}"
         block = "\n".join([header, *(f"    {line}" for line in text)])
@@ -186,8 +192,8 @@ def _code(symbols: list[str], change: Change, before: nx.MultiDiGraph, after: nx
 
 
 def flag_items(flags: list[Flag], change: Change, before: nx.MultiDiGraph, after: nx.MultiDiGraph, *,
-               max_items: int = MAX_FLAG_ITEMS, max_code_chars: int = MAX_ITEM_CODE_CHARS
-               ) -> tuple[list[Item], list[dict[str, Any]]]:
+               max_items: int = MAX_FLAG_ITEMS, max_code_chars: int = MAX_ITEM_CODE_CHARS,
+               repository: Mapping[str, str] | None = None) -> tuple[list[Item], list[dict[str, Any]]]:
     """Items for the model, and every flag with the item that stands for it (or None)."""
     groups: dict[tuple[str, str], list[Flag]] = {}
     for flag in flags:
@@ -213,7 +219,7 @@ def flag_items(flags: list[Flag], change: Change, before: nx.MultiDiGraph, after
                 known = after.nodes.get(symbol) or before.nodes.get(symbol) or {}
                 if known.get("kind") in (FUNCTION, METHOD) and symbol not in symbols:
                     symbols.append(symbol)
-        code = _code(symbols, change, before, after, max_code_chars)
+        code = _code(symbols, change, before, after, max_code_chars, repository or {})
         if code:
             text.append("  Code of the functions involved:")
             text.extend(code)
@@ -230,10 +236,12 @@ class GraphGate:
                  catalog: Catalog = DEFAULT, hops: int | None = DEFAULT_HOPS,
                  rules: Iterable[str] = ("R1", "R2", "R3", "R4"), exclude: Iterable[str] = (),
                  block_on: Iterable[str] = (EXPLOITABLE,), use_triage: bool = True,
-                 max_items: int = MAX_FLAG_ITEMS):
+                 max_items: int = MAX_FLAG_ITEMS, view: RepositoryView | None = None):
         self._scanner, self._client = scanner, client
         self.config, self.catalog, self.hops, self.rules = config, catalog, hops, tuple(rules)
+        self.view = view
         self._exclude = tuple(exclude)
+        self._graphs: dict[str, nx.MultiDiGraph] = {}    # the last few graphs, by code state
         self._block_on = frozenset(block_on)
         self._use_triage = use_triage
         self._max_items = max_items
@@ -241,16 +249,25 @@ class GraphGate:
         # change, and a file is parsed once however often it is seen.
         self._facts: dict[tuple[str, str], dict[str, Any]] = {}
 
+    def _extract(self, path: str, text: str) -> dict[str, Any]:
+        key = (path, hashlib.sha256(text.encode("utf-8")).hexdigest())
+        if key not in self._facts:
+            self._facts[key] = extract(path, text)
+        return self._facts[key]
+
     def graph(self, files: Mapping[str, str]) -> nx.MultiDiGraph:
-        facts = {}
-        for path, text in files.items():
-            if not path.endswith(".py"):
-                continue
-            key = (path, hashlib.sha256(text.encode("utf-8")).hexdigest())
-            if key not in self._facts:
-                self._facts[key] = extract(path, text)
-            facts[path] = self._facts[key]
-        return link(facts, catalog=self.catalog, config=self.config, exclude=self._exclude)
+        if self.view is None:
+            facts = {path: self._extract(path, text) for path, text in files.items() if path.endswith(".py")}
+            return link(facts, catalog=self.catalog, config=self.config, exclude=self._exclude)
+        # With the repository around it, a graph takes seconds to link. The
+        # state before a turn is the state after the one before it: keep it.
+        key = self.view.key(files)
+        if key not in self._graphs:
+            if len(self._graphs) >= 4:
+                self._graphs.pop(next(iter(self._graphs)))
+            self._graphs[key] = link(self.view.facts(files), catalog=self.catalog, config=self.config,
+                                     exclude=self._exclude)
+        return self._graphs[key]
 
     def flags_for(self, change: Change) -> tuple[list[Flag], nx.MultiDiGraph, nx.MultiDiGraph]:
         """Stage 2 alone: the graphs on both sides of a change and what the rules flag."""
@@ -264,7 +281,8 @@ class GraphGate:
         scan = self._scanner.scan_change(change.before, change.after, change.changed_paths)
         scanned = time.perf_counter()
         flags, before, after = self.flags_for(change)
-        graph_items, record = flag_items(flags, change, before, after, max_items=self._max_items)
+        graph_items, record = flag_items(flags, change, before, after, max_items=self._max_items,
+                                         repository=self.view.repo_files if self.view else None)
         seconds = {"scan": scanned - started, "graph": time.perf_counter() - scanned}
         items = finding_items(scan.findings.introduced) + graph_items
         return judge(self.condition, change, items, self._client, replication=replication,
