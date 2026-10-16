@@ -1,0 +1,177 @@
+{
+  "schema_version": 1,
+  "event_id": "lollms-8mrm",
+  "trace_sha256": "9287cb868039ec15c20ca2ff10faf9745c43a4b6e53586221e07ad083c32685f",
+  "scope": "cross_file",
+  "regression_label": "cross_file_regression",
+  "injection_turn": 2,
+  "turns_by_label": {
+    "clean": 3,
+    "cross_file_regression": 15
+  },
+  "turns_carried": 11,
+  "replications": [
+    {
+      "seed": 0,
+      "introduced_at": 2,
+      "turns": [
+        {
+          "turn": 1,
+          "kind": "turn",
+          "label": "clean",
+          "basis": "matches-clean",
+          "introduced": false,
+          "injected": false
+        },
+        {
+          "turn": 2,
+          "kind": "turn",
+          "label": "cross_file_regression",
+          "basis": "matches-regressed",
+          "introduced": true,
+          "injected": true
+        },
+        {
+          "turn": 3,
+          "kind": "turn",
+          "label": "cross_file_regression",
+          "basis": "matches-regressed",
+          "introduced": false,
+          "injected": false
+        },
+        {
+          "turn": 4,
+          "kind": "turn",
+          "label": "cross_file_regression",
+          "basis": "carried",
+          "introduced": false,
+          "injected": false
+        },
+        {
+          "turn": 5,
+          "kind": "turn",
+          "label": "cross_file_regression",
+          "basis": "carried",
+          "introduced": false,
+          "injected": false
+        },
+        {
+          "turn": 6,
+          "kind": "turn",
+          "label": "cross_file_regression",
+          "basis": "carried",
+          "introduced": false,
+          "injected": false
+        }
+      ]
+    },
+    {
+      "seed": 2,
+      "introduced_at": 2,
+      "turns": [
+        {
+          "turn": 1,
+          "kind": "turn",
+          "label": "clean",
+          "basis": "matches-clean",
+          "introduced": false,
+          "injected": false
+        },
+        {
+          "turn": 2,
+          "kind": "turn",
+          "label": "cross_file_regression",
+          "basis": "matches-regressed",
+          "introduced": true,
+          "injected": true
+        },
+        {
+          "turn": 3,
+          "kind": "turn",
+          "label": "cross_file_regression",
+          "basis": "carried",
+          "introduced": false,
+          "injected": false
+        },
+        {
+          "turn": 4,
+          "kind": "turn",
+          "label": "cross_file_regression",
+          "basis": "carried",
+          "introduced": false,
+          "injected": false
+        },
+        {
+          "turn": 5,
+          "kind": "turn",
+          "label": "cross_file_regression",
+          "basis": "carried",
+          "introduced": false,
+          "injected": false
+        },
+        {
+          "turn": 6,
+          "kind": "turn",
+          "label": "cross_file_regression",
+          "basis": "carried",
+          "introduced": false,
+          "injected": false
+        }
+      ]
+    },
+    {
+      "seed": 3,
+      "introduced_at": 2,
+      "turns": [
+        {
+          "turn": 1,
+          "kind": "turn",
+          "label": "clean",
+          "basis": "matches-clean",
+          "introduced": false,
+          "injected": false
+        },
+        {
+          "turn": 2,
+          "kind": "turn",
+          "label": "cross_file_regression",
+          "basis": "matches-regressed",
+          "introduced": true,
+          "injected": true
+        },
+        {
+          "turn": 3,
+          "kind": "turn",
+          "label": "cross_file_regression",
+          "basis": "carried",
+          "introduced": false,
+          "injected": false
+        },
+        {
+          "turn": 4,
+          "kind": "turn",
+          "label": "cross_file_regression",
+          "basis": "carried",
+          "introduced": false,
+          "injected": false
+        },
+        {
+          "turn": 5,
+          "kind": "turn",
+          "label": "cross_file_regression",
+          "basis": "carried",
+          "introduced": false,
+          "injected": false
+        },
+        {
+          "turn": 6,
+          "kind": "turn",
+          "label": "cross_file_regression",
+          "basis": "carried",
+          "introduced": false,
+          "injected": false
+        }
+      ]
+    }
+  ]
+}

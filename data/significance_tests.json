@@ -1,0 +1,326 @@
+{
+  "schema_version": 1,
+  "note": "Paired tests on per-event recall at introduction. The plan was fixed before the tests were computed (graphgate.experiment.stats); secondary tests are Holm-adjusted together and never stand in for the primary one.",
+  "plan": {
+    "module": "graphgate.experiment.stats",
+    "alpha": 0.05,
+    "sided": "two-sided",
+    "zero_differences": "dropped and counted",
+    "ties": "average ranks, exact p over all sign assignments",
+    "ci_level": 0.95,
+    "bootstrap_resamples": 10000,
+    "bootstrap_seed": 0
+  },
+  "source": {
+    "results": "data/results",
+    "triage_model": "qwen2.5-coder-14b-ctx32768",
+    "conditions": [
+      "A",
+      "B",
+      "B+",
+      "C-slice",
+      "C"
+    ]
+  },
+  "events": {
+    "in_run": 30,
+    "with_a_placed_regression": 29,
+    "cross_file_with_a_placed_regression": 23,
+    "without_a_placed_regression": [
+      "gitpython-cwvm"
+    ]
+  },
+  "per_condition": {
+    "A": {
+      "all": {
+        "events": 29,
+        "mean_recall": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ]
+      },
+      "cross_file": {
+        "events": 23,
+        "mean_recall": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "B": {
+      "all": {
+        "events": 29,
+        "mean_recall": 0.0575,
+        "ci95": [
+          0.0,
+          0.1264
+        ]
+      },
+      "cross_file": {
+        "events": 23,
+        "mean_recall": 0.0435,
+        "ci95": [
+          0.0,
+          0.1159
+        ]
+      }
+    },
+    "B+": {
+      "all": {
+        "events": 29,
+        "mean_recall": 0.0862,
+        "ci95": [
+          0.0115,
+          0.1839
+        ]
+      },
+      "cross_file": {
+        "events": 23,
+        "mean_recall": 0.0435,
+        "ci95": [
+          0.0,
+          0.1159
+        ]
+      }
+    },
+    "C-slice": {
+      "all": {
+        "events": 29,
+        "mean_recall": 0.2069,
+        "ci95": [
+          0.0862,
+          0.3448
+        ]
+      },
+      "cross_file": {
+        "events": 23,
+        "mean_recall": 0.1449,
+        "ci95": [
+          0.0435,
+          0.2754
+        ]
+      }
+    },
+    "C": {
+      "all": {
+        "events": 29,
+        "mean_recall": 0.2759,
+        "ci95": [
+          0.1437,
+          0.4253
+        ]
+      },
+      "cross_file": {
+        "events": 23,
+        "mean_recall": 0.2174,
+        "ci95": [
+          0.087,
+          0.3623
+        ]
+      }
+    }
+  },
+  "primary": {
+    "first": "C",
+    "second": "B",
+    "scope": "cross_file",
+    "pairs": 23,
+    "zero_differences_dropped": 16,
+    "pairs_used": 7,
+    "w_plus": 28.0,
+    "w_minus": 0.0,
+    "p_two_sided": 0.015625,
+    "rank_biserial": 1.0,
+    "first_better": 7,
+    "second_better": 0,
+    "tied_with_both_zero": 15,
+    "mean_difference": 0.1739,
+    "mean_difference_ci95": [
+      0.0652,
+      0.2971
+    ],
+    "per_event_difference": {
+      "gitpython-2f96": 0.5,
+      "gitpython-3f7w": 0.3333,
+      "gitpython-6p8h": 0.0,
+      "gitpython-8mcc": 0.0,
+      "gitpython-956x": 0.0,
+      "gitpython-pr76": 0.0,
+      "gitpython-r9mr": 0.0,
+      "gitpython-rpm5": 0.6667,
+      "gitpython-v396": 0.0,
+      "lollms-3x47": 0.0,
+      "lollms-8mrm": 0.0,
+      "lollms-p8h7": 0.0,
+      "lollms-pwc9": 0.0,
+      "mako-2h4p": 0.6667,
+      "mako-v92g": 0.3333,
+      "nicegui-hxp3": 0.0,
+      "nicegui-w8wv": 0.0,
+      "ormar-xxh2": 0.0,
+      "piccolo-xq59": 1.0,
+      "pycsw-hg4c": 0.0,
+      "tortoise-orm-9j2c": 0.5,
+      "wsgidav-wxq4": 0.0,
+      "xml2rfc-cfmv": 0.0
+    },
+    "significant": true
+  },
+  "secondary": [
+    {
+      "first": "C",
+      "second": "B",
+      "scope": "all",
+      "pairs": 29,
+      "zero_differences_dropped": 19,
+      "pairs_used": 10,
+      "w_plus": 55.0,
+      "w_minus": 0.0,
+      "p_two_sided": 0.001953125,
+      "rank_biserial": 1.0,
+      "first_better": 10,
+      "second_better": 0,
+      "tied_with_both_zero": 18,
+      "mean_difference": 0.2184,
+      "mean_difference_ci95": [
+        0.1034,
+        0.3506
+      ],
+      "per_event_difference": {
+        "gitpython-2f96": 0.5,
+        "gitpython-3f7w": 0.3333,
+        "gitpython-6p8h": 0.0,
+        "gitpython-7545": 1.0,
+        "gitpython-8mcc": 0.0,
+        "gitpython-956x": 0.0,
+        "gitpython-hmq2": 1.0,
+        "gitpython-pr76": 0.0,
+        "gitpython-r9mr": 0.0,
+        "gitpython-rpm5": 0.6667,
+        "gitpython-v396": 0.0,
+        "lollms-3x47": 0.0,
+        "lollms-7pgr": 0.0,
+        "lollms-8mrm": 0.0,
+        "lollms-m45c": 0.0,
+        "lollms-p8h7": 0.0,
+        "lollms-pwc9": 0.0,
+        "mako-2h4p": 0.6667,
+        "mako-v92g": 0.3333,
+        "nicegui-hxp3": 0.0,
+        "nicegui-mwc7": 0.0,
+        "nicegui-w8wv": 0.0,
+        "ormar-xxh2": 0.0,
+        "piccolo-xq59": 1.0,
+        "pycsw-hg4c": 0.0,
+        "tortoise-orm-9j2c": 0.5,
+        "wsgidav-p6gw": 0.3333,
+        "wsgidav-wxq4": 0.0,
+        "xml2rfc-cfmv": 0.0
+      },
+      "p_holm": 0.005859375,
+      "significant_after_holm": true
+    },
+    {
+      "first": "C",
+      "second": "B+",
+      "scope": "cross_file",
+      "pairs": 23,
+      "zero_differences_dropped": 16,
+      "pairs_used": 7,
+      "w_plus": 28.0,
+      "w_minus": 0.0,
+      "p_two_sided": 0.015625,
+      "rank_biserial": 1.0,
+      "first_better": 7,
+      "second_better": 0,
+      "tied_with_both_zero": 15,
+      "mean_difference": 0.1739,
+      "mean_difference_ci95": [
+        0.0652,
+        0.2971
+      ],
+      "per_event_difference": {
+        "gitpython-2f96": 0.5,
+        "gitpython-3f7w": 0.3333,
+        "gitpython-6p8h": 0.0,
+        "gitpython-8mcc": 0.0,
+        "gitpython-956x": 0.0,
+        "gitpython-pr76": 0.0,
+        "gitpython-r9mr": 0.0,
+        "gitpython-rpm5": 0.6667,
+        "gitpython-v396": 0.0,
+        "lollms-3x47": 0.0,
+        "lollms-8mrm": 0.0,
+        "lollms-p8h7": 0.0,
+        "lollms-pwc9": 0.0,
+        "mako-2h4p": 0.6667,
+        "mako-v92g": 0.3333,
+        "nicegui-hxp3": 0.0,
+        "nicegui-w8wv": 0.0,
+        "ormar-xxh2": 0.0,
+        "piccolo-xq59": 1.0,
+        "pycsw-hg4c": 0.0,
+        "tortoise-orm-9j2c": 0.5,
+        "wsgidav-wxq4": 0.0,
+        "xml2rfc-cfmv": 0.0
+      },
+      "p_holm": 0.015625,
+      "significant_after_holm": true
+    },
+    {
+      "first": "C",
+      "second": "B+",
+      "scope": "all",
+      "pairs": 29,
+      "zero_differences_dropped": 20,
+      "pairs_used": 9,
+      "w_plus": 45.0,
+      "w_minus": 0.0,
+      "p_two_sided": 0.00390625,
+      "rank_biserial": 1.0,
+      "first_better": 9,
+      "second_better": 0,
+      "tied_with_both_zero": 18,
+      "mean_difference": 0.1897,
+      "mean_difference_ci95": [
+        0.0862,
+        0.3103
+      ],
+      "per_event_difference": {
+        "gitpython-2f96": 0.5,
+        "gitpython-3f7w": 0.3333,
+        "gitpython-6p8h": 0.0,
+        "gitpython-7545": 0.5,
+        "gitpython-8mcc": 0.0,
+        "gitpython-956x": 0.0,
+        "gitpython-hmq2": 1.0,
+        "gitpython-pr76": 0.0,
+        "gitpython-r9mr": 0.0,
+        "gitpython-rpm5": 0.6667,
+        "gitpython-v396": 0.0,
+        "lollms-3x47": 0.0,
+        "lollms-7pgr": 0.0,
+        "lollms-8mrm": 0.0,
+        "lollms-m45c": 0.0,
+        "lollms-p8h7": 0.0,
+        "lollms-pwc9": 0.0,
+        "mako-2h4p": 0.6667,
+        "mako-v92g": 0.3333,
+        "nicegui-hxp3": 0.0,
+        "nicegui-mwc7": 0.0,
+        "nicegui-w8wv": 0.0,
+        "ormar-xxh2": 0.0,
+        "piccolo-xq59": 1.0,
+        "pycsw-hg4c": 0.0,
+        "tortoise-orm-9j2c": 0.5,
+        "wsgidav-p6gw": 0.0,
+        "wsgidav-wxq4": 0.0,
+        "xml2rfc-cfmv": 0.0
+      },
+      "p_holm": 0.0078125,
+      "significant_after_holm": true
+    }
+  ]
+}

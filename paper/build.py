@@ -122,6 +122,34 @@ def compute_numbers() -> tuple[dict[str, str], dict]:
     graph_totals = (load("data/graph_build_check.json") if (ROOT / "data/graph_build_check.json").exists()
                     else {}).get("totals", {})
     session = open_runs.get("first_dataset_session") or {}
+    # The dataset run: what the traces hold (open_model_runs.json) and what each gate condition
+    # did on them (scripts/run_conditions.py). A pilot or an unfinished run is never quoted.
+    run = open_runs.get("dataset") or {}
+    results = load("data/results/summary.json") if (ROOT / "data/results/summary.json").exists() else {}
+    if results and (results["pilot"] or not results["complete"]):
+        raise SystemExit("data/results/summary.json is a pilot or an unfinished run; the paper quotes neither")
+    cond = results.get("conditions", {})
+    # The planned significance tests over that run (scripts/significance_tests.py).
+    sig = load("data/significance_tests.json") if (ROOT / "data/significance_tests.json").exists() else {}
+    primary = sig.get("primary", {})
+    sig_cond = sig.get("per_condition", {})
+
+    def arrival(name: str, group: str | None = None, key: str = "blocked", by: str = "by_scope") -> int:
+        recall = cond.get(name, {}).get("recall_at_introduction", {})
+        return (recall.get(by, {}).get(group, {}) if group else recall.get("all", {})).get(key, 0)
+
+    def clean(name: str, key: str = "blocked"):
+        return cond.get(name, {}).get("false_blocks", {}).get("all_clean_turns", {}).get(key, 0)
+
+    def seconds(name: str, key: str = "median_added_seconds") -> str:
+        value = cond.get(name, {}).get("overhead", {}).get(key)
+        return "--" if value is None else f"{value:.1f}"
+
+    command = ("command", "os-command")     # CWE-77 and CWE-78, reported together in the text
+    cond_rows = [f"{'A, no gate' if name == 'A' else 'C, slice only' if name == 'C-slice' else name} & "
+                 f"{arrival(name)} & {arrival(name, 'cross_file')} & "
+                 + (f"{clean(name)} ({100 * clean(name, 'rate'):.1f}\\%)" if clean(name) else "0")
+                 + f" & {seconds(name)} \\\\ \\hline" for name in cond]
 
     rows = []
     for r in sorted(selected, key=lambda r: (-len(r["advisories"]), r["repo"])):
@@ -190,6 +218,58 @@ def compute_numbers() -> tuple[dict[str, str], dict]:
         "nSeedEvents": session.get("events_started", 0),
         "nInjFailed": session.get("failed_injections", 0),
         "nInjReps": session.get("replications_under_those_seeds", 0),
+        "nRunReps": run.get("replications", 0),
+        "nRunPlaced": run.get("replications_with_regression", 0),
+        "nRunFailed": (run.get("replications_by_outcome") or {}).get("injection-failed", 0),
+        "nRunTurns": run.get("model_calls", 0),
+        "nRunUsable": run.get("turns_usable", 0),
+        "nRunCarried": run.get("turns_carried", 0),
+        "nRunSeconds": run.get("median_seconds_per_turn", 0),
+        "nIntroduced": arrival("A", key="introduced"),
+        "nIntroCross": arrival("A", "cross_file", "introduced"),
+        "nCleanTurns": clean("A", "clean_turns"),
+        "nBRecall": arrival("B"),
+        "nBCross": arrival("B", "cross_file"),
+        "nBPlusCross": arrival("B+", "cross_file"),
+        "nCSliceCross": arrival("C-slice", "cross_file"),
+        "nCRecall": arrival("C"),
+        "nCCross": arrival("C", "cross_file"),
+        "nBDetected": cond.get("B", {}).get("detection", {}).get("detected", 0),
+        "nCDetected": cond.get("C", {}).get("detection", {}).get("detected", 0),
+        "nCSurviving": (cond.get("C", {}).get("degradation_curve") or [{}])[-1].get("surviving", 0),
+        "nBFalse": clean("B"),
+        "nCFalse": clean("C"),
+        "nCFalseShare": f"{100 * clean('C', 'rate'):.1f}",
+        "nCBlocks": cond.get("C", {}).get("blocks", 0),
+        "nBSeconds": seconds("B"),
+        "nBPlusSeconds": seconds("B+"),
+        "nCSeconds": seconds("C"),
+        "nScanSeconds": seconds("C", "median_scan_seconds_unbatched"),
+        "nCTriageSeconds": seconds("C", "median_triage_seconds"),
+        "nTimedTurns": cond.get("C", {}).get("overhead", {}).get("turns_with_full_timing", 0),
+        "nCSql": arrival("C", "sql", by="by_class"),
+        "nSqlIntro": arrival("C", "sql", "introduced", "by_class"),
+        "nCPath": arrival("C", "path-traversal", by="by_class"),
+        "nPathIntro": arrival("C", "path-traversal", "introduced", "by_class"),
+        "nCCommand": sum(arrival("C", c, by="by_class") for c in command),
+        "nCommandIntro": sum(arrival("C", c, "introduced", "by_class") for c in command),
+        "nCErrors": cond.get("C", {}).get("outcomes", {}).get("error", 0),
+        "nCCalls": cond.get("C", {}).get("overhead", {}).get("model_calls", 0),
+        "nCondRows": "\n".join(cond_rows),
+        "nSigEvents": primary.get("pairs", 0),
+        "nSigDiffer": primary.get("pairs_used", 0),
+        "nSigCBetter": primary.get("first_better", 0),
+        "nSigBBetter": primary.get("second_better", 0),
+        "nSigTies": primary.get("zero_differences_dropped", 0),
+        "nSigBothZero": primary.get("tied_with_both_zero", 0),
+        "nSigP": f"{primary.get('p_two_sided', 1):.3f}",
+        "nSigR": f"{primary.get('rank_biserial', 0):.1f}",
+        "nSigMeanC": f"{sig_cond.get('C', {}).get('cross_file', {}).get('mean_recall', 0):.2f}",
+        "nSigMeanB": f"{sig_cond.get('B', {}).get('cross_file', {}).get('mean_recall', 0):.2f}",
+        "nSigDiff": f"{primary.get('mean_difference', 0):.2f}",
+        "nSigLow": f"{(primary.get('mean_difference_ci95') or [0, 0])[0]:.2f}",
+        "nSigHigh": f"{(primary.get('mean_difference_ci95') or [0, 0])[1]:.2f}",
+        "nSigHolm": f"{max([s['p_holm'] for s in sig.get('secondary', [])] or [1]):.3f}",
         "nBanditVersion": static.get("tools", {}).get("bandit", "n/a"),
         "nSnapshotDate": f"{dt.date.today().day} {dt.date.today():%B %Y}",
         "nTests": count_tests(),

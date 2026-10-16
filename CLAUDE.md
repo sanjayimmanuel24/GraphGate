@@ -341,15 +341,12 @@ selected repos (`data/fix_pairs.json`), each reviewed by two independent reviewe
 (`data/fix_review.json`). **Step 2.3 done:** the 35 pairs form 34 events; after AI preparation
 (`data/validation_ai_review.json`) the owner signed off on 2026-10-05 — 30 validated events (24
 cross-file, 6 local) in `data/validation_signoff.json`. **Step 2.6 done:** the leakage scan gives
-35 exclusions in 20 events (`data/leakage_exclusions.json`). **Steps 2.4 and 2.5: tools built**
-(`scripts/synthesize_traces.py`, trace schema v5; `scripts/label_traces.py`) **but no trace has
-been recorded.** What closes M1.2 is the owner's paid run: a 3-event pilot (`--pilot`), then the
-dataset run over the 30 validated events (about 603 calls, roughly $74–126 at 3 seeds), each
-followed by labelling; the pilot also shows how many turns come out `carried`. **Next to
-build: M1.3.** Step 3.1 is done (Semgrep and Bandit wrapper; only 1 of the 30 raw regressions
-introduces a static finding). Step 3.2 is built (triage step, Condition B and the added baseline
-B+) and tested against a stand-in model; the owner's paid pilot (`scripts/triage_events.py`, 62
-calls) has not been run. **Next: 3.3** (Pysa), which needs Linux; this machine has neither WSL
+35 exclusions in 20 events (`data/leakage_exclusions.json`). **Steps 2.4 and 2.5 done (2026-10-11):** all 30 validated events are recorded with the open-weight
+model and labelled (`data/traces/`; see "Dataset run and first run of the conditions" below).
+Step 3.1 is done (Semgrep and Bandit wrapper; only 1 of the 30 raw regressions
+introduces a static finding). Step 3.2 is done (triage step, Condition B and the added baseline
+B+; the triage pilot ran in the notebook, 62 calls, none unusable). Step 6.3 for B and B+ is
+done (see below). **Next: 3.3** (Pysa), which needs Linux; this machine has neither WSL
 nor Docker (BUILD_PLAN 3.1, "Open"). A
 progress paper (`paper/`) and a dashboard
 (`scripts/build_dashboard.py`) exist for the guide's review; both read their numbers from the
@@ -370,21 +367,20 @@ the module's docstring; do not change them after this run either.
 
 **Runner built (2026-10-08):** step 3.4's runner and measures, and Condition C's gate (5.2, in
 part), are built and tested (603 tests); a tool test on the three pilot traces ran without
-triage (BUILD_PLAN 3.4). No condition has been run on dataset traces. Before that run: record
-the traces and set up the analysers and rules in the notebook. The two open points were settled
+triage (BUILD_PLAN 3.4). The two open points were settled
 by the owner on 2026-10-08 (the 15% limit is on clean turns blocked; the registered C sees the
 repository, C on the slice is reported beside it).
 
-**Notebook, second half (2026-10-08, not yet run there):** after the model is up, the notebook
+**Notebook, second half (2026-10-08; run there 2026-10-10 and 11):** after the model is up, the notebook
 installs the analysers, fetches and checks the Semgrep rules, runs the triage pilot, records
 traces for what is left of the session, and runs `scripts/run_conditions.py` over the dataset
 traces only when all of them are recorded. The bundle now carries the repository snapshots
 (`python scripts/build_repo_snapshots.py`, then `python scripts/make_notebook_bundle.py`).
 
-**Model switch, in progress (2026-10-08).** The experiment model is `qwen2.5-coder:14b`
+**Model switch (2026-10-08).** The experiment model is `qwen2.5-coder:14b`
 (Q4_K_M, Apache-2.0, 32,768-token context, Ollama 0.40.0), run by the owner in a Kaggle GPU
-notebook. The three-event pilot passed. The dataset run is under way and spans several
-10.5-hour sessions (about 50 minutes per event); results come back as `graphgate_results.zip`.
+notebook. The three-event pilot passed and the dataset run finished on 2026-10-11; results came
+back as `graphgate_results.zip`.
 - **Replications are 0, 2 and 3, not 0, 1, 2.** The client sends the replication number as the
   sampler seed, which fixes one random stream per replication. Under seed 1 the model's reply
   broke the output format in all 14 events the first run started (never under 0 or 2), so seed
@@ -397,9 +393,40 @@ notebook. The three-event pilot passed. The dataset run is under way and spans s
   rate; never work around it.
 - `docs/MODEL_CHOICE.md`, the paper and the dashboard describe the open model (2026-10-08); their
   figures come from `data/open_model_runs.json` (`scripts/summarize_open_model_runs.py`).
-- Still to do after the run: the triage pilot in the notebook, and Pysa (3.3) there as well.
+- Still to do in the notebook: Pysa (3.3).
 
-**Paper tables for unfinished work (2026-10-08):** "Results obtained so far" holds measured
+**Dataset run and first run of the conditions (2026-10-11).** `data/traces/` holds the 30
+labelled traces (90 replications, 584 turns, all usable; the regression placed in 80, the
+injection failed in 10; 302 labels `carried`), and `data/results/` holds one run of A, B, B+,
+C-slice and C over them (`summary.json` says `pilot: false`, `complete: true`).
+- Recall at introduction, of 80 regressions (63 cross-file): B 5 (3), B+ 7 (3), C-slice 16 (9),
+  C 22 (14). Clean turns blocked, of 235: B 8, B+ 7, C-slice 21, C 30 (12.8%). Median added
+  time: C 7.9 s. C is inside both registered limits, the first narrowly.
+- **Significance tests (6.3, 2026-10-16).** The owner took the recommended choices for what the
+  proposal left open (two-sided; pairs without a difference dropped and counted); the rest of the
+  plan was written into `graphgate.experiment.stats` before any test was computed, after the
+  counts were known. `scripts/significance_tests.py` wrote `data/significance_tests.json`. The
+  registered comparison, C against B on the 23 cross-file events with a placed regression: C
+  higher in 7, B in 0, 16 tied (15 of them both 0); p = 0.0156, mean per-event recall 0.22
+  against 0.04, difference 0.17 (95% bootstrap 0.07 to 0.30). Secondary tests (C against B over
+  all events, C against B+ cross-file and all; Holm) all give p at most 0.016.
+- When writing about it: "significant" is allowed for C against B and B+, always with the fact
+  that it rests on the 7 events where the gates differ, and that most regressions still pass.
+  Do not change the plan in `graphgate.experiment.stats` now that it has been run; another
+  analysis is a new, labelled one beside it. C against S1 waits for Pysa.
+- The conditions were run once. Do not re-run them with a changed rule, catalog entry, setting,
+  threshold or prompt, and do not replace `data/results/`: a later run with anything changed is
+  an ablation with its own output folder. A re-run from the cache (`--cache-only`) on this
+  machine reproduced every decision row.
+- `gitpython-cwvm` has no placed regression in any replication; it stays in the dataset and is
+  reported, and 29 events enter per-trace comparisons.
+- Half the labels are carried, so recall at introduction is the main figure and a claim about
+  false blocks says which reading it uses (BUILD_PLAN 2.5, 3.4).
+- The unpacked archive of the final session is in the ignored `runs/kaggle-2026-10-11/`,
+  including the response cache the conditions were run from. Keep it.
+
+**Paper tables (2026-10-08, updated 2026-10-11):** "Results obtained so far" and the table of
+gate conditions hold measured
 values only, read from the data files. "Remaining steps" lists every open BUILD_PLAN step with
 an *expected* outcome, marked as not yet measured. Never move a figure from the second table
 into the first, or write an expected outcome as a result, until the run behind it exists; when

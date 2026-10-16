@@ -6,3 +6,7 @@ docs/evidence/** -text
 
 # Regression-event slices are model input: their bytes feed prompt hashes.
 data/events/** -text
+
+# Recorded traces, their labels and manifest are evidence read back by hash and
+# compared as written; keep them exactly as recorded.
+data/traces/** -text

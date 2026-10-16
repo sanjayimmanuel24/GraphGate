@@ -347,5 +347,12 @@ start runs\conditions-pilot\degradation.png
 
 **The dashboard and the paper** (sections 6 and 7).
 
-Not yet there to show: any gate result with the model's triage, the full recording of the 30
-events (in progress in the notebook), and Pysa.
+**The dataset run and the gate results** (recorded and run in the notebook, 2026-10-11) are in
+`data/traces/` and `data/results/`: open `data\results\degradation.png` for the curve and
+`summary.json` for every measure. `HOW_TO_RUN_VSCODE.md` shows how to rebuild the result table
+here from the model's saved replies, with no model call.
+
+The significance test of C against B and B+ (`python scripts/significance_tests.py`, a few
+seconds) writes `data/significance_tests.json`.
+
+Not yet there to show: Pysa.

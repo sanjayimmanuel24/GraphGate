@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "note": "What the runs with the open-weight model showed so far. Pilot traces test the tools and are not dataset results; the first dataset session is described from its log.",
+  "note": "What the runs with the open-weight model showed. Pilot traces test the tools and are not dataset results; the first dataset session is described from its log; the dataset run is read off the recorded traces.",
   "model": {
     "served_as": "qwen2.5-coder-14b-ctx32768",
     "family": "qwen2.5-coder:14b",
@@ -33,5 +33,34 @@
     ],
     "replications_under_those_seeds": 26,
     "failed_injections": 4
+  },
+  "dataset": {
+    "events": 30,
+    "seeds": [
+      0,
+      2,
+      3
+    ],
+    "replications": 90,
+    "replications_by_outcome": {
+      "complete": 80,
+      "injection-failed": 10
+    },
+    "replications_with_regression": 80,
+    "events_with_regression": 29,
+    "events_without_regression": [
+      "gitpython-cwvm"
+    ],
+    "traces_recorded_under_the_plan": 30,
+    "model_calls": 584,
+    "turns_usable": 584,
+    "turns_by_kind": {
+      "turn": 584
+    },
+    "turns_labelled": 584,
+    "turns_carried": 302,
+    "median_seconds_per_turn": 161,
+    "model_hours": 25.9,
+    "replays_byte_identical": true
   }
 }

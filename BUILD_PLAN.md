@@ -213,6 +213,14 @@ for failed API calls; an unusable reply is the model's outcome and now stays in 
 responses of that session are in the cache, so replications 0 and 2 of those events are not
 recorded again. Also seen: 4 of 26 replications lost the regression to a failed injection.*
 
+*Dataset run finished (2026-10-11), over three further notebook sessions. All 30 validated events
+are recorded at replications 0, 2 and 3: 90 replications and 584 turns, every one a usable reply
+(no refusal, no error turn), at a median of 161 s per turn, 25.9 hours of model time in all. The
+regression was placed in 80 replications; in 10 the injection failed (7 events, among them all
+three replications of `gitpython-cwvm`, which therefore contributes no regression). Every trace
+was recorded under the plan and replays byte for byte on this machine. The figures are in
+`data/open_model_runs.json` (`scripts/summarize_open_model_runs.py`).*
+
 **2.5** Label every turn `{clean, local_regression, cross_file_regression}` and store alongside
 the trace.
 
@@ -243,6 +251,12 @@ run by `scripts/label_traces.py`, writes `<event_id>.labels.json` next to each t
   means the regressed code is unchanged, not that nothing else on the flow compensates.*
 - *How a BLOCK on a later turn of a surviving regression is scored (late detection, not a false
   positive) is fixed in M1.3 when the gate conditions are scored; the labels support either.*
+
+*Measured on the dataset run (2026-10-11): 302 of the 584 turn labels are `carried` (52%), and of
+the 235 clean turns 95 were read off the code. The labels regenerate identically on this machine.
+No review pass and no rule for leaving carried turns out has been decided. Until one is, recall
+at introduction stays the main figure, and false blocks are given over all clean turns and over
+those read off the code.*
 
 **2.6** Leakage control (proposal §6.3): verify that each injected vulnerable pattern does not
 already appear elsewhere in its repository; where duplicates exist, exclude them from the graph's
@@ -450,6 +464,39 @@ readings are reported beside it.*
   If more than 10% of the triage pilot's replies cannot be used, the conditions are not run (a
   limit fixed before the pilot). None of this has run in the notebook yet.*
 
+*First run on the dataset traces (2026-10-11, in the notebook). One run of A, B, B+, C-slice and C
+over the 90 replications, triage by `qwen2.5-coder-14b-ctx32768`, prompt version 1; nothing was
+changed after it. The triage pilot before it: 62 calls, none unusable (limit 10%). Results are in
+`data/results/`:*
+- *Recall at introduction, of 80 regressions (63 cross-file, 17 local): A 0; B 5 (3 cross-file);
+  B+ 7 (3); C-slice 16 (9); C 22 (14). By class for C: SQL 9 of 14, path traversal 10 of 47,
+  command 3 of 19.*
+- *Caught by the end of the run, of 80: B 13, B+ 15, C-slice 35, C 33.*
+- *Blocked clean turns, of 235 (the registered reading): B 8 (3.4%), B+ 7 (3.0%), C-slice 21
+  (8.9%), C 30 (12.8%). Over the 95 clean turns read off the code, C blocks 12 (12.6%); over the
+  504 turns that introduce nothing, 59 (11.7%).*
+- *Median added time over the 60 timed turns: B 6.5 s, B+ 11.7 s, C-slice 6.6 s, C 7.9 s. The
+  scan alone takes 6.4 s; where C calls the model, the call takes a median of 9.0 s on top, so a
+  triaged turn is over ten seconds although the median turn is not.*
+- *Unusable triage replies (never a block): B 2, B+ 1, C-slice 4, C 5.*
+- *Against the registered criteria: C is under both limits (about 15% of clean turns, about 10 s
+  at the median), the first narrowly. Cross-file recall of C against B is 14 against 3 of 63 and
+  is **not yet tested** (6.3); no significance may be claimed until it is. S1 has not run (3.3),
+  so the exit check is met for A against B and B+ only.*
+- *What was expected and did not happen: B+ was expected to catch more cross-file regressions
+  than B (it catches the same 3), and the added time was expected to exceed ten seconds (it does
+  only for B+, which calls the model on every turn).*
+
+*Checked on this machine the same day: every trace replays byte for byte; the labels regenerate
+identically; `summary.json` recomputes exactly from `turns.csv`; and a re-run of all five
+conditions from the cached replies (`--cache-only`, scanners and graphs built here, on Windows)
+found every one of the 897 replies and gave the same 2,920 rows outside the timing columns.*
+
+*Open after the run:*
+- *6.3 has to fix, before the test is computed, what the proposal leaves open: one- or two-sided,
+  and how traces where both conditions score the same are treated.*
+- *`gitpython-cwvm` has no placed regression, so 29 events enter the paired tests.*
+
 ---
 
 ## Phase M2.1 — Graph layer + ΔG engine (Weeks 9–12)
@@ -607,6 +654,9 @@ model. Not run for results.*
 - *Known limit: files outside the slice are at the fix commit, so a sibling file the fix also
   changed is seen in its fixed form. It is the same before and after every turn, so it raises no
   flag, but it can appear as code shown to the triage model.*
+- *Run once on the dataset traces on 2026-10-11 (figures under 3.4). With the repository around
+  the slice, C blocks 22 of 80 regressions on arrival against 16 for C-slice, and 30 clean turns
+  against 21; by the end of the run C-slice has caught 35 and C 33.*
 
 **5.3** Collect the real-session holdout set: 10–20 genuine multi-turn refinement sessions with
 manual two-pass review of naturally occurring regressions (disagreements adjudicated). Keep this
@@ -633,6 +683,27 @@ LLM-triage), plus the **small-model ablation** — re-run Condition C on the sec
 LLM (proposal §9) to show how much of the benefit depends on model capability.
 
 **6.3** Statistical analysis: paired Wilcoxon tests, effect sizes, confidence intervals.
+
+*Done for B and B+ (2026-10-16). The owner chose what the proposal left open, taking the
+recommended options: two-sided, and pairs without a difference dropped and counted. The rest of
+the plan was written into `graphgate.experiment.stats` before any test was computed, after the
+first run's counts were known: one event as the unit, its recall at introduction; exact Wilcoxon
+p over all sign assignments (ties share average ranks); level 0.05; rank-biserial correlation;
+mean difference with a 95% percentile bootstrap interval (10,000 resamples of events, seed 0);
+C against B over the cross-file events as the primary test, and C against B over all events and
+C against B+ (cross-file, all) as one Holm-adjusted secondary family. Tested in
+`tests/test_stats.py` (the exact p checked against listing every sign assignment, and once
+against SciPy). `scripts/significance_tests.py` wrote `data/significance_tests.json`:*
+- *29 of 30 events have a placed regression (23 cross-file; `gitpython-cwvm` left out).*
+- *Primary, C against B on cross-file events: C higher in 7, B in 0, 16 tied (15 with both at
+  0, one with both at 2/3). p = 0.0156, which is 2/2^7: the smallest p seven untied pairs can
+  give. Mean per-event recall 0.22 against 0.04; difference 0.17, 95% interval 0.07 to 0.30;
+  rank-biserial 1.0.*
+- *Secondary (Holm): C against B, all events, p = 0.0059; C against B+, cross-file, 0.0156; C
+  against B+, all events, 0.0078.*
+- *Reading: the registered criterion (ii) is met against B, and C against S1 is still open. The
+  result rests on 7 events; it shows the graph catches regressions the diff-only gates do not,
+  not how large the gain is in general.*
 
 **6.4** Manual error analysis on false negatives, categorized by cause (aliasing, dynamic
 imports, reflection, framework flows, rule-coverage gaps).

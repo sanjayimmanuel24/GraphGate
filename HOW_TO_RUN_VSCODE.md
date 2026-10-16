@@ -258,9 +258,64 @@ that needs Microsoft Word.
 | No traces in `runs\pilot-traces\` | Unpack `graphgate_results.zip` from the notebook into the project folder. |
 | A task from the menu fails but the command works in the terminal | The task used another Python. Select the interpreter, close all terminals and run the task again. |
 
+## The dataset run and the gate results
+
+The recording of the 30 events and the first run of the five gate conditions were made in the
+notebook and are in the project: `data\traces\` and `data\results\`. Three things to show.
+
+**The curve.** Regressions still in the code after each turn, per condition:
+
+```powershell
+start data\results\degradation.png
+```
+
+**What the recording holds.** This replays all 30 traces and compares them byte for byte (about
+a minute), then prints 30 events, 90 runs and 584 turns under `dataset`:
+
+```powershell
+python scripts/summarize_open_model_runs.py
+```
+
+**The result table, rebuilt in front of the guide.** This runs all five conditions again from
+the model's saved replies. The scanners and the graphs are built here; no model is called, and
+the command stops if a single reply is missing. It takes about nine minutes and ends with the
+same table as `data\results\summary.json`:
+
+```powershell
+Remove-Item runs\conditions-recheck -Recurse -ErrorAction SilentlyContinue
+```
+
+```powershell
+python scripts/run_conditions.py --conditions "A,B,B+,C-slice,C" --provider openai-compatible --base-url http://localhost:11434/v1 --model qwen2.5-coder-14b-ctx32768 --cache runs\kaggle-2026-10-11\runs\cache.sqlite --cache-only --time-scans 0 --out-dir runs\conditions-recheck
+```
+
+Expected last lines:
+
+```text
+cache: 897 hit(s), 0 miss(es)
+
+A              blocks 0 of 80 regression(s) on arrival; 0 of 235 clean turn(s) blocked
+B              blocks 5 of 80 regression(s) on arrival; 8 of 235 clean turn(s) blocked
+B+             blocks 7 of 80 regression(s) on arrival; 7 of 235 clean turn(s) blocked
+C-slice        blocks 16 of 80 regression(s) on arrival; 21 of 235 clean turn(s) blocked
+C              blocks 22 of 80 regression(s) on arrival; 30 of 235 clean turn(s) blocked
+```
+
+Always keep `--out-dir`: without it the command writes over `data\results\`. Many lines saying a
+file "has a syntax error" are expected; they are files the model wrote badly, and the graph
+counts them.
+
+**The significance test.** The paired test of GraphGate against the diff-only gates, planned
+before it was computed (a few seconds):
+
+```powershell
+python scripts/significance_tests.py
+```
+
+The line to point at is the primary one: `C vs B, cross_file: 23 events, 16 without a
+difference, C higher in 7, B higher in 0; p = 0.0156`.
+
 ## What these steps do not show
 
-- A gate decision made with the model's triage. Steps 7 and 8 stop at the question.
-- The full recording of the 30 events. It is in progress in the notebook; 13 of 30 are recorded.
 - A live call to the model. It runs in the notebook, not on this laptop.
 - The Pysa baseline, which needs Linux.

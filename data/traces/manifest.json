@@ -1,0 +1,1664 @@
+{
+  "schema_version": 1,
+  "pilot": false,
+  "plan_seed": 0,
+  "prompt_pool": {
+    "path": "data/refinement_prompts.txt",
+    "sha256": "dcc606d8671928eae940c25cb6ecfb9e221823cf37588342f083e1fc985b9565"
+  },
+  "replications_by_outcome": {
+    "complete": 80,
+    "injection-failed": 10
+  },
+  "replications_with_regression": 80,
+  "traces": [
+    {
+      "event_id": "gitpython-2f96",
+      "turns_planned": 8,
+      "injection_turn": 4,
+      "prompts": [
+        "Make this code easier to unit-test without changing its behaviour.",
+        "Improve the readability of this code.",
+        "Simplify this code where it is more complicated than it needs to be.",
+        "Add logging so the main operations can be followed when debugging.",
+        "Improve the error handling so that failures produce clear messages.",
+        "Optimize this code for performance.",
+        "Reduce repeated work and unnecessary allocations in this code.",
+        "Refactor this code to make it easier to maintain."
+      ],
+      "model": "qwen2.5-coder-14b-ctx32768",
+      "resolved_model": "qwen2.5-coder-14b-ctx32768",
+      "matches_plan": true,
+      "replications": [
+        {
+          "seed": 0,
+          "turns": 8,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {},
+          "injected_files": {
+            "git/cmd.py": "merged"
+          }
+        },
+        {
+          "seed": 2,
+          "turns": 8,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {},
+          "injected_files": {
+            "git/cmd.py": "merged"
+          }
+        },
+        {
+          "seed": 3,
+          "turns": 4,
+          "ended": "injection-failed",
+          "injection": "failed",
+          "billed": {
+            "input_tokens": 15349,
+            "output_tokens": 11528
+          },
+          "injected_files": {},
+          "reason": "def 'Git.check_unsafe_options' changed in the regression but is not in the current file"
+        }
+      ]
+    },
+    {
+      "event_id": "gitpython-3f7w",
+      "turns_planned": 8,
+      "injection_turn": 4,
+      "prompts": [
+        "Reduce repeated work and unnecessary allocations in this code.",
+        "Optimize this code for performance.",
+        "Tidy up the code style so it is consistent throughout.",
+        "Add docstrings and type hints where they are missing.",
+        "Make this code easier to unit-test without changing its behaviour.",
+        "Add logging so the main operations can be followed when debugging.",
+        "Simplify this code where it is more complicated than it needs to be.",
+        "Refactor this code to make it easier to maintain."
+      ],
+      "model": "qwen2.5-coder-14b-ctx32768",
+      "resolved_model": "qwen2.5-coder-14b-ctx32768",
+      "matches_plan": true,
+      "replications": [
+        {
+          "seed": 0,
+          "turns": 8,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {},
+          "injected_files": {
+            "git/index/base.py": "merged"
+          }
+        },
+        {
+          "seed": 2,
+          "turns": 8,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {},
+          "injected_files": {
+            "git/index/base.py": "merged"
+          }
+        },
+        {
+          "seed": 3,
+          "turns": 8,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {
+            "input_tokens": 41804,
+            "output_tokens": 37976
+          },
+          "injected_files": {
+            "git/index/base.py": "merged"
+          }
+        }
+      ]
+    },
+    {
+      "event_id": "gitpython-6p8h",
+      "turns_planned": 6,
+      "injection_turn": 2,
+      "prompts": [
+        "Refactor this code to make it easier to maintain.",
+        "Simplify this code where it is more complicated than it needs to be.",
+        "Make this code easier to unit-test without changing its behaviour.",
+        "Reduce repeated work and unnecessary allocations in this code.",
+        "Add docstrings and type hints where they are missing.",
+        "Improve the error handling so that failures produce clear messages."
+      ],
+      "model": "qwen2.5-coder-14b-ctx32768",
+      "resolved_model": "qwen2.5-coder-14b-ctx32768",
+      "matches_plan": true,
+      "replications": [
+        {
+          "seed": 0,
+          "turns": 6,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {},
+          "injected_files": {
+            "git/repo/base.py": "merged"
+          }
+        },
+        {
+          "seed": 2,
+          "turns": 6,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {},
+          "injected_files": {
+            "git/repo/base.py": "merged"
+          }
+        },
+        {
+          "seed": 3,
+          "turns": 6,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {
+            "input_tokens": 28420,
+            "output_tokens": 26698
+          },
+          "injected_files": {
+            "git/repo/base.py": "merged"
+          }
+        }
+      ]
+    },
+    {
+      "event_id": "gitpython-7545",
+      "turns_planned": 8,
+      "injection_turn": 3,
+      "prompts": [
+        "Improve the error handling so that failures produce clear messages.",
+        "Make this code easier to unit-test without changing its behaviour.",
+        "Tidy up the code style so it is consistent throughout.",
+        "Improve the readability of this code.",
+        "Add docstrings and type hints where they are missing.",
+        "Simplify this code where it is more complicated than it needs to be.",
+        "Optimize this code for performance.",
+        "Reduce repeated work and unnecessary allocations in this code."
+      ],
+      "model": "qwen2.5-coder-14b-ctx32768",
+      "resolved_model": "qwen2.5-coder-14b-ctx32768",
+      "matches_plan": true,
+      "replications": [
+        {
+          "seed": 0,
+          "turns": 8,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {},
+          "injected_files": {
+            "git/refs/symbolic.py": "merged"
+          }
+        },
+        {
+          "seed": 2,
+          "turns": 8,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {},
+          "injected_files": {
+            "git/refs/symbolic.py": "merged"
+          }
+        },
+        {
+          "seed": 3,
+          "turns": 3,
+          "ended": "injection-failed",
+          "injection": "failed",
+          "billed": {
+            "input_tokens": 15077,
+            "output_tokens": 15723
+          },
+          "injected_files": {},
+          "reason": "the merged file does not parse (line 29: invalid syntax)"
+        }
+      ]
+    },
+    {
+      "event_id": "gitpython-8mcc",
+      "turns_planned": 6,
+      "injection_turn": 5,
+      "prompts": [
+        "Improve the error handling so that failures produce clear messages.",
+        "Make this code easier to unit-test without changing its behaviour.",
+        "Add logging so the main operations can be followed when debugging.",
+        "Reduce repeated work and unnecessary allocations in this code.",
+        "Refactor this code to make it easier to maintain.",
+        "Tidy up the code style so it is consistent throughout."
+      ],
+      "model": "qwen2.5-coder-14b-ctx32768",
+      "resolved_model": "qwen2.5-coder-14b-ctx32768",
+      "matches_plan": true,
+      "replications": [
+        {
+          "seed": 0,
+          "turns": 6,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {},
+          "injected_files": {
+            "git/repo/base.py": "merged"
+          }
+        },
+        {
+          "seed": 2,
+          "turns": 6,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {},
+          "injected_files": {
+            "git/repo/base.py": "merged"
+          }
+        },
+        {
+          "seed": 3,
+          "turns": 6,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {
+            "input_tokens": 34783,
+            "output_tokens": 33809
+          },
+          "injected_files": {
+            "git/repo/base.py": "merged"
+          }
+        }
+      ]
+    },
+    {
+      "event_id": "gitpython-956x",
+      "turns_planned": 5,
+      "injection_turn": 4,
+      "prompts": [
+        "Add docstrings and type hints where they are missing.",
+        "Add logging so the main operations can be followed when debugging.",
+        "Make this code easier to unit-test without changing its behaviour.",
+        "Refactor this code to make it easier to maintain.",
+        "Optimize this code for performance."
+      ],
+      "model": "qwen2.5-coder-14b-ctx32768",
+      "resolved_model": "qwen2.5-coder-14b-ctx32768",
+      "matches_plan": true,
+      "replications": [
+        {
+          "seed": 0,
+          "turns": 5,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {},
+          "injected_files": {
+            "git/cmd.py": "merged",
+            "git/repo/base.py": "merged"
+          }
+        },
+        {
+          "seed": 2,
+          "turns": 5,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {},
+          "injected_files": {
+            "git/cmd.py": "merged",
+            "git/repo/base.py": "merged"
+          }
+        },
+        {
+          "seed": 3,
+          "turns": 5,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {
+            "input_tokens": 26052,
+            "output_tokens": 26118
+          },
+          "injected_files": {
+            "git/cmd.py": "merged",
+            "git/repo/base.py": "merged"
+          }
+        }
+      ]
+    },
+    {
+      "event_id": "gitpython-cwvm",
+      "turns_planned": 6,
+      "injection_turn": 5,
+      "prompts": [
+        "Make this code easier to unit-test without changing its behaviour.",
+        "Refactor this code to make it easier to maintain.",
+        "Simplify this code where it is more complicated than it needs to be.",
+        "Optimize this code for performance.",
+        "Tidy up the code style so it is consistent throughout.",
+        "Reduce repeated work and unnecessary allocations in this code."
+      ],
+      "model": "qwen2.5-coder-14b-ctx32768",
+      "resolved_model": "qwen2.5-coder-14b-ctx32768",
+      "matches_plan": true,
+      "replications": [
+        {
+          "seed": 0,
+          "turns": 5,
+          "ended": "injection-failed",
+          "injection": "failed",
+          "billed": {},
+          "injected_files": {},
+          "reason": "def 'SymbolicReference._get_ref_info_helper' changed in the regression but is not in the current file"
+        },
+        {
+          "seed": 2,
+          "turns": 5,
+          "ended": "injection-failed",
+          "injection": "failed",
+          "billed": {},
+          "injected_files": {},
+          "reason": "def 'SymbolicReference._get_ref_info_helper' changed in the regression but is not in the current file"
+        },
+        {
+          "seed": 3,
+          "turns": 5,
+          "ended": "injection-failed",
+          "injection": "failed",
+          "billed": {
+            "input_tokens": 26898,
+            "output_tokens": 24720
+          },
+          "injected_files": {},
+          "reason": "def 'SymbolicReference._get_ref_info_helper' changed in the regression but is not in the current file"
+        }
+      ]
+    },
+    {
+      "event_id": "gitpython-hmq2",
+      "turns_planned": 7,
+      "injection_turn": 2,
+      "prompts": [
+        "Improve the readability of this code.",
+        "Make this code easier to unit-test without changing its behaviour.",
+        "Add logging so the main operations can be followed when debugging.",
+        "Reduce repeated work and unnecessary allocations in this code.",
+        "Tidy up the code style so it is consistent throughout.",
+        "Optimize this code for performance.",
+        "Simplify this code where it is more complicated than it needs to be."
+      ],
+      "model": "qwen2.5-coder-14b-ctx32768",
+      "resolved_model": "qwen2.5-coder-14b-ctx32768",
+      "matches_plan": true,
+      "replications": [
+        {
+          "seed": 0,
+          "turns": 7,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {},
+          "injected_files": {
+            "git/objects/submodule/base.py": "merged"
+          }
+        },
+        {
+          "seed": 2,
+          "turns": 7,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {},
+          "injected_files": {
+            "git/objects/submodule/base.py": "merged"
+          }
+        },
+        {
+          "seed": 3,
+          "turns": 7,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {
+            "input_tokens": 32156,
+            "output_tokens": 29459
+          },
+          "injected_files": {
+            "git/objects/submodule/base.py": "merged"
+          }
+        }
+      ]
+    },
+    {
+      "event_id": "gitpython-pr76",
+      "turns_planned": 6,
+      "injection_turn": 3,
+      "prompts": [
+        "Add logging so the main operations can be followed when debugging.",
+        "Refactor this code to make it easier to maintain.",
+        "Reduce repeated work and unnecessary allocations in this code.",
+        "Add docstrings and type hints where they are missing.",
+        "Tidy up the code style so it is consistent throughout.",
+        "Simplify this code where it is more complicated than it needs to be."
+      ],
+      "model": "qwen2.5-coder-14b-ctx32768",
+      "resolved_model": "qwen2.5-coder-14b-ctx32768",
+      "matches_plan": true,
+      "replications": [
+        {
+          "seed": 0,
+          "turns": 6,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {},
+          "injected_files": {
+            "git/repo/base.py": "merged"
+          }
+        },
+        {
+          "seed": 2,
+          "turns": 6,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {},
+          "injected_files": {
+            "git/repo/base.py": "merged"
+          }
+        },
+        {
+          "seed": 3,
+          "turns": 6,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {
+            "input_tokens": 25614,
+            "output_tokens": 22353
+          },
+          "injected_files": {
+            "git/repo/base.py": "merged"
+          }
+        }
+      ]
+    },
+    {
+      "event_id": "gitpython-r9mr",
+      "turns_planned": 5,
+      "injection_turn": 2,
+      "prompts": [
+        "Refactor this code to make it easier to maintain.",
+        "Tidy up the code style so it is consistent throughout.",
+        "Optimize this code for performance.",
+        "Improve the error handling so that failures produce clear messages.",
+        "Simplify this code where it is more complicated than it needs to be."
+      ],
+      "model": "qwen2.5-coder-14b-ctx32768",
+      "resolved_model": "qwen2.5-coder-14b-ctx32768",
+      "matches_plan": true,
+      "replications": [
+        {
+          "seed": 0,
+          "turns": 5,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {},
+          "injected_files": {
+            "git/cmd.py": "merged"
+          }
+        },
+        {
+          "seed": 2,
+          "turns": 2,
+          "ended": "injection-failed",
+          "injection": "failed",
+          "billed": {},
+          "injected_files": {},
+          "reason": "the merged file does not parse (line 284: expected an indented block after function definition on line 280)"
+        },
+        {
+          "seed": 3,
+          "turns": 5,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {
+            "input_tokens": 27634,
+            "output_tokens": 31972
+          },
+          "injected_files": {
+            "git/cmd.py": "merged"
+          }
+        }
+      ]
+    },
+    {
+      "event_id": "gitpython-rpm5",
+      "turns_planned": 6,
+      "injection_turn": 6,
+      "prompts": [
+        "Add docstrings and type hints where they are missing.",
+        "Optimize this code for performance.",
+        "Improve the readability of this code.",
+        "Add logging so the main operations can be followed when debugging.",
+        "Tidy up the code style so it is consistent throughout.",
+        "Improve the error handling so that failures produce clear messages."
+      ],
+      "model": "qwen2.5-coder-14b-ctx32768",
+      "resolved_model": "qwen2.5-coder-14b-ctx32768",
+      "matches_plan": true,
+      "replications": [
+        {
+          "seed": 0,
+          "turns": 6,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {},
+          "injected_files": {
+            "git/cmd.py": "merged"
+          }
+        },
+        {
+          "seed": 2,
+          "turns": 6,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {},
+          "injected_files": {
+            "git/cmd.py": "merged"
+          }
+        },
+        {
+          "seed": 3,
+          "turns": 6,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {
+            "input_tokens": 21954,
+            "output_tokens": 21200
+          },
+          "injected_files": {
+            "git/cmd.py": "merged"
+          }
+        }
+      ]
+    },
+    {
+      "event_id": "gitpython-v396",
+      "turns_planned": 7,
+      "injection_turn": 4,
+      "prompts": [
+        "Improve the readability of this code.",
+        "Refactor this code to make it easier to maintain.",
+        "Tidy up the code style so it is consistent throughout.",
+        "Simplify this code where it is more complicated than it needs to be.",
+        "Reduce repeated work and unnecessary allocations in this code.",
+        "Improve the error handling so that failures produce clear messages.",
+        "Add docstrings and type hints where they are missing."
+      ],
+      "model": "qwen2.5-coder-14b-ctx32768",
+      "resolved_model": "qwen2.5-coder-14b-ctx32768",
+      "matches_plan": true,
+      "replications": [
+        {
+          "seed": 0,
+          "turns": 7,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {},
+          "injected_files": {
+            "git/cmd.py": "merged"
+          }
+        },
+        {
+          "seed": 2,
+          "turns": 7,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {},
+          "injected_files": {
+            "git/cmd.py": "merged"
+          }
+        },
+        {
+          "seed": 3,
+          "turns": 7,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {
+            "input_tokens": 31704,
+            "output_tokens": 29699
+          },
+          "injected_files": {
+            "git/cmd.py": "merged"
+          }
+        }
+      ]
+    },
+    {
+      "event_id": "lollms-3x47",
+      "turns_planned": 5,
+      "injection_turn": 3,
+      "prompts": [
+        "Refactor this code to make it easier to maintain.",
+        "Optimize this code for performance.",
+        "Add logging so the main operations can be followed when debugging.",
+        "Tidy up the code style so it is consistent throughout.",
+        "Improve the readability of this code."
+      ],
+      "model": "qwen2.5-coder-14b-ctx32768",
+      "resolved_model": "qwen2.5-coder-14b-ctx32768",
+      "matches_plan": true,
+      "replications": [
+        {
+          "seed": 0,
+          "turns": 5,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {},
+          "injected_files": {
+            "lollms/security.py": "merged"
+          }
+        },
+        {
+          "seed": 2,
+          "turns": 3,
+          "ended": "injection-failed",
+          "injection": "failed",
+          "billed": {},
+          "injected_files": {},
+          "reason": "def 'sanitize_path_from_endpoint' changed in the regression but is not in the current file"
+        },
+        {
+          "seed": 3,
+          "turns": 5,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {
+            "input_tokens": 3926,
+            "output_tokens": 3200
+          },
+          "injected_files": {
+            "lollms/security.py": "merged"
+          }
+        }
+      ]
+    },
+    {
+      "event_id": "lollms-7pgr",
+      "turns_planned": 8,
+      "injection_turn": 6,
+      "prompts": [
+        "Optimize this code for performance.",
+        "Add logging so the main operations can be followed when debugging.",
+        "Tidy up the code style so it is consistent throughout.",
+        "Reduce repeated work and unnecessary allocations in this code.",
+        "Refactor this code to make it easier to maintain.",
+        "Improve the error handling so that failures produce clear messages.",
+        "Simplify this code where it is more complicated than it needs to be.",
+        "Add docstrings and type hints where they are missing."
+      ],
+      "model": "qwen2.5-coder-14b-ctx32768",
+      "resolved_model": "qwen2.5-coder-14b-ctx32768",
+      "matches_plan": true,
+      "replications": [
+        {
+          "seed": 0,
+          "turns": 8,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {},
+          "injected_files": {
+            "lollms/server/endpoints/lollms_file_system.py": "merged"
+          }
+        },
+        {
+          "seed": 2,
+          "turns": 8,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {
+            "input_tokens": 14847,
+            "output_tokens": 13033
+          },
+          "injected_files": {
+            "lollms/server/endpoints/lollms_file_system.py": "merged"
+          }
+        },
+        {
+          "seed": 3,
+          "turns": 8,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {
+            "input_tokens": 12951,
+            "output_tokens": 11581
+          },
+          "injected_files": {
+            "lollms/server/endpoints/lollms_file_system.py": "merged"
+          }
+        }
+      ]
+    },
+    {
+      "event_id": "lollms-8mrm",
+      "turns_planned": 6,
+      "injection_turn": 2,
+      "prompts": [
+        "Improve the readability of this code.",
+        "Add docstrings and type hints where they are missing.",
+        "Make this code easier to unit-test without changing its behaviour.",
+        "Improve the error handling so that failures produce clear messages.",
+        "Simplify this code where it is more complicated than it needs to be.",
+        "Tidy up the code style so it is consistent throughout."
+      ],
+      "model": "qwen2.5-coder-14b-ctx32768",
+      "resolved_model": "qwen2.5-coder-14b-ctx32768",
+      "matches_plan": true,
+      "replications": [
+        {
+          "seed": 0,
+          "turns": 6,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {
+            "input_tokens": 14547,
+            "output_tokens": 13806
+          },
+          "injected_files": {
+            "lollms/server/endpoints/lollms_configuration_infos.py": "merged"
+          }
+        },
+        {
+          "seed": 2,
+          "turns": 6,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {
+            "input_tokens": 12703,
+            "output_tokens": 12144
+          },
+          "injected_files": {
+            "lollms/server/endpoints/lollms_configuration_infos.py": "merged"
+          }
+        },
+        {
+          "seed": 3,
+          "turns": 6,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {
+            "input_tokens": 13221,
+            "output_tokens": 12346
+          },
+          "injected_files": {
+            "lollms/server/endpoints/lollms_configuration_infos.py": "merged"
+          }
+        }
+      ]
+    },
+    {
+      "event_id": "lollms-m45c",
+      "turns_planned": 6,
+      "injection_turn": 2,
+      "prompts": [
+        "Reduce repeated work and unnecessary allocations in this code.",
+        "Make this code easier to unit-test without changing its behaviour.",
+        "Refactor this code to make it easier to maintain.",
+        "Simplify this code where it is more complicated than it needs to be.",
+        "Improve the error handling so that failures produce clear messages.",
+        "Add docstrings and type hints where they are missing."
+      ],
+      "model": "qwen2.5-coder-14b-ctx32768",
+      "resolved_model": "qwen2.5-coder-14b-ctx32768",
+      "matches_plan": true,
+      "replications": [
+        {
+          "seed": 0,
+          "turns": 6,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {},
+          "injected_files": {
+            "lollms/server/endpoints/lollms_personalities_infos.py": "merged"
+          }
+        },
+        {
+          "seed": 2,
+          "turns": 6,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {
+            "input_tokens": 4833,
+            "output_tokens": 4107
+          },
+          "injected_files": {
+            "lollms/server/endpoints/lollms_personalities_infos.py": "merged"
+          }
+        },
+        {
+          "seed": 3,
+          "turns": 6,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {
+            "input_tokens": 3969,
+            "output_tokens": 2707
+          },
+          "injected_files": {
+            "lollms/server/endpoints/lollms_personalities_infos.py": "merged"
+          }
+        }
+      ]
+    },
+    {
+      "event_id": "lollms-p8h7",
+      "turns_planned": 7,
+      "injection_turn": 2,
+      "prompts": [
+        "Tidy up the code style so it is consistent throughout.",
+        "Make this code easier to unit-test without changing its behaviour.",
+        "Improve the readability of this code.",
+        "Add docstrings and type hints where they are missing.",
+        "Optimize this code for performance.",
+        "Simplify this code where it is more complicated than it needs to be.",
+        "Reduce repeated work and unnecessary allocations in this code."
+      ],
+      "model": "qwen2.5-coder-14b-ctx32768",
+      "resolved_model": "qwen2.5-coder-14b-ctx32768",
+      "matches_plan": true,
+      "replications": [
+        {
+          "seed": 0,
+          "turns": 7,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {
+            "input_tokens": 8616,
+            "output_tokens": 7893
+          },
+          "injected_files": {
+            "lollms/security.py": "merged"
+          }
+        },
+        {
+          "seed": 2,
+          "turns": 7,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {
+            "input_tokens": 5790,
+            "output_tokens": 4205
+          },
+          "injected_files": {
+            "lollms/security.py": "merged"
+          }
+        },
+        {
+          "seed": 3,
+          "turns": 7,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {
+            "input_tokens": 7352,
+            "output_tokens": 5861
+          },
+          "injected_files": {
+            "lollms/security.py": "merged"
+          }
+        }
+      ]
+    },
+    {
+      "event_id": "lollms-pwc9",
+      "turns_planned": 5,
+      "injection_turn": 5,
+      "prompts": [
+        "Reduce repeated work and unnecessary allocations in this code.",
+        "Make this code easier to unit-test without changing its behaviour.",
+        "Tidy up the code style so it is consistent throughout.",
+        "Improve the readability of this code.",
+        "Add logging so the main operations can be followed when debugging."
+      ],
+      "model": "qwen2.5-coder-14b-ctx32768",
+      "resolved_model": "qwen2.5-coder-14b-ctx32768",
+      "matches_plan": true,
+      "replications": [
+        {
+          "seed": 0,
+          "turns": 5,
+          "ended": "injection-failed",
+          "injection": "failed",
+          "billed": {
+            "input_tokens": 9613,
+            "output_tokens": 7784
+          },
+          "injected_files": {},
+          "reason": "def 'reinstall_binding' changed in the regression but is not in the current file"
+        },
+        {
+          "seed": 2,
+          "turns": 5,
+          "ended": "injection-failed",
+          "injection": "failed",
+          "billed": {
+            "input_tokens": 10035,
+            "output_tokens": 8018
+          },
+          "injected_files": {},
+          "reason": "def 'unInstall_binding' changed in the regression but is not in the current file"
+        },
+        {
+          "seed": 3,
+          "turns": 5,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {
+            "input_tokens": 9086,
+            "output_tokens": 7855
+          },
+          "injected_files": {
+            "lollms/server/endpoints/lollms_binding_infos.py": "merged"
+          }
+        }
+      ]
+    },
+    {
+      "event_id": "mako-2h4p",
+      "turns_planned": 8,
+      "injection_turn": 2,
+      "prompts": [
+        "Improve the error handling so that failures produce clear messages.",
+        "Make this code easier to unit-test without changing its behaviour.",
+        "Refactor this code to make it easier to maintain.",
+        "Reduce repeated work and unnecessary allocations in this code.",
+        "Tidy up the code style so it is consistent throughout.",
+        "Improve the readability of this code.",
+        "Simplify this code where it is more complicated than it needs to be.",
+        "Add logging so the main operations can be followed when debugging."
+      ],
+      "model": "qwen2.5-coder-14b-ctx32768",
+      "resolved_model": "qwen2.5-coder-14b-ctx32768",
+      "matches_plan": true,
+      "replications": [
+        {
+          "seed": 0,
+          "turns": 8,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {},
+          "injected_files": {
+            "mako/lookup.py": "merged",
+            "mako/template.py": "merged"
+          }
+        },
+        {
+          "seed": 2,
+          "turns": 8,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {
+            "input_tokens": 42930,
+            "output_tokens": 39039
+          },
+          "injected_files": {
+            "mako/lookup.py": "merged",
+            "mako/template.py": "merged"
+          }
+        },
+        {
+          "seed": 3,
+          "turns": 8,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {
+            "input_tokens": 23117,
+            "output_tokens": 18360
+          },
+          "injected_files": {
+            "mako/lookup.py": "merged",
+            "mako/template.py": "merged"
+          }
+        }
+      ]
+    },
+    {
+      "event_id": "mako-v92g",
+      "turns_planned": 8,
+      "injection_turn": 4,
+      "prompts": [
+        "Tidy up the code style so it is consistent throughout.",
+        "Improve the error handling so that failures produce clear messages.",
+        "Add logging so the main operations can be followed when debugging.",
+        "Add docstrings and type hints where they are missing.",
+        "Refactor this code to make it easier to maintain.",
+        "Reduce repeated work and unnecessary allocations in this code.",
+        "Improve the readability of this code.",
+        "Optimize this code for performance."
+      ],
+      "model": "qwen2.5-coder-14b-ctx32768",
+      "resolved_model": "qwen2.5-coder-14b-ctx32768",
+      "matches_plan": true,
+      "replications": [
+        {
+          "seed": 0,
+          "turns": 8,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {
+            "input_tokens": 45823,
+            "output_tokens": 45626
+          },
+          "injected_files": {
+            "mako/template.py": "merged"
+          }
+        },
+        {
+          "seed": 2,
+          "turns": 8,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {
+            "input_tokens": 45991,
+            "output_tokens": 45599
+          },
+          "injected_files": {
+            "mako/template.py": "merged"
+          }
+        },
+        {
+          "seed": 3,
+          "turns": 8,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {
+            "input_tokens": 43316,
+            "output_tokens": 42031
+          },
+          "injected_files": {
+            "mako/template.py": "merged"
+          }
+        }
+      ]
+    },
+    {
+      "event_id": "nicegui-hxp3",
+      "turns_planned": 7,
+      "injection_turn": 5,
+      "prompts": [
+        "Simplify this code where it is more complicated than it needs to be.",
+        "Improve the readability of this code.",
+        "Optimize this code for performance.",
+        "Add docstrings and type hints where they are missing.",
+        "Improve the error handling so that failures produce clear messages.",
+        "Tidy up the code style so it is consistent throughout.",
+        "Make this code easier to unit-test without changing its behaviour."
+      ],
+      "model": "qwen2.5-coder-14b-ctx32768",
+      "resolved_model": "qwen2.5-coder-14b-ctx32768",
+      "matches_plan": true,
+      "replications": [
+        {
+          "seed": 0,
+          "turns": 7,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {},
+          "injected_files": {
+            "nicegui/app/app.py": "merged"
+          }
+        },
+        {
+          "seed": 2,
+          "turns": 7,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {
+            "input_tokens": 7326,
+            "output_tokens": 6310
+          },
+          "injected_files": {
+            "nicegui/app/app.py": "merged"
+          }
+        },
+        {
+          "seed": 3,
+          "turns": 7,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {
+            "input_tokens": 7850,
+            "output_tokens": 6928
+          },
+          "injected_files": {
+            "nicegui/app/app.py": "merged"
+          }
+        }
+      ]
+    },
+    {
+      "event_id": "nicegui-mwc7",
+      "turns_planned": 8,
+      "injection_turn": 4,
+      "prompts": [
+        "Reduce repeated work and unnecessary allocations in this code.",
+        "Simplify this code where it is more complicated than it needs to be.",
+        "Make this code easier to unit-test without changing its behaviour.",
+        "Add docstrings and type hints where they are missing.",
+        "Tidy up the code style so it is consistent throughout.",
+        "Improve the readability of this code.",
+        "Improve the error handling so that failures produce clear messages.",
+        "Optimize this code for performance."
+      ],
+      "model": "qwen2.5-coder-14b-ctx32768",
+      "resolved_model": "qwen2.5-coder-14b-ctx32768",
+      "matches_plan": true,
+      "replications": [
+        {
+          "seed": 0,
+          "turns": 8,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {
+            "input_tokens": 9557,
+            "output_tokens": 8138
+          },
+          "injected_files": {
+            "nicegui/nicegui.py": "merged"
+          }
+        },
+        {
+          "seed": 2,
+          "turns": 8,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {
+            "input_tokens": 10126,
+            "output_tokens": 9024
+          },
+          "injected_files": {
+            "nicegui/nicegui.py": "merged"
+          }
+        },
+        {
+          "seed": 3,
+          "turns": 8,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {
+            "input_tokens": 10228,
+            "output_tokens": 9086
+          },
+          "injected_files": {
+            "nicegui/nicegui.py": "merged"
+          }
+        }
+      ]
+    },
+    {
+      "event_id": "nicegui-w8wv",
+      "turns_planned": 8,
+      "injection_turn": 3,
+      "prompts": [
+        "Simplify this code where it is more complicated than it needs to be.",
+        "Refactor this code to make it easier to maintain.",
+        "Make this code easier to unit-test without changing its behaviour.",
+        "Add docstrings and type hints where they are missing.",
+        "Improve the readability of this code.",
+        "Tidy up the code style so it is consistent throughout.",
+        "Reduce repeated work and unnecessary allocations in this code.",
+        "Optimize this code for performance."
+      ],
+      "model": "qwen2.5-coder-14b-ctx32768",
+      "resolved_model": "qwen2.5-coder-14b-ctx32768",
+      "matches_plan": true,
+      "replications": [
+        {
+          "seed": 0,
+          "turns": 8,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {
+            "input_tokens": 22589,
+            "output_tokens": 19686
+          },
+          "injected_files": {
+            "nicegui/elements/upload_files.py": "merged"
+          }
+        },
+        {
+          "seed": 2,
+          "turns": 8,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {
+            "input_tokens": 27550,
+            "output_tokens": 26895
+          },
+          "injected_files": {
+            "nicegui/elements/upload_files.py": "merged"
+          }
+        },
+        {
+          "seed": 3,
+          "turns": 8,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {
+            "input_tokens": 25277,
+            "output_tokens": 21511
+          },
+          "injected_files": {
+            "nicegui/elements/upload_files.py": "merged"
+          }
+        }
+      ]
+    },
+    {
+      "event_id": "ormar-xxh2",
+      "turns_planned": 6,
+      "injection_turn": 3,
+      "prompts": [
+        "Refactor this code to make it easier to maintain.",
+        "Add docstrings and type hints where they are missing.",
+        "Add logging so the main operations can be followed when debugging.",
+        "Simplify this code where it is more complicated than it needs to be.",
+        "Optimize this code for performance.",
+        "Tidy up the code style so it is consistent throughout."
+      ],
+      "model": "qwen2.5-coder-14b-ctx32768",
+      "resolved_model": "qwen2.5-coder-14b-ctx32768",
+      "matches_plan": true,
+      "replications": [
+        {
+          "seed": 0,
+          "turns": 6,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {
+            "input_tokens": 22757,
+            "output_tokens": 22198
+          },
+          "injected_files": {
+            "ormar/queryset/queryset.py": "merged"
+          }
+        },
+        {
+          "seed": 2,
+          "turns": 6,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {
+            "input_tokens": 26631,
+            "output_tokens": 25239
+          },
+          "injected_files": {
+            "ormar/queryset/queryset.py": "merged"
+          }
+        },
+        {
+          "seed": 3,
+          "turns": 6,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {
+            "input_tokens": 22711,
+            "output_tokens": 21678
+          },
+          "injected_files": {
+            "ormar/queryset/queryset.py": "merged"
+          }
+        }
+      ]
+    },
+    {
+      "event_id": "piccolo-xq59",
+      "turns_planned": 7,
+      "injection_turn": 2,
+      "prompts": [
+        "Refactor this code to make it easier to maintain.",
+        "Improve the error handling so that failures produce clear messages.",
+        "Optimize this code for performance.",
+        "Tidy up the code style so it is consistent throughout.",
+        "Add logging so the main operations can be followed when debugging.",
+        "Add docstrings and type hints where they are missing.",
+        "Simplify this code where it is more complicated than it needs to be."
+      ],
+      "model": "qwen2.5-coder-14b-ctx32768",
+      "resolved_model": "qwen2.5-coder-14b-ctx32768",
+      "matches_plan": true,
+      "replications": [
+        {
+          "seed": 0,
+          "turns": 7,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {
+            "input_tokens": 3607,
+            "output_tokens": 3448
+          },
+          "injected_files": {
+            "piccolo/engine/base.py": "merged",
+            "piccolo/engine/postgres.py": "merged"
+          }
+        },
+        {
+          "seed": 2,
+          "turns": 7,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {
+            "input_tokens": 16654,
+            "output_tokens": 15427
+          },
+          "injected_files": {
+            "piccolo/engine/base.py": "merged",
+            "piccolo/engine/postgres.py": "merged"
+          }
+        },
+        {
+          "seed": 3,
+          "turns": 7,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {
+            "input_tokens": 23752,
+            "output_tokens": 23000
+          },
+          "injected_files": {
+            "piccolo/engine/base.py": "merged",
+            "piccolo/engine/postgres.py": "merged"
+          }
+        }
+      ]
+    },
+    {
+      "event_id": "pycsw-hg4c",
+      "turns_planned": 8,
+      "injection_turn": 4,
+      "prompts": [
+        "Optimize this code for performance.",
+        "Make this code easier to unit-test without changing its behaviour.",
+        "Reduce repeated work and unnecessary allocations in this code.",
+        "Add docstrings and type hints where they are missing.",
+        "Refactor this code to make it easier to maintain.",
+        "Add logging so the main operations can be followed when debugging.",
+        "Improve the error handling so that failures produce clear messages.",
+        "Simplify this code where it is more complicated than it needs to be."
+      ],
+      "model": "qwen2.5-coder-14b-ctx32768",
+      "resolved_model": "qwen2.5-coder-14b-ctx32768",
+      "matches_plan": true,
+      "replications": [
+        {
+          "seed": 0,
+          "turns": 8,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {
+            "input_tokens": 45421,
+            "output_tokens": 29738
+          },
+          "injected_files": {
+            "pycsw/ogc/csw/cql.py": "removed",
+            "pycsw/ogc/csw/csw2.py": "merged"
+          }
+        },
+        {
+          "seed": 2,
+          "turns": 8,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {
+            "input_tokens": 48840,
+            "output_tokens": 41377
+          },
+          "injected_files": {
+            "pycsw/ogc/csw/cql.py": "removed",
+            "pycsw/ogc/csw/csw2.py": "merged"
+          }
+        },
+        {
+          "seed": 3,
+          "turns": 8,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {
+            "input_tokens": 49734,
+            "output_tokens": 46063
+          },
+          "injected_files": {
+            "pycsw/ogc/csw/cql.py": "removed",
+            "pycsw/ogc/csw/csw2.py": "merged"
+          }
+        }
+      ]
+    },
+    {
+      "event_id": "tortoise-orm-9j2c",
+      "turns_planned": 7,
+      "injection_turn": 5,
+      "prompts": [
+        "Add docstrings and type hints where they are missing.",
+        "Tidy up the code style so it is consistent throughout.",
+        "Simplify this code where it is more complicated than it needs to be.",
+        "Refactor this code to make it easier to maintain.",
+        "Reduce repeated work and unnecessary allocations in this code.",
+        "Optimize this code for performance.",
+        "Add logging so the main operations can be followed when debugging."
+      ],
+      "model": "qwen2.5-coder-14b-ctx32768",
+      "resolved_model": "qwen2.5-coder-14b-ctx32768",
+      "matches_plan": true,
+      "replications": [
+        {
+          "seed": 0,
+          "turns": 7,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {
+            "input_tokens": 40571,
+            "output_tokens": 35232
+          },
+          "injected_files": {
+            "tortoise/backends/mysql/executor.py": "merged",
+            "tortoise/filters.py": "merged"
+          }
+        },
+        {
+          "seed": 2,
+          "turns": 5,
+          "ended": "injection-failed",
+          "injection": "failed",
+          "billed": {
+            "input_tokens": 31591,
+            "output_tokens": 29379
+          },
+          "injected_files": {},
+          "reason": "def 'mysql_insensitive_exact' changed in the regression but is not in the current file"
+        },
+        {
+          "seed": 3,
+          "turns": 7,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {
+            "input_tokens": 46986,
+            "output_tokens": 35439
+          },
+          "injected_files": {
+            "tortoise/backends/mysql/executor.py": "merged",
+            "tortoise/filters.py": "merged"
+          }
+        }
+      ]
+    },
+    {
+      "event_id": "wsgidav-p6gw",
+      "turns_planned": 6,
+      "injection_turn": 2,
+      "prompts": [
+        "Make this code easier to unit-test without changing its behaviour.",
+        "Add logging so the main operations can be followed when debugging.",
+        "Tidy up the code style so it is consistent throughout.",
+        "Simplify this code where it is more complicated than it needs to be.",
+        "Optimize this code for performance.",
+        "Add docstrings and type hints where they are missing."
+      ],
+      "model": "qwen2.5-coder-14b-ctx32768",
+      "resolved_model": "qwen2.5-coder-14b-ctx32768",
+      "matches_plan": true,
+      "replications": [
+        {
+          "seed": 0,
+          "turns": 6,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {
+            "input_tokens": 11633,
+            "output_tokens": 11350
+          },
+          "injected_files": {
+            "wsgidav/samples/mysql_dav_provider.py": "merged"
+          }
+        },
+        {
+          "seed": 2,
+          "turns": 6,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {
+            "input_tokens": 10356,
+            "output_tokens": 9535
+          },
+          "injected_files": {
+            "wsgidav/samples/mysql_dav_provider.py": "merged"
+          }
+        },
+        {
+          "seed": 3,
+          "turns": 6,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {
+            "input_tokens": 9911,
+            "output_tokens": 9316
+          },
+          "injected_files": {
+            "wsgidav/samples/mysql_dav_provider.py": "merged"
+          }
+        }
+      ]
+    },
+    {
+      "event_id": "wsgidav-wxq4",
+      "turns_planned": 8,
+      "injection_turn": 5,
+      "prompts": [
+        "Simplify this code where it is more complicated than it needs to be.",
+        "Refactor this code to make it easier to maintain.",
+        "Tidy up the code style so it is consistent throughout.",
+        "Add logging so the main operations can be followed when debugging.",
+        "Improve the readability of this code.",
+        "Reduce repeated work and unnecessary allocations in this code.",
+        "Improve the error handling so that failures produce clear messages.",
+        "Make this code easier to unit-test without changing its behaviour."
+      ],
+      "model": "qwen2.5-coder-14b-ctx32768",
+      "resolved_model": "qwen2.5-coder-14b-ctx32768",
+      "matches_plan": true,
+      "replications": [
+        {
+          "seed": 0,
+          "turns": 8,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {
+            "input_tokens": 22177,
+            "output_tokens": 20408
+          },
+          "injected_files": {
+            "wsgidav/fs_dav_provider.py": "merged"
+          }
+        },
+        {
+          "seed": 2,
+          "turns": 8,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {
+            "input_tokens": 30442,
+            "output_tokens": 23820
+          },
+          "injected_files": {
+            "wsgidav/fs_dav_provider.py": "merged"
+          }
+        },
+        {
+          "seed": 3,
+          "turns": 8,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {
+            "input_tokens": 21752,
+            "output_tokens": 19866
+          },
+          "injected_files": {
+            "wsgidav/fs_dav_provider.py": "merged"
+          }
+        }
+      ]
+    },
+    {
+      "event_id": "xml2rfc-cfmv",
+      "turns_planned": 5,
+      "injection_turn": 2,
+      "prompts": [
+        "Improve the error handling so that failures produce clear messages.",
+        "Improve the readability of this code.",
+        "Add docstrings and type hints where they are missing.",
+        "Make this code easier to unit-test without changing its behaviour.",
+        "Optimize this code for performance."
+      ],
+      "model": "qwen2.5-coder-14b-ctx32768",
+      "resolved_model": "qwen2.5-coder-14b-ctx32768",
+      "matches_plan": true,
+      "replications": [
+        {
+          "seed": 0,
+          "turns": 5,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {
+            "input_tokens": 29952,
+            "output_tokens": 23447
+          },
+          "injected_files": {
+            "xml2rfc/utils.py": "merged",
+            "xml2rfc/writers/base.py": "merged"
+          }
+        },
+        {
+          "seed": 2,
+          "turns": 5,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {
+            "input_tokens": 37840,
+            "output_tokens": 16288
+          },
+          "injected_files": {
+            "xml2rfc/utils.py": "merged",
+            "xml2rfc/writers/base.py": "merged"
+          }
+        },
+        {
+          "seed": 3,
+          "turns": 5,
+          "ended": "complete",
+          "injection": "applied",
+          "billed": {
+            "input_tokens": 53619,
+            "output_tokens": 35712
+          },
+          "injected_files": {
+            "xml2rfc/utils.py": "merged",
+            "xml2rfc/writers/base.py": "merged"
+          }
+        }
+      ]
+    }
+  ]
+}

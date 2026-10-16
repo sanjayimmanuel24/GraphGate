@@ -2,11 +2,12 @@
 
     python scripts/summarize_open_model_runs.py
 
-Reads the pilot traces brought back from the notebook (runs/pilot-traces/) and,
-if present, the log of the first dataset session (runs/kaggle_log.txt.txt), and
-writes data/open_model_runs.json. The inputs live in the ignored runs/ folder;
-this small summary is what gets committed, so the figures quoted in the paper
-come from a file and not from memory.
+Reads the pilot traces brought back from the notebook (runs/pilot-traces/), the
+log of the first dataset session if present (runs/kaggle_log.txt.txt) and the
+dataset traces once they are recorded (data/traces/), and writes
+data/open_model_runs.json. The figures quoted in the paper come from that file
+and not from memory. What the gate conditions measured on the dataset traces is
+in data/results/summary.json (scripts/run_conditions.py), not here.
 """
 
 from __future__ import annotations
@@ -35,15 +36,15 @@ def model_facts(path: Path) -> dict:
             "licence": "Apache-2.0" if "Apache License" in text else None}
 
 
-def pilot(traces_dir: Path) -> dict:
-    manifest = json.loads((traces_dir / "manifest.json").read_text(encoding="utf-8"))
-    turns = usable = carried = labelled = 0
+def read_traces(traces_dir: Path) -> dict:
+    """What a folder of labelled traces holds; every trace is replayed and compared byte for byte."""
+    kinds: Counter = Counter()
+    carried = labelled = 0
     seconds = []
     identical = True
     for trace in sorted(traces_dir.glob("*.jsonl")):
         records = [r for r in load_records(trace) if r.turn > 0]
-        turns += len(records)
-        usable += sum(r.kind == KIND_TURN for r in records)
+        kinds.update(r.kind for r in records)
         seconds += [r.latency_ms / 1000 for r in records if r.latency_ms]
         labels = json.loads(trace.with_name(trace.stem + ".labels.json").read_text(encoding="utf-8"))
         carried += labels["turns_carried"]
@@ -52,11 +53,39 @@ def pilot(traces_dir: Path) -> dict:
             copy = Path(scratch) / trace.name
             harness(["--replay", str(trace), "--out", str(copy), "--log-level", "ERROR"])
             identical = identical and copy.read_bytes() == trace.read_bytes()
-    return {"events": len(manifest["traces"]), "model_calls": turns, "turns_usable": usable,
-            "traces_with_regression": manifest["replications_with_regression"],
-            "turns_labelled": labelled, "turns_carried": carried,
+    return {"model_calls": sum(kinds.values()), "turns_usable": kinds[KIND_TURN],
+            "turns_by_kind": dict(sorted(kinds.items())), "turns_labelled": labelled, "turns_carried": carried,
             "median_seconds_per_turn": round(sorted(seconds)[len(seconds) // 2]),
-            "replays_byte_identical": identical}
+            "model_hours": round(sum(seconds) / 3600, 1), "replays_byte_identical": identical}
+
+
+def pilot(traces_dir: Path) -> dict:
+    manifest = json.loads((traces_dir / "manifest.json").read_text(encoding="utf-8"))
+    read = read_traces(traces_dir)
+    return {"events": len(manifest["traces"]), "model_calls": read["model_calls"],
+            "turns_usable": read["turns_usable"],
+            "traces_with_regression": manifest["replications_with_regression"],
+            "turns_labelled": read["turns_labelled"], "turns_carried": read["turns_carried"],
+            "median_seconds_per_turn": read["median_seconds_per_turn"],
+            "replays_byte_identical": read["replays_byte_identical"]}
+
+
+def dataset(traces_dir: Path) -> dict:
+    """The dataset run: the manifest says how each replication ended, the traces and labels the rest."""
+    manifest = json.loads((traces_dir / "manifest.json").read_text(encoding="utf-8"))
+    if manifest["pilot"]:
+        raise SystemExit(f"{traces_dir} holds pilot traces, not the dataset run")
+    replications = [r for t in manifest["traces"] for r in t["replications"]]
+    placed = {t["event_id"]: sum(r["injection"] == "applied" for r in t["replications"])
+              for t in manifest["traces"]}
+    return {"events": len(manifest["traces"]), "seeds": sorted({r["seed"] for r in replications}),
+            "replications": len(replications),
+            "replications_by_outcome": manifest["replications_by_outcome"],
+            "replications_with_regression": manifest["replications_with_regression"],
+            "events_with_regression": sum(n > 0 for n in placed.values()),
+            "events_without_regression": sorted(e for e, n in placed.items() if n == 0),
+            "traces_recorded_under_the_plan": sum(t["matches_plan"] for t in manifest["traces"]),
+            **read_traces(traces_dir)}
 
 
 def first_session(log: Path) -> dict:
@@ -82,16 +111,19 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--pilot", type=Path, default=Path("runs/pilot-traces"))
     parser.add_argument("--log", type=Path, default=Path("runs/kaggle_log.txt.txt"))
+    parser.add_argument("--traces", type=Path, default=Path("data/traces"))
     parser.add_argument("--out", type=Path, default=Path("data/open_model_runs.json"))
     args = parser.parse_args(argv)
 
     summary = {
         "schema_version": SCHEMA_VERSION,
-        "note": "What the runs with the open-weight model showed so far. Pilot traces test the tools "
-                "and are not dataset results; the first dataset session is described from its log.",
+        "note": "What the runs with the open-weight model showed. Pilot traces test the tools and are "
+                "not dataset results; the first dataset session is described from its log; the dataset "
+                "run is read off the recorded traces.",
         "model": model_facts(args.pilot / "MODEL_USED.txt"),
         "pilot": pilot(args.pilot),
         "first_dataset_session": first_session(args.log) if args.log.exists() else None,
+        "dataset": dataset(args.traces) if (args.traces / "manifest.json").exists() else None,
     }
     args.out.write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8", newline="\n")
     print(json.dumps(summary, indent=2))

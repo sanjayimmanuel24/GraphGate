@@ -33,17 +33,23 @@ MILESTONES = [
     ("M1.2", "Dataset v1", [
         ("2.1", "Seed repository selection", "done"), ("2.2", "Fix commits to vulnerable/fixed pairs", "done"),
         ("2.3", "Validation of events", "done"),
-        ("2.4", "Trace synthesis (pilot recorded on the open model, dataset recording in progress)", "active"),
-        ("2.5", "Turn labels (pilot labelled, waits for dataset traces)", "active"),
+        ("2.4", "Trace synthesis (all validated events recorded on the open model, three runs each)", "done"),
+        ("2.5", "Turn labels (every recorded turn labelled)", "done"),
         ("2.6", "Leakage control", "done")]),
     ("M1.3", "Local gate (B) and Pysa baseline (S1)", [
-        ("3.1", "Semgrep and Bandit on a diff", "done"), ("3.2", "LLM triage, gates B and B+ (built, not yet run against the model)", "active"),
-        ("3.3", "Pysa baseline", "todo"), ("3.4", "A / B / S1 run and metrics", "todo")]),
+        ("3.1", "Semgrep and Bandit on a diff", "done"), ("3.2", "LLM triage, gates B and B+ (run on the recorded traces)", "done"),
+        ("3.3", "Pysa baseline", "todo"),
+        ("3.4", "A / B / S1 run and metrics (A, B and B+ run; S1 waits for Pysa)", "active")]),
     ("M2.1", "Graph layer and difference engine", [
         ("4.1-4.5", "Graph builder and rules R1-R4 (built and tested; first look on the 30 regressions done)",
          "done")]),
-    ("M2.2", "Dataset v2, Condition C, holdout", [("5.1-5.4", "Cross-file variants, gate C, holdouts", "todo")]),
-    ("M2.3", "Full study, ablations, writing", [("6.1-6.5", "Study, statistics, paper", "todo")]),
+    ("M2.2", "Dataset v2, Condition C, holdout", [
+        ("5.2", "Gate C, with the repository around the slice and on the slice alone (run once on the "
+                "recorded traces)", "done"),
+        ("5.1, 5.3, 5.4", "Cross-file variants and the two holdouts", "todo")]),
+    ("M2.3", "Full study, ablations, writing", [
+        ("6.3", "Significance tests of C against B and B+ (planned, then run once)", "done"),
+        ("6.1, 6.2, 6.4, 6.5", "Holdout run, ablations, error analysis, paper", "todo")]),
 ]
 
 
@@ -54,6 +60,7 @@ def model_facts() -> list[tuple[str, str]]:
     if not runs:
         return [("Model", "open-weight model, not run yet")]
     model, pilot, session = runs["model"], runs["pilot"], runs.get("first_dataset_session")
+    run = runs.get("dataset")
     facts = [
         ("Model", f'{model["family"]} ({model["parameters"]} parameters, {model["quantization"]}, '
                   f'{model["licence"]})'),
@@ -65,6 +72,17 @@ def model_facts() -> list[tuple[str, str]]:
         ("Pilot, median time per turn", f'{pilot["median_seconds_per_turn"]} s'),
         ("Pilot, replay", "byte-identical" if pilot["replays_byte_identical"] else "differs"),
     ]
+    if run:
+        failed = run["replications_by_outcome"].get("injection-failed", 0)
+        return facts[:3] + [
+            ("Dataset run", f'{run["events"]} events, {run["replications"]} runs, {run["model_calls"]} turns'),
+            ("Usable turns", f'{run["turns_usable"]} of {run["model_calls"]}'),
+            ("Regression placed", f'{run["replications_with_regression"]} of {run["replications"]} runs '
+                                  f'({failed} could not be placed)'),
+            ("Labels carried over", f'{run["turns_carried"]} of {run["turns_labelled"]} turns'),
+            ("Median time per turn", f'{run["median_seconds_per_turn"]} s'),
+            ("Replay", "byte-identical, every trace" if run["replays_byte_identical"] else "differs"),
+        ]
     if session:
         facts += [
             ("First dataset session", f'{session["events_finished"]} of {session["events_started"]} '
@@ -78,6 +96,70 @@ LOC_MIN, LOC_MAX = 5_000, 50_000
 EXCLUDED_BY_HAND = {"GHSA-j6cv-98jx-mrwr"}
 CLASS_NAMES = {"path-traversal": "Path traversal", "os-command": "OS command", "command": "Command",
                "sql": "SQL"}
+
+
+def first_look() -> list[tuple[str, str, str, str]]:
+    """Detector, regressions flagged, cross-file ones flagged, fixes flagged (the control)."""
+    static, delta = load("data/static_first_look.json"), load("data/delta_first_look.json")
+    rows = []
+    if static:
+        groups = static["summary"]["by_class_and_scope"]
+        cross = [g for name, g in groups.items() if name.endswith("/cross_file")]
+        rows.append(("Pattern scanners (Semgrep, Bandit)",
+                     f'{static["summary"]["with_introduced_finding"]} of {static["summary"]["events"]}',
+                     f'{sum(g["with_finding"] for g in cross)} of {sum(g["events"] for g in cross)}', "not run"))
+    if delta:
+        summary = delta["summary"]
+
+        def row(name, result, fixes):
+            scope = result["by_scope"]["cross_file"]
+            return (name, f'{result["flagged"]} of {result["events"]}',
+                    f'{scope["flagged"]} of {scope["events"]}', f'{fixes} of {result["events"]}')
+
+        rows.append(row("Graph rules, slice alone", summary["settings"]["graphgate"],
+                        summary["control_fix_flagged"]["graphgate"]))
+        if summary.get("repository_view"):
+            rows.append(row("Graph rules, with the repository (registered)", summary["repository_view"],
+                            summary["repository_view"]["control_fix_flagged"]))
+    return rows
+
+
+CONDITION_NAMES = {"A": "A, no gate", "B": "B, scanners and triage", "B+": "B+, the model also reads the diff",
+                   "C-slice": "C on the slice alone", "C": "C, GraphGate with the repository (registered)"}
+
+
+def gate_results() -> tuple[list[tuple[str, ...]], str]:
+    """One row per condition, and a line saying what the figures are. Never a pilot's figures."""
+    results = load("data/results/summary.json")
+    if not results or results["pilot"] or not results["complete"]:
+        return [], "The gate conditions have not been run on the dataset traces."
+    rows = []
+    for name, c in results["conditions"].items():
+        recall, clean = c["recall_at_introduction"], c["false_blocks"]["all_clean_turns"]
+        cross, added = recall["by_scope"]["cross_file"], c["overhead"]["median_added_seconds"]
+        rows.append((CONDITION_NAMES.get(name, name),
+                     f'{recall["all"]["blocked"]} of {recall["all"]["introduced"]}',
+                     f'{cross["blocked"]} of {cross["introduced"]}',
+                     f'{c["detection"]["detected"]} of {c["detection"]["regressions"]}',
+                     f'{clean["blocked"]} of {clean["clean_turns"]} ({100 * clean["rate"]:.1f}%)',
+                     "none" if added is None else f"{added:.1f} s"))
+    traces = results["traces"]
+    note = (f'One run of every condition over {traces["replications"]} recorded runs ({traces["turns"]} turns), '
+            f'with triage by {results["triage"]["model"]}. Each turn is judged as recorded; a block changes '
+            "nothing downstream. Limits fixed in advance for C: about 15% of clean turns blocked, about 10 s of "
+            "added time.")
+    tests = load("data/significance_tests.json")
+    if tests:
+        p = tests["primary"]
+        note += (f' Registered comparison, C against B on the {p["pairs"]} cross-file events with a placed '
+                 f'regression (two-sided Wilcoxon on per-event recall): C higher in {p["first_better"]}, B higher '
+                 f'in {p["second_better"]}, {p["zero_differences_dropped"]} tied; p = {p["p_two_sided"]:.3f}, '
+                 f'mean difference {p["mean_difference"]:.2f} (95% interval {p["mean_difference_ci95"][0]:.2f} '
+                 f'to {p["mean_difference_ci95"][1]:.2f}). The result rests on the {p["pairs_used"]} events where '
+                 "the gates differ.")
+    else:
+        note += " The significance test of C against B has not been run."
+    return rows, note
 
 
 def load(rel: str):
@@ -256,6 +338,11 @@ def render(d: dict) -> str:
     repo_rows = "".join(f'<tr><td class="mono">{esc(r)}</td><td>{esc(l)}</td><td class="num">{n}</td></tr>'
                         for r, l, n in d["repos"])
     smoke_rows = "".join(f'<tr><td>{esc(k)}</td><td>{esc(v)}</td></tr>' for k, v in model_facts())
+    gate_table, gate_note = gate_results()
+    gate_rows = "".join("<tr><td>" + esc(r[0]) + "</td>" + "".join(f'<td class="num">{esc(c)}</td>' for c in r[1:])
+                        + "</tr>" for r in gate_table)
+    look_rows = "".join(f'<tr><td>{esc(a)}</td><td class="num">{esc(b)}</td><td class="num">{esc(c)}</td>'
+                        f'<td class="num">{esc(f)}</td></tr>' for a, b, c, f in first_look())
     review = d["review"]
     review_html = "".join(f'<div class="kv"><span>{esc(k.replace("-", " "))}</span><b>{v}</b></div>'
                           for k, v in sorted(review.items(), key=lambda kv: -kv[1]))
@@ -265,7 +352,8 @@ def render(d: dict) -> str:
         generated=esc(d["generated"]), tiles=tiles_html, milestones="".join(ms_html),
         funnel=bar_svg(d["funnel"]),
         scope=stacked_svg({k: tuple(v) for k, v in by_class.items() if sum(v)}),
-        rows="".join(rows), repo_rows=repo_rows, smoke_rows=smoke_rows, review=review_html,
+        rows="".join(rows), repo_rows=repo_rows, smoke_rows=smoke_rows, look_rows=look_rows, gate_rows=gate_rows, gate_note=esc(gate_note),
+        review=review_html,
         class_options=class_options, n_events=len(events), shown_word=shown_word,
         other_word="Not accepted" if decided else "Queued or excluded")
 
@@ -390,6 +478,27 @@ footer {{ color: var(--muted); font-size: 12px; }}
       <thead><tr><th>Event</th><th>Advisories</th><th>Class</th><th>Scope</th><th>Slice tokens</th><th>AI preparation</th><th>Sign-off</th></tr></thead>
       <tbody>{rows}</tbody>
     </table></div>
+  </section>
+
+  <section class="card">
+    <h2>Gate conditions on the recorded runs</h2>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Condition</th><th>Blocked on arrival</th><th>Cross-file, on arrival</th>
+        <th>Blocked by the end of the run</th><th>Clean turns blocked</th><th>Median added time</th></tr></thead>
+      <tbody>{gate_rows}</tbody>
+    </table></div>
+    <p class="sub" style="margin-top:10px;font-size:12.5px">{gate_note}</p>
+  </section>
+
+  <section class="card">
+    <h2>First look at the validated regressions</h2>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Detector</th><th>Regressions flagged</th><th>Cross-file ones flagged</th>
+        <th>Fixes flagged (control)</th></tr></thead>
+      <tbody>{look_rows}</tbody>
+    </table></div>
+    <p class="sub" style="margin-top:10px;font-size:12.5px">Each regression taken as one change, with no model turn and no triage: a first look at
+      what each detector can see, not a gate result. The control runs the same rules on the reverse change.</p>
   </section>
 
   <div class="grid">
